@@ -2,27 +2,39 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://share.fsky.top/s/bJATJ0/notes/index.html</loc>
+    <loc>https://share.fsky.top/s/NzbYkb/notes/index.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://share.fsky.top/s/bJATJ0/index.html</loc>
+    <loc>https://share.fsky.top/s/NzbYkb/notes/about.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://share.fsky.top/s/bJATJ0/notes/about.html</loc>
+    <loc>https://share.fsky.top/s/NzbYkb/index.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://share.fsky.top/s/bJATJ0/notes/hello.html</loc>
+    <loc>https://share.fsky.top/s/NzbYkb/docs.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://share.fsky.top/s/bJATJ0/categories/index.html</loc>
+    <loc>https://share.fsky.top/s/NzbYkb/notes/hello.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://share.fsky.top/s/bJATJ0/tags/index.html</loc>
+    <loc>https://share.fsky.top/s/NzbYkb/members.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://share.fsky.top/s/NzbYkb/secret.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://share.fsky.top/s/NzbYkb/categories/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://share.fsky.top/s/NzbYkb/tags/index.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

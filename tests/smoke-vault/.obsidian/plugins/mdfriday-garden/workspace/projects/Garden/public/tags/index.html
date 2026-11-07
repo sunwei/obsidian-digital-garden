@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
   <link rel="stylesheet" href="
-https://cdn.fsky.top/t/base/2.4.1/css/base.css
+https://cdn.fsky.top/t/base/2.4.3/css/base.css
 "><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,20 +12,27 @@ https://cdn.fsky.top/t/base/2.4.1/css/base.css
 <meta name="description" content="">
 <meta name="author" content="MDFriday">
 
-<link rel="canonical" href="https://share.fsky.top/s/bJATJ0/tags/index.html"><link rel="icon" href="https://cdn.fsky.top/t/creator/1.1.1/favicon.svg">
+<link rel="canonical" href="https://share.fsky.top/s/NzbYkb/tags/index.html"><link rel="icon" href="https://cdn.fsky.top/t/quartz/1.2.8/favicon.svg">
 
 <meta property="og:title" content="Tags" />
-<meta property="og:url" content="https://share.fsky.top/s/bJATJ0/tags/index.html" />
+<meta property="og:url" content="https://share.fsky.top/s/NzbYkb/tags/index.html" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Garden" />
 
+
+<link rel="stylesheet" href="https://cdn.fsky.top/t/quartz/1.2.8/css/quartz.css">
 <link rel="stylesheet" href="
-https://cdn.fsky.top/t/creator/1.1.1/css/callout.css
+https://cdn.fsky.top/t/quartz/1.2.8/css/clipboard.css
 ">
-<link rel="stylesheet" href="https://cdn.fsky.top/t/creator/1.1.1/css/creator.css">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1c1b18" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="
+https://cdn.fsky.top/t/quartz/1.2.8/css/callout.css
+">
+<link rel="stylesheet" href="
+https://cdn.fsky.top/t/quartz/1.2.8/css/graph.css
+">
+<meta name="theme-color" content="#faf8f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161618" media="(prefers-color-scheme: dark)">
+
 <!-- base-math: KaTeX global load — Foundry built-in, always-on -->
 <link rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
@@ -35,119 +42,289 @@ https://cdn.fsky.top/t/creator/1.1.1/css/callout.css
         crossorigin="anonymous"></script>
 
 
-<link rel="preload" href="
-https://cdn.fsky.top/t/creator/1.1.1/fonts/newsreader-latin-400-normal.woff2
-" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="
-https://cdn.fsky.top/t/creator/1.1.1/fonts/lato-latin-400-normal.woff2
-" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400;0,700;1,400;1,700&family=Source+Sans+Pro:ital,wght@0,400;0,600;1,400;1,600&family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+
 
 
 </head>
 
-<body><script>
+<body>
+<script>
 (function() {
-  var saved = localStorage.getItem('mdf-theme') ||
-              'auto';
-  if (saved === 'auto') {
-    saved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-  document.documentElement.setAttribute('data-theme', saved);
+    var saved = localStorage.getItem('mdf-theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = saved || (prefersDark ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
 })();
 </script>
-<svg xmlns="http://www.w3.org/2000/svg" class="cr-sprite" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
-<symbol id="cr-g-seedling" viewBox="0 0 25 25"><g fill="none"><path fill="currentColor" d="M12.21 16.47A12.63 12.63 0 0 0 .81 7.31a.3.3 0 0 0-.31.33 11.67 11.67 0 0 0 12 10h.06a11.67 11.67 0 0 0 12-10 .3.3 0 0 0-.31-.33 12.63 12.63 0 0 0-11.4 9.16.3.3 0 0 1-.64 0"></path></g></symbol>
-<symbol id="cr-g-budding" viewBox="0 0 25 25"><g fill="none"><path fill="currentColor" d="M12.79 18.34a.41.41 0 0 1-.59 0c-4-4.22-4-12.11 0-16.32a.4.4 0 0 1 .59 0c4.06 4.21 4.06 12.1 0 16.32"></path><path fill="currentColor" d="M12.21 21.89a12.63 12.63 0 0 0-11.4-9.16.3.3 0 0 0-.31.33 11.67 11.67 0 0 0 12 10h.06a11.67 11.67 0 0 0 12-10 .3.3 0 0 0-.31-.33 12.63 12.63 0 0 0-11.4 9.16.3.3 0 0 1-.64 0"></path></g></symbol>
-<symbol id="cr-g-evergreen" viewBox="0 0 25 25"><g fill="none"><path fill="currentColor" d="M12.76 15.45a.36.36 0 0 1-.52 0c-3.59-3.74-3.6-10.73 0-14.45a.36.36 0 0 1 .52 0c3.59 3.72 3.6 10.71 0 14.45"></path><path fill="currentColor" d="M12.25 18.61a11.21 11.21 0 0 0-10.12-8.13.26.26 0 0 0-.27.29 10.36 10.36 0 0 0 10.61 8.91h.06a10.36 10.36 0 0 0 10.61-8.91.26.26 0 0 0-.27-.29 11.21 11.21 0 0 0-10.12 8.13.26.26 0 0 1-.5 0"></path><path fill="currentColor" d="M24.17 24.1a.33.33 0 0 0 .32-.42 6.21 6.21 0 0 0-6-4.22 6.3 6.3 0 0 0-5.7 3.44.32.32 0 0 1-.58 0 6.3 6.3 0 0 0-5.7-3.44 6.21 6.21 0 0 0-6 4.22.33.33 0 0 0 .32.42H12.5z"></path></g></symbol>
-<symbol id="cr-i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></symbol>
-<symbol id="cr-i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></symbol>
-<symbol id="cr-i-bars-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></symbol>
-<symbol id="cr-i-book-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></symbol>
-<symbol id="cr-i-calendar-days" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/></symbol>
-<symbol id="cr-i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></symbol>
-<symbol id="cr-i-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></symbol>
-<symbol id="cr-i-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></symbol>
-<symbol id="cr-i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/></symbol>
-<symbol id="cr-i-hashtag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5"/></symbol>
-<symbol id="cr-i-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></symbol>
-<symbol id="cr-i-microphone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"/></symbol>
-<symbol id="cr-i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></symbol>
-<symbol id="cr-i-paper-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/></symbol>
-<symbol id="cr-i-presentation-chart-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"/></symbol>
-<symbol id="cr-i-squares-2x2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></symbol>
-<symbol id="cr-i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></symbol>
-<symbol id="cr-i-user-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></symbol>
-<symbol id="cr-i-x-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></symbol>
-<symbol id="cr-i-pattern" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c0-5.5-3-9-7.5-10.5 0 5.25 3 9.75 7.5 10.5Zm0 0c0-5.5 3-9 7.5-10.5 0 5.25-3 9.75-7.5 10.5ZM12 20.25V9"/></symbol>
-</svg>
-<a class="cr-skip" href="#main-content">Skip to content</a>
-<header class="cr-topbar" role="banner">
-	<div class="cr-topbar-inner">
-		<a class="cr-brand" href="/s/bJATJ0/index.html" aria-label="Garden home"><img class="cr-brand-logo" src="https://cdn.fsky.top/t/creator/1.1.1/favicon.svg" alt="" width="28" height="28">
-			<span class="cr-brand-name">Garden</span>
-		</a>
-		<div class="cr-topbar-right"><div class="garden-menu" data-garden-menu>
-	<button class="garden-menu-toggle" type="button" aria-expanded="false" aria-controls="cr-garden-panel" aria-haspopup="true">
-		<span>The Garden</span><svg class="cr-icon garden-menu-chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cr-i-chevron-down"></use></svg></button>
-	<div class="garden-menu-panel" id="cr-garden-panel" hidden>
-		<div class="garden-menu-grid" role="list"><a class="garden-menu-item" role="listitem" href="/s/bJATJ0/notes/index.html">
-				<span class="garden-menu-icon"><svg class="growth-icon" data-icon="budding" width="24" height="24" viewBox="0 0 25 25" aria-hidden="true" focusable="false"><use href="#cr-g-budding"></use></svg></span>
-				<span class="garden-menu-text">
-					<span class="garden-menu-title">Notes</span>
-				</span>
-			</a></div><a class="garden-menu-foot" href="/s/bJATJ0/tags/index.html">All tags <svg class="cr-icon " width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cr-i-arrow-right"></use></svg></a>
-	</div>
-</div><button id="mdf-search-trigger" class="mdf-search-trigger cr-icon-btn" type="button"
-  aria-label="Search" title="Search ( / )"
-  aria-expanded="false" aria-controls="mdf-search-modal"><svg class="cr-icon " width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cr-i-magnifying-glass"></use></svg></button><button id="mdf-theme-toggle" class="cr-icon-btn cr-theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode"><svg class="cr-icon cr-when-light" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cr-i-moon"></use></svg><svg class="cr-icon cr-when-dark" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cr-i-sun"></use></svg></button>
-		</div>
-	</div>
-</header>
-<main id="main-content"><div class="cr-page cr-taxonomy">
-	<header class="cr-folder-head">
-		<div class="cr-kicker">
-			<span class="cr-count">0</span>
-			<a class="cr-back" href="/s/bJATJ0/index.html"><svg class="cr-icon " width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cr-i-arrow-left"></use></svg>Back to Garden</a>
-		</div>
-		<h1 class="cr-page-title">Tags</h1>
-	</header>
-	<ul class="cr-tag-cloud"></ul></div>
-</main><footer class="cr-footer">
-	<div class="cr-footer-inner">
-		<div class="cr-footer-brand">
-			<a class="cr-footer-title" href="/s/bJATJ0/index.html">Garden</a>
-			<p class="cr-footer-copy">© 2026 Garden</p>
-			<p class="cr-footer-credit">Built with <a href="https://mdfriday.com">MDFriday</a></p>
-		</div><nav class="cr-sitemap" aria-label="Sitemap"><a href="/s/bJATJ0/notes/index.html">Notes</a></nav></div>
-</footer>
+
+
+
+<main id="main-content"><div class="page">
+    <div id="quartz-body">
+        <aside class="sidebar left"><h1 class="page-title">
+    <a href="/s/NzbYkb/index.html" aria-label="Garden home"><img class="page-title-logo" src="https://cdn.fsky.top/t/quartz/1.2.8/favicon.svg" alt="" width="28" height="28" aria-hidden="true" />
+        <span class="page-title-name">Garden</span>
+    </a>
+</h1>
+<div class="spacer mobile-only"></div>
+
+<div class="flex-component" style="display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+    <div style="flex-grow: 1; flex-shrink: 1; min-width: 0;">
+<div class="search">
+    <button class="search-button" aria-label="Search" type="button">
+        <svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7">
+            <title>Search</title>
+            <g class="search-path" fill="none">
+                <path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4" />
+                <circle cx="8" cy="8" r="7" />
+            </g>
+        </svg>
+        <p>Search</p>
+    </button>
+    <div class="search-container">
+        <div class="search-space">
+            <input
+                autocomplete="off"
+                class="search-bar"
+                name="search"
+                type="text"
+                aria-label="Search for something..."
+                placeholder="Search for something..."
+            />
+            <div class="search-layout" data-preview="true"></div>
+        </div>
+    </div>
+</div>
+
+</div>
+    <div style="flex-grow: 0; flex-shrink: 0;"><div class="darkmode">
+    <button 
+        id="darkmode-toggle" 
+        class="darkmode-toggle"
+        aria-label="Toggle dark mode"
+        title="Toggle dark mode">
+        <svg class="sun-icon" width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="3" fill="currentColor"/>
+            <line x1="10" y1="2" x2="10" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="10" y1="16" x2="10" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="2" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="16" y1="10" x2="18" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="4.34" y1="4.34" x2="5.76" y2="5.76" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="14.24" y1="14.24" x2="15.66" y2="15.66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="4.34" y1="15.66" x2="5.76" y2="14.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="14.24" y1="5.76" x2="15.66" y2="4.34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <svg class="moon-icon" width="18" height="18" viewBox="0 0 20 20" fill="none" style="display: none;">
+            <path d="M17.5 11.5A7.5 7.5 0 0 1 9 3.5c0-.5.1-1 .2-1.5A8.5 8.5 0 1 0 18.5 11c-.5.1-1 .2-1.5.2-.2 0-.3 0-.5.3z" fill="currentColor"/>
+        </svg>
+    </button>
+</div>
+
+</div></div><div class="explorer" 
+     data-behavior="link" 
+     data-collapsed="collapsed" 
+     data-savestate="true">
+    
+    
+    <button type="button" 
+            class="explorer-toggle mobile-explorer hide-until-loaded" 
+            data-mobile="true"
+            aria-controls="explorer-content"
+            aria-label="Toggle Explorer">
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             width="24" 
+             height="24" 
+             viewBox="0 0 24 24" 
+             stroke-width="2" 
+             stroke="currentColor"
+             fill="none"
+             stroke-linecap="round" 
+             stroke-linejoin="round" 
+             class="lucide-menu">
+            <line x1="4" x2="20" y1="12" y2="12" />
+            <line x1="4" x2="20" y1="6" y2="6" />
+            <line x1="4" x2="20" y1="18" y2="18" />
+        </svg>
+    </button>
+    
+    
+    <button type="button" 
+            class="title-button explorer-toggle desktop-explorer" 
+            data-mobile="false"
+            aria-expanded="true"
+            aria-label="Toggle Explorer">
+        <h2>Explorer</h2>
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             width="14" 
+             height="14" 
+             viewBox="5 8 14 8" 
+             fill="none" 
+             stroke="currentColor" 
+             stroke-width="2" 
+             stroke-linecap="round" 
+             stroke-linejoin="round" 
+             class="fold">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </button>
+    
+    
+    <div id="explorer-content" 
+         class="explorer-content" 
+         aria-expanded="false" 
+         role="group">
+        <ul class="explorer-ul"></ul>
+    </div>
+    
+    
+    <template id="template-file">
+        <li>
+            <a href="#"></a>
+        </li>
+    </template>
+    
+    <template id="template-folder">
+        <li>
+            <div class="folder-container">
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                     width="12" 
+                     height="12" 
+                     viewBox="5 8 14 8" 
+                     fill="none" 
+                     stroke="currentColor" 
+                     stroke-width="2" 
+                     stroke-linecap="round" 
+                     stroke-linejoin="round" 
+                     class="folder-icon">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <div>
+                    <button class="folder-button">
+                        <span class="folder-title"></span>
+                    </button>
+                </div>
+            </div>
+            <div class="folder-outer">
+                <ul class="content"></ul>
+            </div>
+        </li>
+    </template>
+</div>
+
+</aside>
+        <div class="center">
+            <div class="page-header">
+                <div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs">
+    <ul class="breadcrumbs">
+        
+        <li class="breadcrumb-element">
+            <a href="/s/NzbYkb/index.html">Home</a>
+            <p aria-hidden="true"> ❯ </p>
+        </li>
+        
+        
+                <li class="breadcrumb-element">
+                    <a href="/s/NzbYkb/tags/">Tags</a>
+                    <p aria-hidden="true"> ❯ </p>
+                </li>
+                <li class="breadcrumb-element">
+                    <a href="/s/NzbYkb/tags/index.html">tag</a>
+                </li></ul>
+</nav></div>
+            </div>
+            <article class="popover-hint">
+                <header class="article-header">
+                    <h1>Tags</h1></header></article>
+        </div>
+        <aside class="sidebar right"><div class="graph">
+  <h3>Graph View</h3>
+  <div class="graph-outer">
+    <div class="graph-container" data-cfg='{"drag":true,"zoom":true,"depth":1,"scale":1.1,"repelForce":0.5,"centerForce":0.3,"linkDistance":30,"fontSize":0.6,"opacityScale":1,"showTags":true,"removeTags":[],"focusOnHover":false,"enableRadial":false}'></div>
+    <button class="global-graph-icon" aria-label="Global Graph" title="Global Graph">
+      <svg
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        x="0px"
+        y="0px"
+        viewBox="0 0 55 55"
+        fill="currentColor"
+        xml:space="preserve"
+      >
+        <path
+          d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+          s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+          c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+          C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+          c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+          v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+          s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+          C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+          S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+          s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+          s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"
+        />
+      </svg>
+    </button>
+  </div>
+  <div class="global-graph-outer">
+    <div class="global-graph-container" data-cfg='{"drag":true,"zoom":true,"depth":-1,"scale":0.9,"repelForce":0.5,"centerForce":0.2,"linkDistance":30,"fontSize":0.6,"opacityScale":1,"showTags":true,"removeTags":[],"focusOnHover":true,"enableRadial":true}'></div>
+  </div>
+</div>
+
+</aside>
+<footer>
+    <p>
+        Built with
+        <a href="https://mdfriday.com">MDFriday</a>
+        <br/>2026 All Rights Reserved.
+    </p></footer>
+
+</div>
+</div>
+</main>
+
 
   
 
 
 <script defer src="
-https://cdn.fsky.top/t/base/2.4.1/caps/katex/katex-render.js
+https://cdn.fsky.top/t/base/2.4.3/caps/katex/katex-render.js
 "></script>
 
 
 <script defer src="
-https://cdn.fsky.top/t/base/2.4.1/caps/mermaid/mermaid-render.js
+https://cdn.fsky.top/t/base/2.4.3/caps/mermaid/mermaid-render.js
 "></script>
 
+
+
 <script src="
-https://cdn.fsky.top/t/creator/1.1.1/js/creator.js
+https://cdn.fsky.top/t/quartz/1.2.8/js/darkmode.js
 " defer></script>
 <script src="
-https://cdn.fsky.top/t/creator/1.1.1/js/callout.js
+https://cdn.fsky.top/t/quartz/1.2.8/js/readermode.js
 " defer></script>
+<script src="
+https://cdn.fsky.top/t/quartz/1.2.8/js/callout.js
+" defer></script>
+
+
 <script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.5.0/dist/floating-ui.core.umd.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.5.3/dist/floating-ui.dom.umd.min.js" defer></script>
 <script src="
-https://cdn.fsky.top/t/creator/1.1.1/js/popover.js
+https://cdn.fsky.top/t/quartz/1.2.8/js/popover.js
 " defer></script>
+
+
 <script>
 (function () {
   if (window.__MDF_SEARCH_READY__) return;
-  var url = "/s/bJATJ0/en.search-index.min.8a31098a9d01.json";
+  var url = "/s/NzbYkb/en.search-index.min.ee76e23d8207.json";
   var ready = fetch(url, { credentials: "same-origin" })
     .then(function (res) {
       if (!res.ok) throw new Error("search-index HTTP " + res.status);
@@ -167,50 +344,27 @@ https://cdn.fsky.top/t/creator/1.1.1/js/popover.js
     });
   };
 })();
-</script><script defer src="https://cdn.jsdelivr.net/npm/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script><link rel="stylesheet" href="
-https://cdn.fsky.top/t/base/2.4.1/caps/search/search.css
-"><div id="mdf-search-modal"
-  role="dialog"
-  aria-modal="true"
-  aria-label="[i18n] search.label"
-  data-hotkey="/"
-  hidden>
-  <div class="mdf-search-modal-box">
-    <div class="mdf-search-input-row">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="search"
-        id="mdf-search-input"
-        autocomplete="off"
-        spellcheck="false"
-        placeholder="[i18n] search.placeholder"
-        aria-label="[i18n] search.placeholder"
-        aria-controls="mdf-search-results">
-      <button class="mdf-search-close" type="button" aria-label="Close search">Esc</button>
-    </div>
-    <div id="mdf-search-results" role="listbox" aria-live="polite"></div>
-  </div>
-</div><script defer src="
-https://cdn.fsky.top/t/base/2.4.1/caps/search/search.js
+</script><script defer src="https://cdn.jsdelivr.net/npm/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script><script defer src="
+https://cdn.fsky.top/t/base/2.4.3/caps/search/search-inline.js
 "></script><link rel="stylesheet" href="
-https://cdn.fsky.top/t/base/2.4.1/caps/clipboard/clipboard.css
+https://cdn.fsky.top/t/base/2.4.3/caps/clipboard/clipboard.css
 ">
 <script defer src="
-https://cdn.fsky.top/t/base/2.4.1/caps/clipboard/clipboard.js
+https://cdn.fsky.top/t/base/2.4.3/caps/clipboard/clipboard.js
+"></script><script defer src="
+https://cdn.fsky.top/t/base/2.4.3/caps/toc/toc-interactive.js
 "></script><link rel="stylesheet" href="
-https://cdn.fsky.top/t/base/2.4.1/caps/llm-copy/llm-copy.css
+https://cdn.fsky.top/t/base/2.4.3/caps/explorer/explorer.css
 ">
 <script defer src="
-https://cdn.fsky.top/t/base/2.4.1/caps/llm-copy/llm-copy.js
+https://cdn.fsky.top/t/base/2.4.3/caps/explorer/explorer.js
 "></script><link rel="stylesheet" href="
-https://cdn.fsky.top/t/base/2.4.1/caps/graph/graph.css
+https://cdn.fsky.top/t/base/2.4.3/caps/graph/graph.css
 ">
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.0.0/dist/pixi.min.js"></script>
 <script defer src="
-https://cdn.fsky.top/t/base/2.4.1/caps/graph/graph.js
+https://cdn.fsky.top/t/base/2.4.3/caps/graph/graph.js
 "></script>
 
 </body>

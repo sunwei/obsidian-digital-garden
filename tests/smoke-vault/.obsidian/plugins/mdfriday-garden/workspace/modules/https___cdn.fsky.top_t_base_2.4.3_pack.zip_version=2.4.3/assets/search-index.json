@@ -1,0 +1,62 @@
+{{- /*
+  assets/search-index.json — site-wide search / explorer / graph index.
+
+  Built once per language via resources.ExecuteAsTemplate (Book-style).
+  Shape matches the former window.__MDF_SEARCH__ payload:
+    { baseURLPath, pages[], content? }
+
+  content is included when search.content or graph is enabled.
+*/ -}}
+{{- $searchContent := false -}}
+{{- with .Site.Params.search -}}
+  {{- if .content -}}{{- $searchContent = true -}}{{- end -}}
+{{- end -}}
+{{- $needsContent := or $searchContent .Site.Params.graph -}}
+{{- $baseURLPath := partial "base-url-path.html" . -}}
+{
+  "baseURLPath": {{ $baseURLPath | jsonify }},
+  "pages": [
+    {{- range $i, $p := .Site.Pages -}}
+    {{- if $i -}},{{- end -}}
+    {{- $fullSlug := partial "page-slug.html" $p -}}
+    {{- $pageTitle := partial "page-title.html" $p -}}
+    {"slug":{{ $fullSlug | jsonify }},"displayPath":{{ $fullSlug | jsonify }},"url":{{ $p.RelPermalink | jsonify }},"title":{{ $pageTitle | jsonify }},"section":{{ $p.Section | jsonify }}}
+    {{- end -}}
+  ]
+  {{- if $needsContent -}}
+  ,"content": {
+    {{- $ci := 0 -}}
+    {{- range $p := .Site.Pages -}}
+    {{- $isProtected := or $p.Params.password (eq $p.Params.access "protected") -}}
+    {{- if not $isProtected -}}
+    {{- if $ci -}},{{- end -}}{{- $ci = add $ci 1 -}}
+    {{- $fullSlug := partial "page-slug.html" $p -}}
+    {{- $pageTitle := partial "page-title.html" $p -}}
+    {{- $tagNames := default (slice) $p.Params.tags -}}
+    {{- if not (reflect.IsSlice $tagNames) -}}
+      {{- $tagNames = slice $tagNames -}}
+    {{- end -}}
+    {{- $links := slice -}}
+    {{- with $p.OutgoingLinks -}}
+      {{- $links = . -}}
+    {{- end -}}
+    {{- $tags := slice -}}
+    {{- with $p.Params.tags -}}
+      {{- if reflect.IsSlice . -}}
+        {{- range . -}}
+          {{- with $.Site.GetPage (printf "tags/%s" .) -}}
+            {{- $tags = $tags | append (partial "page-slug.html" .) -}}
+          {{- end -}}
+        {{- end -}}
+      {{- else -}}
+        {{- with $.Site.GetPage (printf "tags/%s" .) -}}
+          {{- $tags = $tags | append (partial "page-slug.html" .) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{ $fullSlug | jsonify }}: {"slug":{{ $fullSlug | jsonify }},"url":{{ $p.RelPermalink | jsonify }},"title":{{ $pageTitle | jsonify }},"content":{{ $p.Plain | jsonify }},"tagNames":{{ $tagNames | jsonify }},"links":{{ $links | jsonify }},"tags":{{ $tags | jsonify }}}
+    {{- end -}}
+    {{- end -}}
+  }
+  {{- end -}}
+}

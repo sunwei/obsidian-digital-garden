@@ -1,0 +1,98 @@
+{
+  "$schema": "https://mdfriday.com/schemas/capability-manifest/v1",
+  "name": "access",
+  "version": "2.0.1",
+  "type": "conditional",
+  "description": "Member access control (access keys + scopes). Encrypts page bodies with per-page CEK; readers unlock via access key. Replaces the password-based encrypt cap for new sites.",
+  "entry": "partial:access-content.html",
+  "config": {
+    "scope": "page",
+    "note": "Declare access: protected and optional access_scope in index.md / frontmatter. Keys are issued in the Dashboard.",
+    "params": [
+      {
+        "key": "access",
+        "in": "front-matter",
+        "type": "string",
+        "required": false,
+        "description": "public | protected. Nearest ancestor wins.",
+        "example": "protected"
+      },
+      {
+        "key": "access_scope",
+        "in": "front-matter",
+        "type": "string",
+        "required": false,
+        "description": "Scope slug for this page/folder. Only set when creating an independent scope.",
+        "example": "skill"
+      },
+      {
+        "key": "teaser",
+        "in": "front-matter",
+        "type": "string",
+        "required": false,
+        "description": "Public preview shown before unlock."
+      }
+    ],
+    "example_frontmatter": "---\ntitle: Skills\naccess: protected\naccess_scope: skill\nteaser: Open with your access key.\n---\n"
+  },
+  "assets": {
+    "css": {
+      "file": "static/caps/access/style.css",
+      "published_at": "caps/access/style.css",
+      "size": "~4KB",
+      "child_override": true,
+      "note": "Content-area unlock card styles. Override to restyle; keep locked ids."
+    },
+    "js": [
+      {
+        "file": "static/access.js",
+        "published_at": "access.js",
+        "size": "~12KB",
+        "locked": true,
+        "cdn": null,
+        "note": "Reader runtime (session + CEK fetch + AES-GCM). Implemented in I3."
+      }
+    ],
+    "future_lazy_load": false,
+    "size_impact": "~16KB"
+  },
+  "locked": {
+    "html_ids": [
+      "mdf-encrypt-content",
+      "mdf-access-card",
+      "mdf-access-key-input",
+      "mdf-access-unlock-btn",
+      "mdf-access-status",
+      "mdf-access-cta",
+      "mdf-access-another",
+      "mdf-access-signout"
+    ],
+    "html_data_attrs": [
+      "data-format",
+      "data-project",
+      "data-scope",
+      "data-resource",
+      "data-key",
+      "data-encrypted"
+    ],
+    "js_files": [
+      "static/access.js"
+    ],
+    "reason": "access.js reads these IDs/data-attrs"
+  },
+  "child_override": {
+    "css": "static/caps/access/style.css",
+    "partials": [
+      {
+        "file": "layouts/_partials/access-content.html",
+        "level": "safe",
+        "note": "Wrap encrypted vs teaser content"
+      },
+      {
+        "file": "layouts/_partials/access-card.html",
+        "level": "caution",
+        "note": "Can change visual layout, but must keep ALL locked html_ids"
+      }
+    ]
+  }
+}

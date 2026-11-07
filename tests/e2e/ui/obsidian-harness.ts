@@ -333,6 +333,18 @@ export async function launchObsidianForUiE2e(opts?: {
 	}
 }
 
+
+function isPublishedUiState(badge: string, stateTitle: string): boolean {
+	const b = (badge || '').trim();
+	const t = (stateTitle || '').trim();
+	return (
+		b === 'Published' ||
+		b === '已发布' ||
+		t === 'Published' ||
+		t === '发布成功'
+	);
+}
+
 /**
  * Product path: select Garden → open panel (Open in) → click Publish.
  * Never opens Community plugins / Download.
@@ -375,7 +387,7 @@ export async function publishGardenFolderViaUi(page: Page): Promise<string> {
 
 	const publishBtn = page
 		.locator('button.btn.btn-primary')
-		.filter({ hasText: /Publish again|Publish site|^Publish$/ });
+		.filter({ hasText: /Publish again|Publish site|^Publish$|再次发布|发布站点|^发布$/ });
 	if ((await publishBtn.count()) === 0) {
 		await page.evaluate(async (pluginId) => {
 			const w = window as unknown as {
@@ -410,11 +422,12 @@ export async function publishGardenFolderViaUi(page: Page): Promise<string> {
 				stateTitle: document.querySelector('.state-title')?.textContent?.trim() || '',
 			};
 		});
-		if (
-			!state.building &&
-			(state.badge === 'Published' || state.stateTitle === 'Published') &&
-			(state.urlText || state.match)
-		) {
+		if (!state.building && isPublishedUiState(state.badge, state.stateTitle) && (state.urlText || state.match)) {
+			publicUrl = (state.urlText || state.match).replace(/\/?$/, '/');
+			break;
+		}
+		// URL may appear slightly before badge i18n settles
+		if (!state.building && (state.urlText || state.match) && /share\.fsky\.top\/s\//.test(state.urlText || state.match)) {
 			publicUrl = (state.urlText || state.match).replace(/\/?$/, '/');
 			break;
 		}
@@ -510,4 +523,270 @@ export async function closeObsidianSession(session: ObsidianSession | undefined)
 	} catch {
 		/* ignore */
 	}
+}
+
+/** Open Garden folder in the publish panel (same path as Open in MDFriday Digital Garden). */
+export async function openGardenPublishPanel(page: Page): Promise<void> {
+	await leaveCommunityPluginUi(page);
+	await dismissHarmlessModals(page);
+
+	const garden = page.locator('.nav-folder-title[data-path="Garden"]');
+	await garden.waitFor({ timeout: 30_000 });
+	await garden.click({ force: true });
+	await sleep(400);
+
+	await page.evaluate(async (pluginId) => {
+		const w = window as unknown as {
+			app: {
+				plugins: {
+					plugins: Record<
+						string,
+						{
+							openOrFollowSelection: (
+								f: unknown,
+								file: null,
+								opts: { createIfMissing: boolean },
+							) => Promise<void>;
+						}
+					>;
+				};
+				vault: { getAbstractFileByPath: (p: string) => unknown };
+			};
+		};
+		const plugin = w.app.plugins.plugins[pluginId];
+		const folder = w.app.vault.getAbstractFileByPath('Garden');
+		if (!plugin || !folder) throw new Error('plugin or Garden folder missing');
+		await plugin.openOrFollowSelection(folder, null, { createIfMissing: true });
+	}, PLUGIN_ID);
+	await sleep(1000);
+	await leaveCommunityPluginUi(page);
+}
+
+/** Expand Publish panel ▸ Advanced options (Dashboard access-keys link lives here). */
+export async function expandAdvancedOptions(page: Page): Promise<void> {
+	const opened = await page.evaluate(() => {
+		const toggle = document.querySelector(
+			'button.advanced-toggle, .advanced-toggle',
+		) as HTMLButtonElement | null;
+		if (!toggle) return { ok: false, reason: 'no-toggle' };
+		const expanded = toggle.getAttribute('aria-expanded') === 'true';
+		if (!expanded) toggle.click();
+		return { ok: true, reason: expanded ? 'already-open' : 'clicked' };
+	});
+	if (!opened.ok) throw new Error('Advanced options toggle not found — is the publish panel open?');
+	await sleep(500);
+	await page.waitForSelector(
+		'[data-mdf-access-keys], [data-mdf-access-dashboard], .adv-block',
+		{ timeout: 15_000 },
+	);
+}
+
+export interface AccessKeysLinkResult {
+	visible: boolean;
+	hrefOrDisabled: string;
+}
+
+/**
+ * Sidebar no longer edits access frontmatter. Assert the Access settings radios
+ * are gone and the Dashboard manage-keys control is present under Advanced.
+ */
+export async function assertAccessKeysLinkInPanel(page: Page): Promise<AccessKeysLinkResult> {
+	await expandAdvancedOptions(page);
+	const result = await page.evaluate(() => {
+		const radios = document.querySelectorAll('input[name="mdf-access-prot"]').length;
+		const teaser = document.getElementById('mdf-access-teaser');
+		const btn = document.querySelector(
+			'[data-mdf-access-dashboard], button',
+		) as HTMLButtonElement | null;
+		// Prefer the dedicated dashboard button
+		const dash =
+			(document.querySelector('[data-mdf-access-dashboard]') as HTMLButtonElement | null) ||
+			Array.from(document.querySelectorAll('button')).find((b) =>
+				/Manage keys|管理密钥|Dashboard/i.test(b.textContent || ''),
+			) ||
+			null;
+		return {
+			radios,
+			hasTeaser: !!teaser,
+			hasDash: !!dash,
+			dashDisabled: dash ? !!dash.disabled : true,
+			dashText: (dash?.textContent || '').trim().slice(0, 80),
+		};
+	});
+	if (result.radios > 0 || result.hasTeaser) {
+		throw new Error(
+			`Sidebar Access settings editor still present (radios=${result.radios} teaser=${result.hasTeaser})`,
+		);
+	}
+	if (!result.hasDash) {
+		throw new Error('Dashboard manage-keys control missing from Advanced panel');
+	}
+	return {
+		visible: true,
+		hrefOrDisabled: result.dashDisabled ? 'disabled' : `ready:${result.dashText}`,
+	};
+}
+
+export interface PublishUiResult {
+	publicUrl: string;
+	sharedKey: string | null;
+}
+
+function normalizeNoticeKey(raw: string): string {
+	return raw
+		.toUpperCase()
+		.replace(/[-\s]/g, '')
+		.replace(/O/g, '0')
+		.replace(/[IL]/g, '1');
+}
+
+/** Scrape Obsidian Notice toast for `Access key: …` after a protected publish. */
+export async function readSharedKeyFromNotice(page: Page): Promise<string | null> {
+	const raw = await page.evaluate(() => {
+		const nodes = Array.from(document.querySelectorAll('.notice, .notice-container .notice'));
+		for (const n of nodes) {
+			const text = (n.textContent || '').replace(/\s+/g, ' ').trim();
+			const m = text.match(/Access key:\s*([0-9A-Za-z-]{10,})/i);
+			if (m?.[1]) return m[1];
+		}
+		// Fallback: body text (notice may have dismissed visually but still briefly present)
+		const body = document.body?.innerText || '';
+		const m2 = body.match(/Access key:\s*([0-9A-Za-z-]{10,})/i);
+		return m2?.[1] || null;
+	});
+	if (!raw) return null;
+	const norm = normalizeNoticeKey(raw);
+	return norm.length === 17 ? norm : raw;
+}
+
+/**
+ * Product path: select Garden → open panel → Publish.
+ * Also captures shared access key from the success Notice when present.
+ */
+export async function publishGardenFolderViaUiWithAccess(
+	page: Page,
+): Promise<PublishUiResult> {
+	await leaveCommunityPluginUi(page);
+	await dismissHarmlessModals(page);
+
+	const garden = page.locator('.nav-folder-title[data-path="Garden"]');
+	await garden.waitFor({ timeout: 30_000 });
+	await garden.click({ force: true });
+	await sleep(400);
+
+	await page.evaluate(async (pluginId) => {
+		const w = window as unknown as {
+			app: {
+				plugins: {
+					plugins: Record<
+						string,
+						{
+							openOrFollowSelection: (
+								f: unknown,
+								file: null,
+								opts: { createIfMissing: boolean },
+							) => Promise<void>;
+						}
+					>;
+				};
+				vault: { getAbstractFileByPath: (p: string) => unknown };
+			};
+		};
+		const plugin = w.app.plugins.plugins[pluginId];
+		const folder = w.app.vault.getAbstractFileByPath('Garden');
+		if (!plugin || !folder) throw new Error('plugin or Garden folder missing');
+		await plugin.openOrFollowSelection(folder, null, { createIfMissing: true });
+	}, PLUGIN_ID);
+	await sleep(1000);
+	await leaveCommunityPluginUi(page);
+
+	const publishBtn = page
+		.locator('button.btn.btn-primary')
+		.filter({ hasText: /Publish again|Publish site|^Publish$|再次发布|发布站点|^发布$/ });
+	if ((await publishBtn.count()) === 0) {
+		await page.evaluate(async (pluginId) => {
+			const w = window as unknown as {
+				app: {
+					plugins: { plugins: Record<string, { publishToWeb: (f: unknown) => Promise<void> }> };
+					vault: { getAbstractFileByPath: (p: string) => unknown };
+				};
+			};
+			const plugin = w.app.plugins.plugins[pluginId];
+			const folder = w.app.vault.getAbstractFileByPath('Garden');
+			await plugin.publishToWeb(folder);
+		}, PLUGIN_ID);
+	} else {
+		await publishBtn.last().click({ force: true });
+	}
+
+	const deadline = Date.now() + 180_000;
+	let publicUrl = '';
+	let sharedKey: string | null = null;
+	while (Date.now() < deadline) {
+		await leaveCommunityPluginUi(page);
+		const state = await page.evaluate(() => {
+			const urlText =
+				document.querySelector('.success-url-box .url, .state-result .url')?.textContent?.trim() ||
+				'';
+			const body = document.body?.innerText || '';
+			const match = body.match(/https:\/\/share\.fsky\.top\/s\/[A-Za-z0-9_-]+\/?/);
+			const noticeNodes = Array.from(document.querySelectorAll('.notice'));
+			let noticeKey: string | null = null;
+			for (const n of noticeNodes) {
+				const t = (n.textContent || '').replace(/\s+/g, ' ');
+				const km = t.match(/Access key:\s*([0-9A-Za-z-]{10,})/i);
+				if (km?.[1]) {
+					noticeKey = km[1];
+					break;
+				}
+			}
+			if (!noticeKey) {
+				const km2 = body.match(/Access key:\s*([0-9A-Za-z-]{10,})/i);
+				if (km2?.[1]) noticeKey = km2[1];
+			}
+			return {
+				urlText,
+				match: match?.[0] || '',
+				building: !!document.querySelector('.spinner'),
+				badge: document.querySelector('.result-badge')?.textContent?.trim() || '',
+				stateTitle: document.querySelector('.state-title')?.textContent?.trim() || '',
+				noticeKey,
+			};
+		});
+		if (state.noticeKey) {
+			const norm = normalizeNoticeKey(state.noticeKey);
+			sharedKey = norm.length === 17 ? norm : state.noticeKey;
+		}
+		if (!state.building && isPublishedUiState(state.badge, state.stateTitle) && (state.urlText || state.match)) {
+			publicUrl = (state.urlText || state.match).replace(/\/?$/, '/');
+			if (!sharedKey) {
+				await sleep(800);
+				sharedKey = await readSharedKeyFromNotice(page);
+			}
+			break;
+		}
+		if (!state.building && (state.urlText || state.match) && /share\.fsky\.top\/s\//.test(state.urlText || state.match)) {
+			publicUrl = (state.urlText || state.match).replace(/\/?$/, '/');
+			if (!sharedKey) {
+				await sleep(800);
+				sharedKey = await readSharedKeyFromNotice(page);
+			}
+			break;
+		}
+		await sleep(1500);
+	}
+	if (!publicUrl) {
+		const debug = await page.evaluate(() => {
+			const body = (document.body?.innerText || '').slice(0, 1200);
+			const err = document.querySelector('.quota-error, .helper.warn')?.textContent?.trim() || '';
+			const badge = document.querySelector('.result-badge')?.textContent?.trim() || '';
+			const title = document.querySelector('.state-title')?.textContent?.trim() || '';
+			const building = !!document.querySelector('.spinner');
+			return { err, badge, title, building, body };
+		});
+		throw new Error(
+			`Timed out waiting for Published URL in Obsidian UI (badge=${debug.badge} title=${debug.title} building=${debug.building} err=${debug.err}) body=${debug.body.replace(/\s+/g, ' ').slice(0, 400)}`,
+		);
+	}
+	return { publicUrl, sharedKey };
 }

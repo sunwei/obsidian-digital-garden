@@ -46,6 +46,8 @@ export interface PluginPublishResult {
 	publishMs: number;
 	/** Last X-MDFriday-Client value sent to the API origin during this publish. */
 	clientHeader: string;
+	/** Root-scope shared keys from access-manifest ingest (I3), when publish was protected. */
+	sharedKeys?: { scope: string; key: string; link: string }[];
 }
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -331,11 +333,42 @@ export class GardenPluginDriver {
 		const set = await this.projectConfig.set(this.workspaceDir, site.name, 'baseURL', baseURL);
 		if (!set.success) throw new Error(`set baseURL: ${set.error}`);
 
+		// Mirror ProjectServiceManager / test-kit PluginDriver: pass access so SSG
+		// encrypts protected pages and writes access-manifest.json (I3).
+		let access:
+			| {
+					workspaceId: string;
+					projectId: string;
+					remoteProjectId: string;
+					epochs?: Record<string, number>;
+					apiBaseUrl?: string;
+			  }
+			| undefined;
+		try {
+			let epochs: Record<string, number> = {};
+			if (typeof this.publish.getAccessState === 'function') {
+				const state = await this.publish.getAccessState(auth.token, binding.cloudflareProjectId);
+				for (const [slug, v] of Object.entries(state?.scopes ?? {})) {
+					epochs[slug] = (v as { epoch: number }).epoch;
+				}
+			}
+			access = {
+				workspaceId: this.workspaceId || 'e2e-workspace',
+				projectId: site.name,
+				remoteProjectId: binding.cloudflareProjectId,
+				epochs,
+				apiBaseUrl: this.opts.apiBaseUrl,
+			};
+		} catch {
+			/* first publish / API optional */
+		}
+
 		const b0 = Date.now();
 		const built = await this.build.buildProject({
 			workspacePath: this.workspaceDir,
 			projectNameOrPath: site.name,
 			clean: true,
+			...(access ? { access } : {}),
 		});
 		if (!built.success) throw new Error(`buildProject: ${built.error}`);
 		const buildMs = Date.now() - b0;
@@ -356,6 +389,9 @@ export class GardenPluginDriver {
 			releaseTheme: { mode: 'themed' },
 		});
 		if (!result.success) throw new Error(`publishCloudflare: ${result.error} ${result.code ?? ''}`);
+		const sharedKeys = result.data?.sharedKeys as
+			| { scope: string; key: string; link: string }[]
+			| undefined;
 		return {
 			url: result.data?.url ?? `${baseURL}index.html`,
 			baseURL,
@@ -365,6 +401,7 @@ export class GardenPluginDriver {
 			buildMs,
 			publishMs: Date.now() - p0,
 			clientHeader: this.http.lastClientHeader || this.clientHeader,
+			...(sharedKeys?.length ? { sharedKeys } : {}),
 		};
 	}
 

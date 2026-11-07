@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "projectId": "p_3768caddc6d4d1e1cf1f99be0620c18f",
+  "scopes": [
+    {
+      "slug": "docs",
+      "epoch": 1,
+      "declaredIn": "docs.md",
+      "root": false
+    },
+    {
+      "slug": "members",
+      "epoch": 1,
+      "declaredIn": "members.md",
+      "root": false
+    }
+  ],
+  "resources": [
+    {
+      "resourceId": "res_8K11MM0GWJBP6R7E3ZQ1",
+      "scope": "members",
+      "sourcePath": "members.md",
+      "url": "https://share.fsky.top/s/NzbYkb/members.html",
+      "title": "Members",
+      "keyId": "k_DS1N2NF3hPQKQQ",
+      "epoch": 1
+    },
+    {
+      "resourceId": "res_82YM48ZGKTE7ENX3MVQR",
+      "scope": "docs",
+      "sourcePath": "docs.md",
+      "url": "https://share.fsky.top/s/NzbYkb/docs.html",
+      "title": "Docs",
+      "keyId": "k_IIYIQcUOMaS8zg",
+      "epoch": 1
+    }
+  ],
+  "keys": [
+    {
+      "keyId": "k_DS1N2NF3hPQKQQ",
+      "cek": "Ohsk9ynGoSfsZkM60JzWx1neWrekoG5UpqbQuUcwJk8="
+    },
+    {
+      "keyId": "k_IIYIQcUOMaS8zg",
+      "cek": "TJBDNyNrAUUuuwxSpJZaeOIWHGNJrNNyEZUZqwtKG5Q="
+    }
+  ]
+}

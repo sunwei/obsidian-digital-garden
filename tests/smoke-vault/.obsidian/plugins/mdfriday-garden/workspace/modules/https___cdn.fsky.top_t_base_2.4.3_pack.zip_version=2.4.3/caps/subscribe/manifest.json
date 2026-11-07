@@ -1,0 +1,60 @@
+{
+  "$schema": "https://mdfriday.com/schemas/capability-manifest/v1",
+  "name": "subscribe",
+  "version": "1.0.0",
+  "type": "conditional",
+  "description": "Email subscribe form for site visitors. Rendered only when params.subscribe.enabled = true (written by the plugin) and the family places partial \"subscribe.html\". Posts urlencoded to params.subscribe.endpoint (POST /v1/public/subscribe). No email is sent in MVP.",
+
+  "entry": "partial:subscribe.html (form, placed by the family) | scripts-body-end/subscribe.html (js when enabled; never injects the form)",
+
+  "config": {
+    "scope": "site",
+    "owner": "plugin",
+    "params": [
+      { "key": "subscribe.enabled", "in": "site-params", "type": "boolean", "required": false, "description": "Render the form where the family placed it.", "example": "true" },
+      { "key": "subscribe.project", "in": "site-params", "type": "string", "required": false, "description": "projects.id (p_<hex>) of the published site; empty before first publish (form runs in preview mode).", "example": "p_3f9c…" },
+      { "key": "subscribe.endpoint", "in": "site-params", "type": "string", "required": false, "default": "https://api.mdfriday.com/v1/public/subscribe", "description": "Public subscribe endpoint of the environment." },
+      { "key": "subscribe.title", "in": "site-params", "type": "string", "required": false, "description": "Heading; empty → i18n subscribe.title → English/Chinese default." },
+      { "key": "subscribe.description", "in": "site-params", "type": "string", "required": false, "description": "Text under the heading (full variant)." },
+      { "key": "subscribe.button", "in": "site-params", "type": "string", "required": false, "description": "Button label." },
+      { "key": "subscribe.notice", "in": "site-params", "type": "string", "required": false, "description": "One-line privacy notice." }
+    ],
+    "example_config": "\"subscribe\": { \"enabled\": true, \"project\": \"p_…\", \"endpoint\": \"https://api.mdfriday.com/v1/public/subscribe\", \"title\": \"\", \"description\": \"\", \"v\": 1 }"
+  },
+
+  "usage": "{{ partial \"subscribe.html\" (dict \"Page\" . \"variant\" \"full|compact\" \"placement\" \"article|home|list|term|sidebar|footer\" \"class\" \"\") }}",
+
+  "assets": {
+    "css": { "file": "static/caps/subscribe/subscribe.css", "child_override": true, "note": "Set --mdf-subscribe-* variables in the family CSS (incl. dark selector); do not fork the file." },
+    "js": [ { "file": "static/caps/subscribe/subscribe.js", "locked": true, "size": "~4.5KB (~1.8KB gz)", "note": "Delegated submit on document; states idle|loading|success|error|preview." } ],
+    "size_impact": "~10KB uncompressed, only on sites with subscribe enabled"
+  },
+
+  "locked": {
+    "html_ids": [],
+    "html_data_attrs": ["data-mdf-subscribe", "data-state", "data-msg-success", "data-msg-error", "data-msg-invalid", "data-msg-rate-limited", "data-msg-preview"],
+    "html_classes": ["mdf-subscribe", "mdf-subscribe--full", "mdf-subscribe--compact", "mdf-subscribe__title", "mdf-subscribe__desc", "mdf-subscribe__form", "mdf-subscribe__input", "mdf-subscribe__button", "mdf-subscribe__hp", "mdf-subscribe__status", "mdf-subscribe__notice", "mdf-subscribe__powered"],
+    "form_fields": ["email", "website", "project", "url", "path", "title", "file", "kind", "lang", "placement", "return", "t"],
+    "js_files": ["static/caps/subscribe/subscribe.js"],
+    "reason": "subscribe.js and POST /v1/public/subscribe depend on these names. Themes style them; never rename."
+  },
+
+  "child_override": {
+    "css_variables": [
+      "--mdf-subscribe-bg", "--mdf-subscribe-fg", "--mdf-subscribe-muted", "--mdf-subscribe-border",
+      "--mdf-subscribe-radius", "--mdf-subscribe-padding", "--mdf-subscribe-gap",
+      "--mdf-subscribe-max-width", "--mdf-subscribe-margin", "--mdf-subscribe-font", "--mdf-subscribe-title-size",
+      "--mdf-subscribe-input-bg", "--mdf-subscribe-input-fg", "--mdf-subscribe-input-border", "--mdf-subscribe-input-radius",
+      "--mdf-subscribe-accent", "--mdf-subscribe-accent-fg", "--mdf-subscribe-focus",
+      "--mdf-subscribe-success", "--mdf-subscribe-error"
+    ],
+    "partials": [
+      { "file": "layouts/_partials/subscribe.html", "level": "locked", "note": "Place it; do not override. 'Powered by MDFriday' is always shown." }
+    ]
+  },
+
+  "activation_pattern": {
+    "in": "theme.manifest capabilities",
+    "template": "\"capabilities\": { \"subscribe\": true }  // = this family places partial \"subscribe.html\"; no Site.Params are generated (plugin owns params.subscribe)"
+  }
+}

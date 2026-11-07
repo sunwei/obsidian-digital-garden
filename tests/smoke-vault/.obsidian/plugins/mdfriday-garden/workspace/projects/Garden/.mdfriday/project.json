@@ -1,34 +1,16 @@
 {
-  "id": "garden-mw5nnl0x",
+  "id": "garden-mw66anns",
   "name": "Garden",
   "type": "site",
-  "createdAt": 1794010707252,
-  "updatedAt": 1794011724947,
+  "createdAt": 1794042016844,
+  "updatedAt": 1794042034146,
   "workspaceId": "workspace-1794010692366-bfb665aeb",
   "buildHistory": [
     {
-      "timestamp": 1794011721401,
+      "timestamp": 1794042021909,
       "type": "build",
       "success": true,
-      "duration": 321
-    },
-    {
-      "timestamp": 1794011438402,
-      "type": "build",
-      "success": true,
-      "duration": 253
-    },
-    {
-      "timestamp": 1794011317114,
-      "type": "build",
-      "success": true,
-      "duration": 247
-    },
-    {
-      "timestamp": 1794011177072,
-      "type": "build",
-      "success": true,
-      "duration": 6044
+      "duration": 2450
     }
   ],
   "contentLinks": [
@@ -39,18 +21,18 @@
     }
   ],
   "baseURLStructure": {
-    "baseURL": "/s/bJATJ0/",
-    "createdAt": 1794011721724,
+    "baseURL": "/s/NzbYkb/",
+    "createdAt": 1794042024361,
     "pathParts": [
       "s",
-      "bJATJ0"
+      "NzbYkb"
     ]
   },
   "cloudflare": {
-    "cloudflareProjectId": "p_5a85dfe5ec78ddc63fbd6616333e09df",
+    "cloudflareProjectId": "p_3768caddc6d4d1e1cf1f99be0620c18f",
     "hostingMode": "share",
-    "boundAt": 1794011174202,
-    "siteId": "bJATJ0",
+    "boundAt": 1794042021573,
+    "siteId": "NzbYkb",
     "publicBaseUrl": "https://share.fsky.top"
   }
 }

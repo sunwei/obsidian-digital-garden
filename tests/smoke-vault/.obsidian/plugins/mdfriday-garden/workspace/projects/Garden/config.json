@@ -1,5 +1,5 @@
 {
-  "baseURL": "/s/bJATJ0/",
+  "baseURL": "/s/NzbYkb/",
   "title": "Garden",
   "contentDir": "content",
   "publishDir": "public",
@@ -11,7 +11,7 @@
   "module": {
     "imports": [
       {
-        "path": "https://cdn.fsky.top/t/creator/1.1.1/pack.zip?version=1.1.1"
+        "path": "https://cdn.fsky.top/t/quartz/1.2.8/pack.zip?version=1.2.8"
       }
     ]
   },
@@ -19,36 +19,32 @@
     "useInternalRenderer": true
   },
   "params": {
+    "branding": true,
     "search": {
       "enable": true,
-      "variant": "modal",
-      "trigger": "header",
+      "variant": "inline",
+      "trigger": "sidebar",
       "content": true,
       "cjk": true
     },
+    "explorer": true,
     "graph": true,
     "clipboard": true,
-    "llmCopy": {
-      "enable": true,
-      "variant": "split",
-      "viewMarkdown": true,
-      "external": false
-    },
     "toc": {
-      "variant": "static"
+      "variant": "interactive"
     },
     "breadcrumbs": true,
+    "readerMode": true,
     "logo": "",
     "favicon": "",
-    "branding": true,
-    "password": "",
-    "navLinks": [],
-    "lastPublishUrl": "https://share.fsky.top/s/bJATJ0/",
     "mdfriday": {
-      "family": "creator",
-      "variant": "creator",
-      "version": "1.1.1"
-    }
+      "family": "quartz",
+      "variant": "quartz",
+      "version": "1.2.6"
+    },
+    "navLinks": [],
+    "lastPublishUrl": "https://share.fsky.top/s/NzbYkb/",
+    "password": ""
   },
   "publish": {
     "method": "cloudflare"

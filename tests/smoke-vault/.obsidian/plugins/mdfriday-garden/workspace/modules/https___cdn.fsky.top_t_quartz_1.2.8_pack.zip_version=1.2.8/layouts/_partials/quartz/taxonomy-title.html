@@ -1,0 +1,11 @@
+{{- /* quartz/taxonomy-title.html — page title for <title>, og:title and the taxonomy h1. Input: page.
+     Foundry gives taxonomy list pages the singular key as .Title ("tag", "category"),
+     so name those lists "Tags" / "Categories" (i18n). Every other page returns .Title unchanged. */ -}}
+{{- $t := .Title -}}
+{{- if eq .Kind "taxonomy" -}}
+	{{- $k := lower (printf "%v" .Title) -}}
+	{{- if or (eq $k "tag") (eq $k "tags") -}}{{- $t = i18n "tags.title" | default "Tags" -}}
+	{{- else if or (eq $k "category") (eq $k "categories") -}}{{- $t = i18n "categories.title" | default "Categories" -}}
+	{{- else -}}{{- $t = $k | humanize | title -}}{{- end -}}
+{{- end -}}
+{{- return $t -}}

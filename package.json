@@ -24,7 +24,11 @@
 		"test:e2e": "node --test --test-timeout=300000 tests/e2e/*.test.ts",
 		"test:e2e:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e",
 		"test:e2e:ui": "node --test --test-timeout=420000 tests/e2e/ui/*.test.ts",
-		"test:e2e:ui:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:ui"
+		"test:e2e:ui:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:ui",
+		"test:e2e:access": "node --test --test-timeout=480000 tests/e2e/03-access-headless.test.ts tests/e2e/04-access-multiscope-dashboard.test.ts",
+		"test:e2e:access:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:access",
+		"test:e2e:ui:access": "node --test --test-timeout=480000 tests/e2e/ui/03-ui-access-journey.test.ts",
+		"test:e2e:ui:access:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:ui:access"
 	},
 	"keywords": [
 		"mdfriday",

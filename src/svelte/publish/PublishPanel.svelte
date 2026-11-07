@@ -6,7 +6,6 @@
 	import { vaultImageSrc } from '../../branding/pick-vault-image';
 	import DomainSection from '../DomainSection.svelte';
 	import SubscribeSection from '../SubscribeSection.svelte';
-	import AccessSection from '../AccessSection.svelte';
 	import HistorySection from '../HistorySection.svelte';
 	import { filterThemesForSelection } from '../../utils/theme';
 	import { resolveSiteBaseUrl } from '../../cloudflare-env';
@@ -401,6 +400,17 @@
 
 	function siteHomeUrl(): string {
 		return resolveSiteBaseUrl(plugin.settings);
+	}
+
+	/** Dashboard Access keys page (protection itself is page frontmatter). */
+	function dashboardAccessUrl(): string {
+		const site = resolveSiteBaseUrl(plugin.settings);
+		const q = remoteProjectId ? `?id=${encodeURIComponent(remoteProjectId)}` : '';
+		return `${site}/dashboard/access/${q}`;
+	}
+
+	function openAccessDashboard() {
+		window.open(dashboardAccessUrl(), '_blank', 'noopener');
 	}
 
 	function openDemo(e: MouseEvent, entry: CatalogEntry) {
@@ -1035,15 +1045,31 @@
 								</div>
 							</section>
 
-							<!-- 4. Access (keys + scopes; replaces password) -->
-							<AccessSection
-								{plugin}
-								{t}
-								{isGuest}
-								sourcePath={activeVaultPath}
-								{remoteProjectId}
-								refreshKey={historyRefreshKey + accountEpoch * 1000}
-							/>
+							<!-- 4. Access keys (Dashboard only; protection is page frontmatter) -->
+							<section class="adv-block" data-mdf-access-keys>
+								<header class="adv-block-head">
+									<span class="adv-block-icon" aria-hidden="true">
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12 20 3m0 0h-4M20 3v4"/></svg>
+									</span>
+									<div class="adv-block-text">
+										<div class="adv-block-title">{t('ui.access_title')}</div>
+										<div class="adv-block-desc">{t('ui.access_desc')}</div>
+									</div>
+								</header>
+								<div class="adv-block-body">
+									<p class="helper">{t('ui.access_page_hint')}</p>
+									<button
+										type="button"
+										class="nav-links-add"
+										data-mdf-access-dashboard
+										on:click={openAccessDashboard}
+										disabled={!remoteProjectId && isGuest}
+									>
+										{t('ui.access_manage_keys')}
+									</button>
+									<p class="helper">{t('ui.access_keys_hint')}</p>
+								</div>
+							</section>
 
 							<!-- 5. Subscribe -->
 							<SubscribeSection

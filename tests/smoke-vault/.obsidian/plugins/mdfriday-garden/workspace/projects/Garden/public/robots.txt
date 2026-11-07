@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://share.fsky.top/s/bJATJ0/sitemap.xml
+Sitemap: https://share.fsky.top/s/NzbYkb/sitemap.xml
 

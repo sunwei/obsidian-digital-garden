@@ -1,0 +1,27 @@
+{{- /* Locked IDs for access.js — inline unlock card (cap access). */ -}}
+<link rel="stylesheet" href="{{ partial "base-asset" "caps/access/style.css" }}">
+<div id="mdf-access-card" class="mdf-access-card" hidden>
+  <p class="mdf-access-card__eyebrow">
+    <span class="mdf-access-card__eyebrow-dot" aria-hidden="true"></span>
+    <span>Protected content · Access key required</span>
+  </p>
+  <p class="mdf-access-card__title">Enter access key to continue</p>
+  <p class="mdf-access-card__zh" lang="zh-CN">内容已加密，输入访问密钥后继续</p>
+  <p class="mdf-access-card__body">Enter an access key to unlock this page.</p>
+  <label class="mdf-access-card__label" for="mdf-access-key-input">Access key</label>
+  <input
+    type="text"
+    id="mdf-access-key-input"
+    class="mdf-access-card__input"
+    placeholder="K7QM-2XPA-9RTD-4HNB-Y"
+    autocomplete="off"
+    spellcheck="false"
+  >
+  <p id="mdf-access-status" class="mdf-access-card__status" hidden role="alert"></p>
+  <button type="button" id="mdf-access-unlock-btn" class="mdf-access-card__btn">Unlock</button>
+  <button type="button" id="mdf-access-another" class="mdf-access-card__link" hidden>Use another key</button>
+  <button type="button" id="mdf-access-signout" class="mdf-access-card__link">Sign out</button>
+  <a id="mdf-access-cta" class="mdf-access-card__cta" hidden href="#"></a>
+  <p class="mdf-access-card__helper">Contact the publisher if you don’t have an access key.</p>
+</div>
+<script defer src="{{ partial "base-asset" "access.js" }}"></script>

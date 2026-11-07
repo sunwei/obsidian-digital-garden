@@ -1,0 +1,47 @@
+# Base 2.4 — subscribe capability strings (params.subscribe.<key> overrides these)
+- id: subscribe.title
+  translation: "Subscribe to updates"
+- id: subscribe.description
+  translation: "Get new posts by email."
+- id: subscribe.button
+  translation: "Subscribe"
+- id: subscribe.placeholder
+  translation: "you@example.com"
+- id: subscribe.success
+  translation: "Thanks! You're subscribed."
+- id: subscribe.error
+  translation: "Something went wrong. Please try again."
+- id: subscribe.invalid
+  translation: "Please enter a valid email address."
+- id: subscribe.rate_limited
+  translation: "Too many attempts. Please try again later."
+- id: subscribe.preview
+  translation: "Preview only: the form works, but nothing was saved."
+- id: subscribe.powered
+  translation: "Powered by MDFriday"
+- id: subscribe.notice
+  translation: "By subscribing you agree to receive emails from this site. You can ask to be removed at any time."
+
+# Bases views. {name} {type} {count} {total} are filled by the engine.
+- id: bases.noData
+  translation: "No data found."
+- id: bases.noViews
+  translation: "No views"
+- id: bases.viewNotFound
+  translation: "View \"{name}\" not found"
+- id: bases.unknownView
+  translation: "Unknown view type: {type}"
+- id: bases.parseFile
+  translation: "This base file could not be parsed."
+- id: bases.parseBlock
+  translation: "This base block could not be parsed."
+- id: bases.uncategorized
+  translation: "Uncategorized"
+- id: bases.allEntries
+  translation: "All entries"
+- id: bases.showingCount
+  translation: "Showing {count} of {total} entries"
+- id: bases.mapPlaceholder
+  translation: "Map view is not available in static builds."
+- id: bases.noImage
+  translation: "No image available"

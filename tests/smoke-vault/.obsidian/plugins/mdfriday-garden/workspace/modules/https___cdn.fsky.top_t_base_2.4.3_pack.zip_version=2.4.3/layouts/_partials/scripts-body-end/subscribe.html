@@ -1,0 +1,6 @@
+{{- /* [CAP:subscribe] asset include only — the form is placed by the family (partial "subscribe.html"), never injected here. */ -}}
+{{- with .Site.Params.subscribe -}}
+{{- if .enabled -}}
+<script defer src="{{ partial "base-asset" "caps/subscribe/subscribe.js" }}"></script>
+{{- end -}}
+{{- end -}}
