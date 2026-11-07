@@ -1,0 +1,33 @@
+{{- /* layouts/_partials/header.html — creator top bar (arch/26 §2.1).
+     Left: logo + site title. Right: The Garden ▾ (only when the site has folders) ·
+     navLinks (only when params.navLinks is non-empty) · search · dark-mode toggle. */ -}}
+{{- partial "creator/icons.html" . -}}
+<a class="cr-skip" href="#main-content">Skip to content</a>
+<header class="cr-topbar" role="banner">
+	<div class="cr-topbar-inner">
+		<a class="cr-brand" href="{{ .Site.Home.RelPermalink }}" aria-label="{{ .Site.Title }} home">
+			{{- $mark := .Site.Params.logo | default "favicon.svg" -}}
+			<img class="cr-brand-logo" src="{{ trim (partial "resolve-asset" $mark) "\n\r\t " }}" alt="" width="28" height="28">
+			<span class="cr-brand-name">{{ .Site.Title }}</span>
+		</a>
+		<div class="cr-topbar-right">
+			{{- partial "creator/megamenu.html" . -}}
+			{{- with .Site.Params.navLinks -}}
+			<nav class="creator-nav" aria-label="Site links">
+				{{- range . -}}
+				{{- $href := .url | default .href | default "#" -}}
+				{{- if not (or (strings.HasPrefix $href "http://") (strings.HasPrefix $href "https://") (strings.HasPrefix $href "mailto:") (strings.HasPrefix $href "#")) -}}
+					{{- $href = $href | relURL -}}
+				{{- end -}}
+				<a class="creator-nav-link" href="{{ $href }}">{{ .title | default .name }}</a>
+				{{- end -}}
+			</nav>
+			{{- end -}}
+			{{- partial "search-trigger.html" . -}}
+			<button id="mdf-theme-toggle" class="cr-icon-btn cr-theme-toggle" type="button" aria-label="{{ i18n "creator.toggleTheme" }}" title="{{ i18n "creator.toggleTheme" }}">
+				{{- partial "creator/icon.html" (dict "name" "moon" "size" 20 "class" "cr-when-light") -}}
+				{{- partial "creator/icon.html" (dict "name" "sun" "size" 20 "class" "cr-when-dark") -}}
+			</button>
+		</div>
+	</div>
+</header>

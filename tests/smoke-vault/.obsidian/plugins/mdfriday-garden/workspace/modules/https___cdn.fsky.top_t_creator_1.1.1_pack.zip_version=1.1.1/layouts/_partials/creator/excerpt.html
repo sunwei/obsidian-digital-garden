@@ -1,0 +1,16 @@
+{{- /* creator/excerpt.html — clean card excerpt from the engine summary (arch/26 §3).
+     Input: (dict "summary" .Summary "title" <display title>). Output: plain text, max 120 chars.
+     Foundry's auto summary is the rendered first N words of the body, so a leading "# Title"
+     and inline #tags end up in it. Drop headings, tag links, bare #tags, a lone "Tags:" label
+     line and a leading line that just repeats the title, so the card starts with body prose. */ -}}
+{{- $h := printf "%v" .summary -}}
+{{- $h = replaceRE `<h[1-6][^>]*>[\s\S]*?</h[1-6]>` " " $h -}}
+{{- $h = replaceRE `<a\b[^>]*class="[^"]*\btag-link\b[^"]*"[^>]*>[\s\S]*?</a>` " " $h -}}
+{{- $t := $h | plainify -}}
+{{- $t = replaceRE `(^|\s)#[A-Za-z_\u00C0-\uFFFF][^\s#]*` " " $t -}}
+{{- $t = replaceRE `(^|\n)[ \t]*([Tt][Aa][Gg][Ss]?|标签)[ \t]*[:：]?[ \t]*(?=\n|$)` "\n" $t -}}
+{{- $t = trim $t " \t\r\n" -}}
+{{- with .title -}}{{- if hasPrefix $t (printf "%s\n" .) -}}{{- $t = trim (strings.TrimPrefix . $t) " \t\r\n" -}}{{- end -}}{{- end -}}
+{{- $t = trim (replaceRE `\s+` " " $t) " " -}}
+{{- if $t -}}{{- $t = $t | truncate 120 -}}{{- end -}}
+{{- return $t -}}

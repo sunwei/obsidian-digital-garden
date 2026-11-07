@@ -1,0 +1,82 @@
+{{- /*
+  creator/stream.html — time stream for daily-note style folders (arch/26 §2.5).
+  Input: (dict "page" . "node" <folder>). Date desc. Full body for the latest 30,
+  titles only after that. Side rail: latest 20 + year/month archive.
+  Date: frontmatter date (via .Date) when present; else YYYY-MM-DD from the file name; else .Date.
+*/ -}}
+{{- $page := .page -}}
+{{- $f := .node -}}
+{{- $_ := partial "creator/nodes.html" $page -}}{{- $nodes := $page.Scratch.Get "creatorNodes" -}}
+{{- $subVariant := cond (eq $page.Kind "section") "compact" "full" -}}
+{{- $prefix := printf "%s/" $f.slug -}}
+{{- $items := slice -}}
+{{- range $nodes -}}
+	{{- if and (eq .g 1) (strings.HasPrefix .slug $prefix) -}}
+		{{- $d := .date -}}{{- $dt := .dateText -}}
+		{{- if and (not .hasDate) .fdate -}}{{- $d = .fdate -}}{{- $dt = .fdateText -}}{{- end -}}
+		{{- $items = $items | append (merge . (dict "sdate" $d "sdateText" $dt "ym" (substr $d 0 7) "y" (substr $d 0 4))) -}}
+	{{- end -}}
+{{- end -}}
+{{- $items = sort $items "sdate" "desc" -}}
+<div class="cr-page cr-stream" data-folder="{{ $f.slug }}">
+	{{- partial "creator/folder-head.html" (dict "page" $page "node" $f "nodes" $nodes) -}}
+	<div class="cr-stream-grid">
+		<div class="cr-stream-main">
+			{{- range $i, $it := $items -}}
+			{{- $label := $it.title -}}{{- if not $it.hasTitle -}}{{- $label = $it.sdateText -}}{{- end -}}
+			<article class="cr-stream-item" id="{{ replaceRE "[^A-Za-z0-9_-]+" "-" $it.slug }}" data-growth="{{ $it.growth }}" data-date="{{ $it.sdate }}">
+				<div class="cr-stream-meta">
+					{{- partial "creator/icon.html" (dict "name" "calendar-days" "size" 14) -}}
+					{{- partial "creator/dates.html" (dict "iso" $it.sdate "text" $it.sdateText "rel" false) -}}
+					{{- with $it.tags -}}
+					<ul class="cr-stream-tags">{{ range . }}<li><a href="{{ printf "tags/%s" (. | urlize) | relURL }}">{{ . }}</a></li>{{ end }}</ul>
+					{{- end -}}
+				</div>
+				<div class="cr-stream-body">
+					<h2 class="cr-stream-title"><a href="{{ $it.url }}">{{ $label }}</a></h2>
+					{{- if lt $i 30 -}}
+					{{- /* `where .Site.RegularPages "RelPermalink"` never matches in Foundry → GetPage by slug. */ -}}
+					{{- with $page.Site.GetPage $it.slug -}}
+					<div class="cr-prose">{{ .WikilinkContent }}</div>
+					{{- end -}}
+					{{- end -}}
+				</div>
+			</article>
+			{{- end -}}
+		</div>
+		<aside class="cr-stream-side" aria-label="{{ i18n "creator.archive" }}">
+			<h3 class="cr-side-title">{{ i18n "creator.recent" }}</h3>
+			<ul class="cr-side-list">
+				{{- range first 20 $items -}}
+				{{- $label := .title -}}{{- if not .hasTitle -}}{{- $label = .sdateText -}}{{- end -}}
+				<li><a href="#{{ replaceRE "[^A-Za-z0-9_-]+" "-" .slug }}">{{ $label }}</a></li>
+				{{- end -}}
+			</ul>
+			<h3 class="cr-side-title">{{ i18n "creator.archive" }}</h3>
+			{{- $years := slice -}}{{- $ys := dict -}}
+			{{- range $items -}}{{- if and .y (not (index $ys .y)) -}}{{- $ys = merge $ys (dict .y true) -}}{{- $years = $years | append .y -}}{{- end -}}{{- end -}}
+			{{- $years = sort $years "value" "desc" -}}
+			{{- range $yi, $y := $years -}}
+			<details class="cr-archive"{{ if eq $yi 0 }} open{{ end }}>
+				<summary>{{ $y }}</summary>
+				{{- $months := slice -}}{{- $ms := dict -}}
+				{{- range $items -}}{{- if and (eq .y $y) (not (index $ms .ym)) -}}{{- $ms = merge $ms (dict .ym true) -}}{{- $months = $months | append .ym -}}{{- end -}}{{- end -}}
+				{{- $months = sort $months "value" "desc" -}}
+				{{- range $ym := $months -}}
+				{{- $inMonth := where $items "ym" $ym -}}
+				<div class="cr-archive-month">
+					<span class="cr-archive-label">{{ time.Format "January" (time.AsTime (printf "%s-01" $ym)) }} <span class="cr-archive-n">{{ len $inMonth }}</span></span>
+					<ul>
+						{{- range $inMonth -}}
+						{{- $label := .title -}}{{- if not .hasTitle -}}{{- $label = .sdateText -}}{{- end -}}
+						<li><a href="#{{ replaceRE "[^A-Za-z0-9_-]+" "-" .slug }}">{{ $label }}</a></li>
+						{{- end -}}
+					</ul>
+				</div>
+				{{- end -}}
+			</details>
+			{{- end -}}
+		</aside>
+	</div>
+	{{- partial "subscribe.html" (dict "Page" $page "variant" $subVariant "placement" "list") -}}
+</div>

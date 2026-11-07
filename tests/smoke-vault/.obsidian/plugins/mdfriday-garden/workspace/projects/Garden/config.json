@@ -1,0 +1,63 @@
+{
+  "baseURL": "/s/bJATJ0/",
+  "title": "Garden",
+  "contentDir": "content",
+  "publishDir": "public",
+  "defaultContentLanguage": "en",
+  "taxonomies": {
+    "tag": "tags",
+    "category": "categories"
+  },
+  "module": {
+    "imports": [
+      {
+        "path": "https://cdn.fsky.top/t/creator/1.1.1/pack.zip?version=1.1.1"
+      }
+    ]
+  },
+  "markdown": {
+    "useInternalRenderer": true
+  },
+  "params": {
+    "search": {
+      "enable": true,
+      "variant": "modal",
+      "trigger": "header",
+      "content": true,
+      "cjk": true
+    },
+    "graph": true,
+    "clipboard": true,
+    "llmCopy": {
+      "enable": true,
+      "variant": "split",
+      "viewMarkdown": true,
+      "external": false
+    },
+    "toc": {
+      "variant": "static"
+    },
+    "breadcrumbs": true,
+    "logo": "",
+    "favicon": "",
+    "branding": true,
+    "password": "",
+    "navLinks": [],
+    "lastPublishUrl": "https://share.fsky.top/s/bJATJ0/",
+    "mdfriday": {
+      "family": "creator",
+      "variant": "creator",
+      "version": "1.1.1"
+    }
+  },
+  "publish": {
+    "method": "cloudflare"
+  },
+  "languages": {
+    "en": {
+      "contentDir": "content",
+      "weight": 1
+    }
+  },
+  "canonicalHost": "https://share.fsky.top"
+}

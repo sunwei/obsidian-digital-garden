@@ -1,0 +1,11 @@
+{{- /* search-trigger.html — creator: compact icon button. Keeps the Base contract id
+     #mdf-search-trigger (base caps/search/search.js opens #mdf-search-modal). */ -}}
+{{- with .Site.Params.search -}}
+{{- if .enable -}}
+<button id="mdf-search-trigger" class="mdf-search-trigger cr-icon-btn" type="button"
+  aria-label="{{ i18n "creator.search" }}" title="{{ i18n "creator.search" }} ( / )"
+  aria-expanded="false" aria-controls="mdf-search-modal">
+  {{- partial "creator/icon.html" (dict "name" "magnifying-glass" "size" 20) -}}
+</button>
+{{- end -}}
+{{- end -}}

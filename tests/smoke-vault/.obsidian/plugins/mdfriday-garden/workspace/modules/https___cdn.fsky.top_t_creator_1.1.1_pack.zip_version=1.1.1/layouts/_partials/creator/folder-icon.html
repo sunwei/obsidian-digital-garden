@@ -1,0 +1,41 @@
+{{- /*
+  creator/folder-icon.html — (dict "node" <folder node> "size" 24)
+  Order (arch/26 §2.3): folder index.md `icon` → name keyword map → seedling.
+  `icon` may be a growth stage (seedling/budding/evergreen) or a sprite name
+  (document-text, calendar-days, pattern, presentation-chart-line, microphone, book-open,
+  cube, paper-clip, user-circle, hashtag, folder).
+*/ -}}
+{{- $n := .node -}}
+{{- $px := .size | default 24 -}}
+{{- $key := lower (printf "%s %s" $n.slug $n.title) -}}
+{{- $name := "" -}}
+{{- $map := slice
+	(slice "document-text" "essay" "article" "writing" "文章")
+	(slice "budding" "note" "garden" "笔记")
+	(slice "calendar-days" "daily" "journal" "log" "diary" "日记")
+	(slice "pattern" "pattern")
+	(slice "presentation-chart-line" "talk" "slides")
+	(slice "microphone" "podcast")
+	(slice "book-open" "book" "reading")
+	(slice "cube" "project")
+	(slice "paper-clip" "tool" "resource" "link")
+	(slice "user-circle" "now" "about")
+	(slice "hashtag" "tag" "topic")
+-}}
+{{- with $n.icon -}}{{- $name = . -}}{{- end -}}
+{{- if not $name -}}
+	{{- range $map -}}
+		{{- if not $name -}}
+			{{- $icon := index . 0 -}}
+			{{- range $i, $kw := . -}}
+				{{- if and (gt $i 0) (not $name) (strings.Contains $key $kw) -}}{{- $name = $icon -}}{{- end -}}
+			{{- end -}}
+		{{- end -}}
+	{{- end -}}
+{{- end -}}
+{{- $name = $name | default "seedling" -}}
+{{- if in (slice "seedling" "budding" "evergreen") $name -}}
+	{{- partial "creator/growth-icon.html" (dict "stage" $name "size" $px) -}}
+{{- else -}}
+	{{- partial "creator/icon.html" (dict "name" $name "size" $px "class" "cr-folder-icon") -}}
+{{- end -}}

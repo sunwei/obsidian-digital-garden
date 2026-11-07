@@ -1,0 +1,13 @@
+{{- /* creator/card-image.html — card image URL for a page (arch/26 §1.5).
+     M1–M2: frontmatter `cover` only (absolute URL or site path).
+     TODO(foundry M3): `{{ $img := .Params.cover | default .FirstImage }}` once the engine exposes .FirstImage. */ -}}
+{{- $out := "" -}}
+{{- with .Params.cover -}}
+	{{- $c := strings.TrimSpace (printf "%v" .) -}}
+	{{- if or (strings.HasPrefix $c "http://") (strings.HasPrefix $c "https://") (strings.HasPrefix $c "//") -}}
+		{{- $out = $c -}}
+	{{- else if $c -}}
+		{{- $out = strings.TrimPrefix "/" $c | relURL -}}
+	{{- end -}}
+{{- end -}}
+{{- return $out -}}

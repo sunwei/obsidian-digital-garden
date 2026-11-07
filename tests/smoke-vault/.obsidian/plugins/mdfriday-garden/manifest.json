@@ -1,0 +1,10 @@
+{
+	"id": "mdfriday-garden",
+	"name": "MDFriday Digital Garden",
+	"minAppVersion": "1.13.0",
+	"description": "Right-click a folder to publish a wiki or digital garden. No account, no Git, no setup.",
+	"author": "sunwei",
+	"authorUrl": "https://mdfriday.com",
+	"isDesktopOnly": true,
+	"version": "26.11.0"
+}

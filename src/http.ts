@@ -1,0 +1,840 @@
+/**
+ * Obsidian HTTP Client Implementation
+ * 
+ * 将 Obsidian 的 requestUrl API 适配为 Foundry 的 HttpClient 接口
+ * 基于 Friday 插件的真实实现
+ */
+
+import { requestUrl, type RequestUrlParam, type RequestUrlResponse } from 'obsidian';
+import * as http from 'http';
+import * as https from 'https';
+import type { 
+	PublishHttpClient, 
+	PublishHttpResponse, 
+	IdentityHttpClient, 
+	IdentityHttpResponse,
+} from './foundry/types';
+import { withMdfridayClientHeader } from './mdfriday-client';
+
+/**
+ * Electron / Obsidian requestUrl rejects forbidden headers with net::ERR_INVALID_ARGUMENT.
+ * SigV4 may still sign `host`; the runtime sets Host from the URL.
+ */
+function sanitizeRequestHeaders(
+	headers?: Record<string, string>,
+): Record<string, string> | undefined {
+	if (!headers) return undefined;
+	const out: Record<string, string> = {};
+	for (const [k, v] of Object.entries(headers)) {
+		const lower = k.toLowerCase();
+		if (lower === 'host' || lower === 'content-length') continue;
+		out[k] = v;
+	}
+	return out;
+}
+
+/**
+ * Obsidian requestUrl populates `.json` by parsing the body; empty S3/R2
+ * responses (PUT/DELETE/HEAD) throw "Unexpected end of JSON input".
+ * Always read `.text` and parse manually when needed.
+ */
+function parseResponseData(text: string): unknown {
+	const trimmed = text.trim();
+	if (!trimmed) return undefined;
+	try {
+		return JSON.parse(trimmed) as unknown;
+	} catch {
+		return text;
+	}
+}
+
+function isAssetUpload(
+	value: unknown,
+): value is { data: BlobPart; filename: string; contentType?: string } {
+	return (
+		typeof value === 'object' &&
+		value !== null &&
+		'data' in value &&
+		'filename' in value
+	);
+}
+
+function blobFileName(value: Blob): string {
+	return value instanceof File ? value.name : 'file';
+}
+
+function toStandaloneArrayBuffer(data: Buffer | Uint8Array): ArrayBuffer {
+	const view = data instanceof Uint8Array ? data : new Uint8Array(data);
+	return view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength) as ArrayBuffer;
+}
+
+function toNodeBuffer(body: Buffer | Uint8Array | ArrayBuffer): Buffer {
+	if (Buffer.isBuffer(body)) return body;
+	if (body instanceof ArrayBuffer) return Buffer.from(new Uint8Array(body));
+	return Buffer.from(body.buffer, body.byteOffset, body.byteLength);
+}
+
+function adaptObsidianResponse(response: RequestUrlResponse): PublishHttpResponse {
+	const text = typeof response.text === 'string' ? response.text : '';
+	const data = parseResponseData(text);
+
+	return {
+		status: response.status,
+		ok: response.status >= 200 && response.status < 300,
+		statusText: response.status.toString(),
+		data,
+		async text() {
+			return text;
+		},
+		async json() {
+			const trimmed = text.trim();
+			if (!trimmed) return null;
+			try {
+				return JSON.parse(trimmed) as unknown;
+			} catch {
+				return null;
+			}
+		},
+	};
+}
+
+function adaptObsidianIdentityResponse(response: RequestUrlResponse): IdentityHttpResponse {
+	const text = typeof response.text === 'string' ? response.text : '';
+	const data = parseResponseData(text);
+
+	return {
+		status: response.status,
+		ok: response.status >= 200 && response.status < 300,
+		data,
+		async text() {
+			return text;
+		},
+		async json() {
+			const trimmed = text.trim();
+			if (!trimmed) return null;
+			try {
+				return JSON.parse(trimmed) as unknown;
+			} catch {
+				return null;
+			}
+		},
+	};
+}
+
+function isEmptyJsonParseError(err: unknown): boolean {
+	return err instanceof Error && err.message.includes('Unexpected end of JSON input');
+}
+
+/** Electron requestUrl often dies mid-upload to R2; Node https is more reliable. */
+function isTransientNetworkError(err: unknown): boolean {
+	const msg = err instanceof Error ? err.message : String(err);
+	return /ERR_CONNECTION_RESET|ECONNRESET|EPIPE|ERR_CONNECTION_CLOSED|ERR_CONNECTION_ABORTED|ERR_NETWORK_CHANGED|ERR_FAILED|ETIMEDOUT|ECONNREFUSED|socket hang up|fetch failed|network/i.test(
+		msg,
+	);
+}
+
+function isR2StorageUrl(url: string): boolean {
+	try {
+		return /r2\.cloudflarestorage\.com$/i.test(new URL(url).hostname);
+	} catch {
+		return /r2\.cloudflarestorage\.com/i.test(url);
+	}
+}
+
+/**
+ * Fallback for R2 PUT/DELETE/HEAD when requestUrl rejects empty JSON bodies.
+ * Uses Node http/https (same pattern as ObsidianLLMHttpClient).
+ *
+ * Do NOT prefer this path for normal R2 uploads in Obsidian/Electron: concurrent
+ * `req.end(largeBody)` against a closed peer surfaces as uncaught `write EPIPE`
+ * (regression vs 26.9.x requestUrl-first). Keep requestUrl primary.
+ */
+function nodeHttpRequest(
+	url: string,
+	method: string,
+	headers?: Record<string, string>,
+	body?: Buffer | Uint8Array | ArrayBuffer,
+): Promise<PublishHttpResponse> {
+	return new Promise((resolve, reject) => {
+		const parsed = new URL(url);
+		const transport = parsed.protocol === 'https:' ? https : http;
+		const reqHeaders: Record<string, string> = { ...(headers ?? {}) };
+
+		let payload: Buffer | undefined;
+		if (body) {
+			payload = toNodeBuffer(body);
+			reqHeaders['content-length'] = String(payload.byteLength);
+		}
+
+		let settled = false;
+		const settle = (fn: () => void) => {
+			if (settled) return;
+			settled = true;
+			fn();
+		};
+
+		const req = transport.request(
+			parsed,
+			{ method, headers: reqHeaders },
+			(res) => {
+				const chunks: Buffer[] = [];
+				res.on('data', (chunk: Buffer) => chunks.push(chunk));
+				res.on('end', () => {
+					const text = Buffer.concat(chunks).toString('utf8');
+					const status = res.statusCode ?? 0;
+					const data = parseResponseData(text);
+					settle(() =>
+						resolve({
+							status,
+							ok: status >= 200 && status < 300,
+							statusText: String(status),
+							data,
+							async text() {
+								return text;
+							},
+							async json() {
+								return data ?? null;
+							},
+						}),
+					);
+				});
+				res.on('error', (err) => settle(() => reject(err)));
+			},
+		);
+
+		// EPIPE / ECONNRESET after peer close — must not become Electron "Uncaught Error"
+		req.on('error', (err) => settle(() => reject(err)));
+		req.on('socket', (socket) => {
+			socket.on('error', (err) => settle(() => reject(err)));
+		});
+
+		try {
+			if (payload) req.end(payload);
+			else req.end();
+		} catch (err) {
+			settle(() => reject(err instanceof Error ? err : new Error(String(err))));
+		}
+	});
+}
+
+async function requestUrlOrNode(
+	rawParam: RequestUrlParam,
+	nodeBody?: Buffer | Uint8Array | ArrayBuffer,
+): Promise<PublishHttpResponse> {
+	const headers = withMdfridayClientHeader(rawParam.url, rawParam.headers);
+	const param: RequestUrlParam = headers ? { ...rawParam, headers } : rawParam;
+	const body = nodeBody ?? (param.body as ArrayBuffer | undefined);
+	const method = param.method ?? 'GET';
+
+	// Same strategy as released 26.9.x: Obsidian requestUrl first; Node only for
+	// empty-JSON parse quirks (and as a last resort on transient network errors).
+	try {
+		const response = await requestUrl({ ...param, throw: false });
+		return adaptObsidianResponse(response);
+	} catch (err) {
+		if (isEmptyJsonParseError(err)) {
+			return nodeHttpRequest(param.url, method, param.headers, body);
+		}
+		if (isTransientNetworkError(err) && isR2StorageUrl(param.url)) {
+			try {
+				return await nodeHttpRequest(param.url, method, param.headers, body);
+			} catch (nodeErr) {
+				const msg = nodeErr instanceof Error ? nodeErr.message : String(nodeErr);
+				throw new Error(`${err instanceof Error ? err.message : String(err)} (node fallback: ${msg})`);
+			}
+		}
+		throw err;
+	}
+}
+
+/**
+ * Obsidian HTTP Client
+ * 
+ * 适配 Obsidian 的 requestUrl API 到 Foundry 的 HttpClient 接口
+ */
+export class ObsidianHttpClient implements PublishHttpClient {
+
+  /**
+   * POST JSON data
+   */
+  async postJSON(url: string, data: unknown, headers?: Record<string, string>): Promise<PublishHttpResponse> {
+    return this.sendJSON('POST', url, data, headers);
+  }
+
+  /**
+   * PATCH JSON data (e.g. PATCH /v1/projects/:id)
+   */
+  async patchJSON(url: string, data: unknown, headers?: Record<string, string>): Promise<PublishHttpResponse> {
+    return this.sendJSON('PATCH', url, data, headers);
+  }
+
+  /**
+   * PUT JSON data
+   */
+  async putJSON(url: string, data: unknown, headers?: Record<string, string>): Promise<PublishHttpResponse> {
+    return this.sendJSON('PUT', url, data, headers);
+  }
+
+  private async sendJSON(
+    method: 'POST' | 'PATCH' | 'PUT',
+    url: string,
+    data: unknown,
+    headers?: Record<string, string>,
+  ): Promise<PublishHttpResponse> {
+    const response = await requestUrl({
+      url,
+      method,
+      headers: withMdfridayClientHeader(url, {
+        'Content-Type': 'application/json',
+        ...headers,
+      }),
+      body: JSON.stringify(data ?? {}),
+      throw: false,
+    });
+
+    return adaptObsidianResponse(response);
+  }
+
+  /**
+   * POST multipart form data (for file uploads)
+   * 
+   * Converts Record<string, any> to FormData, with special handling for 'asset' field
+   */
+  async postMultipart(
+    url: string,
+    formData: Record<string, unknown>,
+    headers?: Record<string, string>
+  ): Promise<PublishHttpResponse> {
+    // Create FormData and populate fields
+    const form = new FormData();
+    
+    for (const [key, value] of Object.entries(formData)) {
+      if (key === 'asset' && isAssetUpload(value)) {
+        // Handle special 'asset' field format: {data: Uint8Array, filename: string, contentType: string}
+        const blob = new Blob([value.data], { type: value.contentType || 'application/octet-stream' });
+        form.append(key, blob, value.filename);
+      } else if (typeof value === 'string' || typeof value === 'number') {
+        // Handle string and number values
+        form.append(key, value.toString());
+      } else {
+        // Handle other types
+        form.append(key, String(value));
+      }
+    }
+
+    // 生成随机 boundary
+    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2, 9);
+    
+    // 将 FormData 转换为 ArrayBuffer
+    const arrayBufferBody = await this.formDataToArrayBufferFromFormData(form, boundary);
+
+    const response = await requestUrl({
+      url,
+      method: 'POST',
+      headers: withMdfridayClientHeader(url, {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        ...headers,
+      }),
+      body: arrayBufferBody,
+      throw: false,
+    });
+
+    return adaptObsidianResponse(response);
+  }
+
+  /**
+   * PUT binary data
+   */
+  async putBinary(
+    url: string,
+    data: Buffer | Uint8Array,
+    headers?: Record<string, string>
+  ): Promise<PublishHttpResponse> {
+    // Convert Buffer / TypedArray view to a standalone ArrayBuffer
+    const arrayBuffer = toStandaloneArrayBuffer(data);
+
+    // Do not force Content-Type — R2 SigV4 signs content-type; caller headers win.
+    // Strip Host / Content-Length — Electron requestUrl rejects them (ERR_INVALID_ARGUMENT).
+    return requestUrlOrNode(
+      {
+        url,
+        method: 'PUT',
+        headers: sanitizeRequestHeaders(headers) ?? { 'Content-Type': 'application/octet-stream' },
+        body: arrayBuffer,
+      },
+      data,
+    );
+  }
+
+  /**
+   * GET request
+   */
+  async get(url: string, headers?: Record<string, string>): Promise<PublishHttpResponse> {
+    const sanitized = withMdfridayClientHeader(url, sanitizeRequestHeaders(headers));
+    const request: RequestUrlParam = {
+      url,
+      method: 'GET',
+      throw: false,
+    };
+    
+    if (sanitized) {
+      request.headers = sanitized;
+    }
+
+    try {
+      const response = await requestUrl(request);
+      return adaptObsidianResponse(response);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`${msg} [${url}]`);
+    }
+  }
+
+  /**
+   * DELETE request
+   */
+  async delete(url: string, headers?: Record<string, string>): Promise<PublishHttpResponse> {
+    const sanitized = sanitizeRequestHeaders(headers);
+    return requestUrlOrNode({
+      url,
+      method: 'DELETE',
+      headers: sanitized,
+    });
+  }
+
+  /**
+   * HEAD request
+   */
+  async head(url: string, headers?: Record<string, string>): Promise<PublishHttpResponse> {
+    const sanitized = sanitizeRequestHeaders(headers);
+    return requestUrlOrNode({
+      url,
+      method: 'HEAD',
+      headers: sanitized,
+    });
+  }
+
+  /**
+   * 将 FormData 转换为 ArrayBuffer（用于 multipart 请求）
+   * Based on hugoverse.ts implementation
+   */
+  private async formDataToArrayBufferFromFormData(
+    formData: FormData,
+    boundary: string
+  ): Promise<ArrayBuffer> {
+    const bodyParts: (string | Uint8Array)[] = [];
+
+    // 用来存储所有的字段数据，先同步收集信息
+    const formDataEntries: { value: FormDataEntryValue; key: string }[] = [];
+
+    formData.forEach((value, key) => {
+      formDataEntries.push({ value, key });
+    });
+
+    // 处理收集的数据，使用 for...of 遍历并进行异步操作
+    for (const { value, key } of formDataEntries) {
+      bodyParts.push(`--${boundary}\r\n`);
+
+      if (typeof value === 'string') {
+        // 处理字符串值
+        bodyParts.push(`Content-Disposition: form-data; name="${key}"\r\n\r\n${value}\r\n`);
+      } else if (value instanceof Blob) {
+        // 处理 Blob 值（文件上传）
+        const blobName = blobFileName(value);
+        bodyParts.push(
+          `Content-Disposition: form-data; name="${key}"; filename="${blobName}"\r\n`
+        );
+        bodyParts.push(`Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`);
+
+        // 使用 await 等待 Blob 转换为 ArrayBuffer
+        const arrayBuffer = await value.arrayBuffer();
+        bodyParts.push(new Uint8Array(arrayBuffer));
+        bodyParts.push('\r\n');
+      }
+    }
+
+    // 添加结束边界
+    bodyParts.push(`--${boundary}--\r\n`);
+
+    // 将所有部分合并为一个 ArrayBuffer
+    const encoder = new TextEncoder();
+    const encodedParts = bodyParts.map(part => (typeof part === 'string' ? encoder.encode(part) : part));
+
+    // 计算总长度并创建最终的 ArrayBuffer
+    const totalLength = encodedParts.reduce((acc, curr) => acc + curr.length, 0);
+    const combinedArray = new Uint8Array(totalLength);
+    let offset = 0;
+
+    for (const part of encodedParts) {
+      combinedArray.set(part, offset);
+      offset += part.length;
+    }
+
+    return combinedArray.buffer;
+  }
+
+  /**
+   * 将 FormData 对象转换为 ArrayBuffer
+   * 
+   * 基于 Friday 插件的实现：
+   * friday/src/hugoverse.ts:220-268
+   */
+  private async formDataToArrayBuffer(
+    formData: Record<string, unknown>,
+    boundary: string
+  ): Promise<ArrayBuffer> {
+    const bodyParts: (string | Uint8Array)[] = [];
+
+    for (const [key, value] of Object.entries(formData)) {
+      bodyParts.push(`--${boundary}\r\n`);
+
+      if (typeof value === 'string') {
+        // 处理字符串值
+        bodyParts.push(`Content-Disposition: form-data; name="${key}"\r\n\r\n${value}\r\n`);
+      } else if (value instanceof Blob) {
+        // 处理 Blob 值（文件上传）
+        const blobName = blobFileName(value);
+        bodyParts.push(
+          `Content-Disposition: form-data; name="${key}"; filename="${blobName}"\r\n` +
+          `Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`
+        );
+        
+        // 将 Blob 转换为 Uint8Array
+        const arrayBuffer = await value.arrayBuffer();
+        bodyParts.push(new Uint8Array(arrayBuffer));
+        bodyParts.push('\r\n');
+      } else if (value instanceof Uint8Array || value instanceof ArrayBuffer) {
+        // 处理二进制数据
+        const uint8Array = value instanceof ArrayBuffer ? new Uint8Array(value) : value;
+        bodyParts.push(
+          `Content-Disposition: form-data; name="${key}"; filename="file"\r\n` +
+          `Content-Type: application/octet-stream\r\n\r\n`
+        );
+        bodyParts.push(uint8Array);
+        bodyParts.push('\r\n');
+      } else {
+        // 其他类型转换为字符串
+        bodyParts.push(`Content-Disposition: form-data; name="${key}"\r\n\r\n${String(value)}\r\n`);
+      }
+    }
+
+    // 添加结束 boundary
+    bodyParts.push(`--${boundary}--\r\n`);
+
+    // 计算总长度
+    let totalLength = 0;
+    for (const part of bodyParts) {
+      if (typeof part === 'string') {
+        totalLength += new TextEncoder().encode(part).byteLength;
+      } else {
+        totalLength += part.byteLength;
+      }
+    }
+
+    // 创建最终的 ArrayBuffer
+    const finalBuffer = new Uint8Array(totalLength);
+    let offset = 0;
+
+    for (const part of bodyParts) {
+      if (typeof part === 'string') {
+        const encoded = new TextEncoder().encode(part);
+        finalBuffer.set(encoded, offset);
+        offset += encoded.byteLength;
+      } else {
+        finalBuffer.set(part, offset);
+        offset += part.byteLength;
+      }
+    }
+
+    return finalBuffer.buffer;
+  }
+}
+
+/**
+ * 创建 ObsidianHttpClient 实例
+ * 
+ * @returns ObsidianHttpClient 实例
+ * 
+ * @example
+ * ```typescript
+ * import { createObsidianHttpClient } from './http';
+ * 
+ * const httpClient = createObsidianHttpClient();
+ * ```
+ */
+export function createObsidianHttpClient(): PublishHttpClient {
+  return new ObsidianHttpClient();
+}
+
+/**
+ * Obsidian Identity HTTP Client
+ * 
+ * 为 Auth Service 和 License Service 提供的 HTTP 客户端
+ * 实现 IdentityHttpClient 接口（HttpClient 的完整实现）
+ */
+export class ObsidianIdentityHttpClient implements IdentityHttpClient {
+  /**
+   * POST JSON data
+   */
+  async post(url: string, data: unknown, headers?: Record<string, string>): Promise<IdentityHttpResponse> {
+    const response = await requestUrl({
+      url,
+      method: 'POST',
+      headers: withMdfridayClientHeader(url, {
+        'Content-Type': 'application/json',
+        ...headers,
+      }),
+      body: JSON.stringify(data),
+      throw: false,
+    });
+
+    return adaptObsidianIdentityResponse(response);
+  }
+
+  /**
+   * POST JSON data (alias for compatibility)
+   */
+  async postJSON(url: string, data: unknown, headers?: Record<string, string>): Promise<IdentityHttpResponse> {
+    return this.post(url, data, headers);
+  }
+
+  /**
+   * POST form data (application/x-www-form-urlencoded)
+   * 
+   * 基于 Friday 插件的实现：
+   * friday/src/user.ts:85-95 (loginWithCredentials)
+   */
+  async postForm(url: string, data: Record<string, string>): Promise<IdentityHttpResponse> {
+    // 将数据转换为 URL 编码格式
+    const formBody = Object.entries(data)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+
+    const response = await requestUrl({
+      url,
+      method: 'POST',
+      headers: withMdfridayClientHeader(url, {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      }),
+      body: formBody,
+    });
+
+    return adaptObsidianIdentityResponse(response);
+  }
+
+  /**
+   * POST multipart form data (for file uploads)
+   * 
+   * Converts Record<string, any> to FormData, with special handling for 'asset' field
+   */
+  async postMultipart(
+    url: string,
+    data: Record<string, unknown>,
+    headers?: Record<string, string>
+  ): Promise<IdentityHttpResponse> {
+    // Create FormData and populate fields
+    const formData = new FormData();
+    
+    for (const [key, value] of Object.entries(data)) {
+      if (key === 'asset' && isAssetUpload(value)) {
+        // Handle special 'asset' field format: {data: Uint8Array, filename: string, contentType: string}
+        const blob = new Blob([value.data], { type: value.contentType || 'application/octet-stream' });
+        formData.append(key, blob, value.filename);
+      } else if (typeof value === 'string' || typeof value === 'number') {
+        // Handle string and number values
+        formData.append(key, value.toString());
+      } else {
+        // Handle other types
+        formData.append(key, String(value));
+      }
+    }
+
+    // 生成随机 boundary
+    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2, 9);
+    
+    // 将 FormData 转换为 ArrayBuffer
+    const arrayBufferBody = await this.formDataToArrayBufferFromFormData(formData, boundary);
+
+    const response = await requestUrl({
+      url,
+      method: 'POST',
+      headers: withMdfridayClientHeader(url, {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        ...headers,
+      }),
+      body: arrayBufferBody,
+    });
+
+    return adaptObsidianIdentityResponse(response);
+  }
+
+  /**
+   * GET request
+   */
+  async get(url: string, headers?: Record<string, string>): Promise<IdentityHttpResponse> {
+    const request: RequestUrlParam = {
+      url,
+      method: 'GET',
+    };
+    
+    const finalHeaders = withMdfridayClientHeader(url, headers);
+    if (finalHeaders) {
+      request.headers = finalHeaders;
+    }
+
+    const response = await requestUrl(request);
+
+    return adaptObsidianIdentityResponse(response);
+  }
+
+  /**
+   * 将 FormData 转换为 ArrayBuffer（用于 multipart 请求）
+   * Based on hugoverse.ts implementation
+   */
+  private async formDataToArrayBufferFromFormData(
+    formData: FormData,
+    boundary: string
+  ): Promise<ArrayBuffer> {
+    const bodyParts: (string | Uint8Array)[] = [];
+
+    // 用来存储所有的字段数据，先同步收集信息
+    const formDataEntries: { value: FormDataEntryValue; key: string }[] = [];
+
+    formData.forEach((value, key) => {
+      formDataEntries.push({ value, key });
+    });
+
+    // 处理收集的数据，使用 for...of 遍历并进行异步操作
+    for (const { value, key } of formDataEntries) {
+      bodyParts.push(`--${boundary}\r\n`);
+
+      if (typeof value === 'string') {
+        // 处理字符串值
+        bodyParts.push(`Content-Disposition: form-data; name="${key}"\r\n\r\n${value}\r\n`);
+      } else if (value instanceof Blob) {
+        // 处理 Blob 值（文件上传）
+        const blobName = blobFileName(value);
+        bodyParts.push(
+          `Content-Disposition: form-data; name="${key}"; filename="${blobName}"\r\n`
+        );
+        bodyParts.push(`Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`);
+
+        // 使用 await 等待 Blob 转换为 ArrayBuffer
+        const arrayBuffer = await value.arrayBuffer();
+        bodyParts.push(new Uint8Array(arrayBuffer));
+        bodyParts.push('\r\n');
+      }
+    }
+
+    // 添加结束边界
+    bodyParts.push(`--${boundary}--\r\n`);
+
+    // 将所有部分合并为一个 ArrayBuffer
+    const encoder = new TextEncoder();
+    const encodedParts = bodyParts.map(part => (typeof part === 'string' ? encoder.encode(part) : part));
+
+    // 计算总长度并创建最终的 ArrayBuffer
+    const totalLength = encodedParts.reduce((acc, curr) => acc + curr.length, 0);
+    const combinedArray = new Uint8Array(totalLength);
+    let offset = 0;
+
+    for (const part of encodedParts) {
+      combinedArray.set(part, offset);
+      offset += part.length;
+    }
+
+    return combinedArray.buffer;
+  }
+
+  /**
+   * 将 FormData 对象转换为 ArrayBuffer
+   * 
+   * 基于 Friday 插件的实现：
+   * friday/src/hugoverse.ts:220-268
+   */
+  private async formDataToArrayBuffer(
+    formData: Record<string, unknown>,
+    boundary: string
+  ): Promise<ArrayBuffer> {
+    const bodyParts: (string | Uint8Array)[] = [];
+
+    for (const [key, value] of Object.entries(formData)) {
+      bodyParts.push(`--${boundary}\r\n`);
+
+      if (typeof value === 'string') {
+        // 处理字符串值
+        bodyParts.push(`Content-Disposition: form-data; name="${key}"\r\n\r\n${value}\r\n`);
+      } else if (value instanceof Blob) {
+        // 处理 Blob 值（文件上传）
+        const blobName = blobFileName(value);
+        bodyParts.push(
+          `Content-Disposition: form-data; name="${key}"; filename="${blobName}"\r\n` +
+          `Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`
+        );
+        
+        // 将 Blob 转换为 Uint8Array
+        const arrayBuffer = await value.arrayBuffer();
+        bodyParts.push(new Uint8Array(arrayBuffer));
+        bodyParts.push('\r\n');
+      } else if (value instanceof Uint8Array || value instanceof ArrayBuffer) {
+        // 处理二进制数据
+        const uint8Array = value instanceof ArrayBuffer ? new Uint8Array(value) : value;
+        bodyParts.push(
+          `Content-Disposition: form-data; name="${key}"; filename="file"\r\n` +
+          `Content-Type: application/octet-stream\r\n\r\n`
+        );
+        bodyParts.push(uint8Array);
+        bodyParts.push('\r\n');
+      } else {
+        // 其他类型转换为字符串
+        bodyParts.push(`Content-Disposition: form-data; name="${key}"\r\n\r\n${String(value)}\r\n`);
+      }
+    }
+
+    // 添加结束 boundary
+    bodyParts.push(`--${boundary}--\r\n`);
+
+    // 计算总长度
+    let totalLength = 0;
+    for (const part of bodyParts) {
+      if (typeof part === 'string') {
+        totalLength += new TextEncoder().encode(part).byteLength;
+      } else {
+        totalLength += part.byteLength;
+      }
+    }
+
+    // 创建最终的 ArrayBuffer
+    const finalBuffer = new Uint8Array(totalLength);
+    let offset = 0;
+
+    for (const part of bodyParts) {
+      if (typeof part === 'string') {
+        const encoded = new TextEncoder().encode(part);
+        finalBuffer.set(encoded, offset);
+        offset += encoded.byteLength;
+      } else {
+        finalBuffer.set(part, offset);
+        offset += part.byteLength;
+      }
+    }
+
+    return finalBuffer.buffer;
+  }
+}
+
+/**
+ * 创建 ObsidianIdentityHttpClient 实例
+ * 
+ * @returns ObsidianIdentityHttpClient 实例
+ * 
+ * @example
+ * ```typescript
+ * import { createObsidianIdentityHttpClient } from './http';
+ * 
+ * const identityClient = createObsidianIdentityHttpClient();
+ * ```
+ */
+export function createObsidianIdentityHttpClient(): IdentityHttpClient {
+  return new ObsidianIdentityHttpClient();
+}

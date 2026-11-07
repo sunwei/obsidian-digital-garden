@@ -1,0 +1,7 @@
+{{- /* creator/nodes.html — decode the site model once per page into .Scratch "creatorNodes".
+     Foundry stringifies non-string `return` values, so callers do:
+       {{ $_ := partial "creator/nodes.html" $page }}{{ $nodes := $page.Scratch.Get "creatorNodes" }} */ -}}
+{{- if not (.Scratch.Get "creatorNodes") -}}
+	{{- .Scratch.Set "creatorNodes" (partial "creator/site-model-global.html" . | transform.Unmarshal) -}}
+{{- end -}}
+{{- return "" -}}

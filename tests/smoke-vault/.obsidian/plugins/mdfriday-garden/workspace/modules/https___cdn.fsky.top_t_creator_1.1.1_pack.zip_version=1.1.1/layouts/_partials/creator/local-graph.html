@@ -1,0 +1,19 @@
+{{- /* creator/local-graph.html — Base graph capability (caps/graph/graph.js mounts on .graph-container,
+     reads data-cfg; data from search-index.json, search.content=true). Global view via .global-graph-*. */ -}}
+{{- $local := dict "drag" true "zoom" true "depth" 1 "scale" 1.1 "repelForce" 0.5 "centerForce" 0.3 "linkDistance" 30 "fontSize" 0.6 "opacityScale" 1 "showTags" false "removeTags" (slice) "focusOnHover" false "enableRadial" false -}}
+{{- $global := dict "drag" true "zoom" true "depth" -1 "scale" 0.9 "repelForce" 0.5 "centerForce" 0.2 "linkDistance" 30 "fontSize" 0.6 "opacityScale" 1 "showTags" false "removeTags" (slice) "focusOnHover" true "enableRadial" true -}}
+{{- $cfg := .Site.Params.graph -}}
+{{- if reflect.IsMap $cfg -}}
+	{{- with index $cfg "localGraph" -}}{{- $local = merge $local . -}}{{- end -}}
+	{{- with index $cfg "globalGraph" -}}{{- $global = merge $global . -}}{{- end -}}
+{{- end -}}
+<section class="cr-graph graph" aria-labelledby="cr-graph-h">
+	<h2 class="cr-block-title" id="cr-graph-h">{{ i18n "creator.graph" }}</h2>
+	<div class="graph-outer">
+		<div class="graph-container" data-cfg='{{ $local | jsonify }}'></div>
+		<button class="global-graph-icon cr-icon-btn" type="button" aria-label="Global graph" title="Global graph">{{ partial "creator/icon.html" (dict "name" "squares-2x2" "size" 18) }}</button>
+	</div>
+	<div class="global-graph-outer">
+		<div class="global-graph-container" data-cfg='{{ $global | jsonify }}'></div>
+	</div>
+</section>

@@ -1,0 +1,61 @@
+{{- /*
+  creator/card.html — single card partial (arch/26 §3).
+  Input: (dict "node" <node> "kind" "auto|row|folder|mini" "showSec" true)
+    auto   → Essay card when the node has a card image, Note card otherwise
+    row    → home section row (icon 22 + title + relative time)
+    folder → sub-folder card (icon + title + desc + count)
+    mini   → backlink card (icon + title + one-line desc)
+  Whole card is the link. data-growth / data-date / data-section on every card.
+*/ -}}
+{{- $n := .node -}}
+{{- $kind := .kind | default "auto" -}}
+{{- $showSec := .showSec | default true -}}
+{{- $label := $n.title -}}
+{{- if and (not $n.hasTitle) $n.fdateText -}}{{- $label = $n.fdateText -}}{{- end -}}
+{{- if eq $kind "folder" -}}
+<a class="cr-card cr-card--folder" href="{{ $n.url }}" data-growth="{{ $n.growth }}" data-date="{{ $n.date }}" data-section="{{ $n.top }}">
+	<span class="cr-card-icon">{{ partial "creator/folder-icon.html" (dict "node" $n "size" 24) }}</span>
+	<span class="cr-card-body">
+		<span class="cr-card-title">{{ $n.title }}</span>
+		{{- with $n.desc }}<span class="cr-card-desc">{{ . }}</span>{{ end }}
+		<span class="cr-card-meta">{{ $n.n }} {{ cond (eq (printf "%v" $n.n) "1") "note" "notes" }}</span>
+	</span>
+</a>
+{{- else if eq $kind "row" -}}
+<a class="cr-row" href="{{ $n.url }}" data-growth="{{ $n.growth }}" data-date="{{ $n.date }}" data-section="{{ $n.top }}">
+	{{- partial "creator/growth-icon.html" (dict "stage" $n.growth "size" 22) -}}
+	<span class="cr-row-title">{{ $label }}</span>
+	{{- partial "creator/dates.html" (dict "iso" $n.date "text" $n.dateText "rel" true) -}}
+</a>
+{{- else if eq $kind "mini" -}}
+<a class="cr-mini" href="{{ $n.url }}" data-growth="{{ $n.growth }}" data-date="{{ $n.date }}" data-section="{{ $n.top }}">
+	{{- partial "creator/growth-icon.html" (dict "stage" $n.growth "size" 20) -}}
+	<span class="cr-mini-body">
+		<span class="cr-mini-title">{{ $label }}</span>
+		{{- with $n.desc }}<span class="cr-mini-desc">{{ . }}</span>{{ end }}
+	</span>
+</a>
+{{- else if $n.cover -}}
+<a class="cr-card cr-card--essay" href="{{ $n.url }}" data-growth="{{ $n.growth }}" data-date="{{ $n.date }}" data-section="{{ $n.top }}">
+	<span class="cr-card-img"><img src="{{ $n.cover }}" alt="" loading="lazy" decoding="async"></span>
+	<span class="cr-card-title">{{ $label }}</span>
+	{{- with $n.desc }}<span class="cr-card-desc">{{ . }}</span>{{ end }}
+	<span class="cr-card-meta">
+		{{- if and $showSec $n.sec }}<span class="cr-card-sec">{{ $n.sec }}</span>{{ end -}}
+		{{- partial "creator/growth-icon.html" (dict "stage" $n.growth "size" 15) -}}
+		{{- partial "creator/dates.html" (dict "iso" $n.date "text" $n.dateText "rel" true) -}}
+	</span>
+</a>
+{{- else -}}
+<a class="cr-card cr-card--note" href="{{ $n.url }}" data-growth="{{ $n.growth }}" data-date="{{ $n.date }}" data-section="{{ $n.top }}">
+	<span class="cr-card-icon">{{ partial "creator/growth-icon.html" (dict "stage" $n.growth "size" 24) }}</span>
+	<span class="cr-card-body">
+		<span class="cr-card-title">{{ $label }}</span>
+		{{- with $n.desc }}<span class="cr-card-desc">{{ . }}</span>{{ end }}
+		<span class="cr-card-meta">
+			{{- if and $showSec $n.sec }}<span class="cr-card-sec">{{ $n.sec }}</span><span class="cr-dot" aria-hidden="true">·</span>{{ end -}}
+			{{- partial "creator/dates.html" (dict "iso" $n.date "text" $n.dateText "rel" true) -}}
+		</span>
+	</span>
+</a>
+{{- end -}}

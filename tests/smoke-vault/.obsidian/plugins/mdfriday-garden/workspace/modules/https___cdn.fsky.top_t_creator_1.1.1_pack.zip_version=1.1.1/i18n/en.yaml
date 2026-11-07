@@ -1,0 +1,57 @@
+# creator — UI strings (English only for beta; arch/26 §2.1)
+- id: creator.garden
+  translation: "The Garden"
+- id: creator.allTags
+  translation: "All tags"
+- id: creator.backToGarden
+  translation: "Back to Garden"
+- id: creator.viewAll
+  translation: "View all"
+- id: creator.featured
+  translation: "Featured"
+- id: creator.planted
+  translation: "Planted"
+- id: creator.backlinks
+  translation: "Linked from"
+- id: creator.graph
+  translation: "Local graph"
+- id: creator.toc
+  translation: "On this page"
+- id: creator.previous
+  translation: "Previous"
+- id: creator.next
+  translation: "Next"
+- id: creator.all
+  translation: "All"
+- id: creator.seedling
+  translation: "Seedling"
+- id: creator.budding
+  translation: "Budding"
+- id: creator.evergreen
+  translation: "Evergreen"
+- id: creator.seedlingTip
+  translation: "Seedlings are very rough and early ideas"
+- id: creator.buddingTip
+  translation: "Budding notes are cleaned up and clarified, but still growing"
+- id: creator.evergreenTip
+  translation: "Evergreen notes are reasonably complete, though still open to change"
+- id: creator.toggleTheme
+  translation: "Toggle dark mode"
+- id: creator.search
+  translation: "Search"
+- id: creator.notFound
+  translation: "This patch hasn't been planted yet."
+- id: creator.notFoundBody
+  translation: "The page you were looking for doesn't exist, or has been moved."
+- id: creator.home
+  translation: "Return to the garden"
+- id: creator.recent
+  translation: "Recent"
+- id: creator.archive
+  translation: "Archive"
+- id: creator.tags
+  translation: "Tags"
+- id: creator.categories
+  translation: "Categories"
+- id: footer.built_with
+  translation: "Built with"

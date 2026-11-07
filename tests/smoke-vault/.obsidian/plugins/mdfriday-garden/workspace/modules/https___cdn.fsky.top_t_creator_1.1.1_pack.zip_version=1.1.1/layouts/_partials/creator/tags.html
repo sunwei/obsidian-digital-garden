@@ -1,0 +1,17 @@
+{{- /* creator/tags.html — page → normalized tag list (strings, leading "#" dropped).
+     Accepts YAML list or a single comma/space separated string. */ -}}
+{{- $out := slice -}}
+{{- with .Params.tags -}}
+	{{- $list := . -}}
+	{{- if not (reflect.IsSlice .) -}}
+		{{- $list = split (replaceRE "[,\\s]+" "," (printf "%v" .)) "," -}}
+	{{- end -}}
+	{{- range $list -}}
+		{{- $t := strings.TrimPrefix "#" (strings.TrimSpace (printf "%v" .)) -}}
+		{{- if $t -}}{{- $out = $out | append $t -}}{{- end -}}
+	{{- end -}}
+{{- end -}}
+{{- /* JSON string (Foundry stringifies non-string returns); callers pipe to transform.Unmarshal. */ -}}
+{{- $json := "[]" -}}
+{{- with $out -}}{{- $json = . | jsonify -}}{{- end -}}
+{{- return $json -}}

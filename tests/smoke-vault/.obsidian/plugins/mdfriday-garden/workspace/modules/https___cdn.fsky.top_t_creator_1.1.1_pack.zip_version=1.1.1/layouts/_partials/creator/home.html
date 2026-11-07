@@ -1,0 +1,85 @@
+{{- /*
+  creator/home.html — home page (arch/26 §2.2). Aggregation lives here because
+  Foundry shortcodes cannot reach .Site.
+    1. Hero: heroTitle/heroSubtitle (jasper keys) → .Title/.Description → .Site.Title; body as lede.
+    2. Featured: root-folder notes ∪ featured: true, deduped, weight → date; masonry cards.
+    3. One section per top-level folder (streams excluded): latest 10 notes as rows.
+    4. Streams: latest 5 entries each.
+*/ -}}
+{{- $_ := partial "creator/nodes.html" . -}}{{- $nodes := .Scratch.Get "creatorNodes" -}}
+{{- $notes := where $nodes "g" 1 -}}
+{{- $title := .Params.heroTitle | default .Title | default .Site.Title -}}
+{{- $sub := .Params.heroSubtitle | default .Description -}}
+
+{{- /* Featured = root notes ∪ featured:true (no union in dist → dedupe by slug). */ -}}
+{{- $featured := slice -}}
+{{- $seen := dict -}}
+{{- range $notes -}}
+	{{- if and (or (eq .parent "") .featured) (not (index $seen .slug)) -}}
+		{{- $seen = merge $seen (dict .slug true) -}}
+		{{- $featured = $featured | append . -}}
+	{{- end -}}
+{{- end -}}
+{{- $featured = partial "creator/sort-pages.html" (dict "nodes" $featured "by" "cards") | transform.Unmarshal -}}
+
+{{- $folders := where (where $nodes "parent" "") "g" 0 -}}
+{{- $folders = partial "creator/sort-pages.html" (dict "nodes" $folders "by" "menu") | transform.Unmarshal -}}
+
+<div class="cr-page cr-home">
+	<div class="popover-hint">
+	<header class="cr-hero">
+		<h1 class="cr-hero-title">{{ $title }}</h1>
+		{{- with $sub }}<p class="cr-hero-sub">{{ . }}</p>{{ end }}
+	</header>
+	{{- with .WikilinkContent -}}
+	<div class="cr-hero-body cr-prose">{{ . }}</div>
+	{{- end -}}
+	</div>
+
+	{{- if $featured -}}
+	<section class="cr-home-featured" aria-labelledby="cr-featured-h">
+		<h2 class="cr-garden-title" id="cr-featured-h">{{ i18n "creator.featured" }}</h2>
+		<div class="cr-masonry">
+			{{- range $featured -}}{{- partial "creator/card.html" (dict "node" . "kind" "auto") -}}{{- end -}}
+		</div>
+	</section>
+	{{- end -}}
+
+	{{- if $folders -}}
+	<section class="cr-home-garden" aria-labelledby="cr-garden-h">
+		<h2 class="cr-garden-title" id="cr-garden-h">{{ i18n "creator.garden" }}</h2>
+		<div class="cr-sections">
+			{{- range $f := $folders -}}
+			{{- $prefix := printf "%s/" $f.slug -}}
+			{{- $items := slice -}}
+			{{- range $notes -}}{{- if strings.HasPrefix .slug $prefix -}}{{- $items = $items | append . -}}{{- end -}}{{- end -}}
+			{{- $items = partial "creator/sort-pages.html" (dict "nodes" $items "by" "date") | transform.Unmarshal -}}
+			<section class="cr-section{{ if $f.stream }} cr-section--stream{{ end }}" data-section="{{ $f.slug }}">
+				<a class="cr-section-head" href="{{ $f.url }}">
+					<span class="cr-section-icon">{{ partial "creator/folder-icon.html" (dict "node" $f "size" 22) }}</span>
+					<h3 class="cr-section-title">{{ $f.title }}</h3>
+					{{- partial "creator/icon.html" (dict "name" "arrow-right" "size" 18 "class" "cr-section-arrow") -}}
+				</a>
+				{{- with $f.desc }}<p class="cr-section-desc">{{ . }}</p>{{ end }}
+				{{- if $f.stream -}}
+				<ul class="cr-stream-peek">
+					{{- range first 5 $items -}}
+					{{- $label := .title -}}{{- if and (not .hasTitle) .fdateText -}}{{- $label = .fdateText -}}{{- end -}}
+					<li><a href="{{ .url }}"><span>{{ $label }}</span>{{ partial "creator/dates.html" (dict "iso" .date "text" .dateText "rel" true) }}</a></li>
+					{{- end -}}
+				</ul>
+				{{- else -}}
+				<div class="cr-rows">
+					{{- range first 10 $items -}}{{- partial "creator/card.html" (dict "node" . "kind" "row") -}}{{- end -}}
+				</div>
+				{{- end -}}
+				{{- if gt (len $items) 0 -}}
+				<a class="cr-viewall" href="{{ $f.url }}">{{ i18n "creator.viewAll" }} {{ $f.n }} {{ partial "creator/icon.html" (dict "name" "arrow-right" "size" 16) }}</a>
+				{{- end -}}
+			</section>
+			{{- end -}}
+		</div>
+	</section>
+	{{- end -}}
+	{{- partial "subscribe.html" (dict "Page" . "variant" "full" "placement" "home") -}}
+</div>

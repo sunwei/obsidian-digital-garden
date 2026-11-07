@@ -1,0 +1,28 @@
+{{- /* creator/term-page.html — tag page with cards (arch/26 §2.7). Input: term page.
+     Foundry renders term pages through _default/list.html (not taxonomy/term.html), so both call this. */ -}}
+{{- $_ := partial "creator/nodes.html" . -}}{{- $nodes := .Scratch.Get "creatorNodes" -}}
+{{- $items := slice -}}
+{{- range .Pages -}}
+	{{- $url := .RelPermalink -}}
+	{{- range first 1 (where $nodes "url" $url) -}}{{- $items = $items | append . -}}{{- end -}}
+{{- end -}}
+{{- $items = partial "creator/sort-pages.html" (dict "nodes" $items "by" "date") | transform.Unmarshal -}}
+{{- $tags := "tags/" | relURL -}}
+{{- with .Site.GetPage "tags" -}}{{- $tags = .RelPermalink -}}{{- end -}}
+{{- $stage := lower .Title -}}
+<div class="cr-page cr-term">
+	<header class="cr-folder-head">
+		<div class="cr-kicker">
+			<span class="cr-count">{{ len $items }}</span>
+			<a class="cr-back" href="{{ $tags }}">{{ partial "creator/icon.html" (dict "name" "arrow-left" "size" 14) }}{{ i18n "creator.allTags" }}</a>
+		</div>
+		<h1 class="cr-page-title">
+			{{- if in (slice "seedling" "budding" "evergreen") $stage -}}{{- partial "creator/growth-icon.html" (dict "stage" $stage "size" 40) -}}{{- end -}}
+			#{{ .Title }}</h1>
+		{{- if in (slice "seedling" "budding" "evergreen") $stage -}}<p class="cr-lede">{{ i18n (printf "creator.%sTip" $stage) }}</p>{{- end -}}
+	</header>
+	<div class="cr-masonry">
+		{{- range $items -}}{{- partial "creator/card.html" (dict "node" . "kind" "auto") -}}{{- end -}}
+	</div>
+	{{- partial "subscribe.html" (dict "Page" . "variant" "compact" "placement" "term") -}}
+</div>

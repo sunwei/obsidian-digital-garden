@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "family": {
+    "id": "creator",
+    "name": "Creator",
+    "targets": [
+      "folder"
+    ],
+    "defaultVariant": "creator",
+    "engine": {
+      "foundry": ">=26.5.0 <27.0.0",
+      "base": "^2.4.1"
+    }
+  },
+  "variants": [
+    {
+      "id": "creator",
+      "name": "Creator",
+      "default": true,
+      "css": "static/css/creator.css",
+      "tier": "professional",
+      "kinds": [
+        "wiki"
+      ],
+      "tags": [
+        "digital-garden",
+        "obsidian",
+        "cards",
+        "backlinks"
+      ]
+    }
+  ],
+  "capabilities": {
+    "darkmode": true,
+    "search": true,
+    "i18n": true,
+    "math": true,
+    "mermaid": true,
+    "graph": true,
+    "clipboard": true,
+    "llmCopy": true,
+    "toc": true,
+    "breadcrumbs": true,
+    "subscribe": true
+  },
+  "capabilityOverrides": {
+    "search": {
+      "variant": "modal",
+      "trigger": "header",
+      "content": true,
+      "cjk": true
+    },
+    "subscribe": {
+      "enabled": false,
+      "endpoint": "",
+      "title": "",
+      "description": ""
+    }
+  },
+  "customParams": {
+    "logo": "favicon.svg",
+    "favicon": "favicon.svg",
+    "navLinks": []
+  },
+  "shortcodes": [
+    "callout",
+    "details"
+  ],
+  "externalDeps": [],
+  "author": {
+    "id": "mdfriday",
+    "name": "MDFriday",
+    "official": true
+  },
+  "license": "MIT",
+  "pack": {
+    "exclude": [
+      "fixtures/**",
+      "screenshots/**",
+      "source/**",
+      "theme-dna.yaml",
+      "*.md",
+      "LICENSE"
+    ]
+  }
+}

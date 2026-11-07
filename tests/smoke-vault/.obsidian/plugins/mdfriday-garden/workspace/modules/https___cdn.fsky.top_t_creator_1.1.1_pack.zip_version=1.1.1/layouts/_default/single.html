@@ -1,0 +1,12 @@
+{{- /* Folder index.md pages render through single.html in Foundry → folder card page when the
+     slug has children in the site model; otherwise the note page. */ -}}
+{{ define "main" }}
+{{- $n := partial "creator/page-node.html" . | transform.Unmarshal -}}
+{{- $shell := "" -}}
+{{- if eq $n.g 0 -}}
+	{{- $shell = partial "creator/folder-page.html" (dict "page" . "node" $n) -}}
+{{- else -}}
+	{{- $shell = partial "creator/note-page.html" (dict "page" . "node" $n) -}}
+{{- end -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

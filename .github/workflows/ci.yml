@@ -1,0 +1,42 @@
+name: CI
+
+on:
+    push:
+        branches: ["**"]
+    pull_request:
+
+jobs:
+    build-test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: "18.x"
+                  registry-url: "https://registry.npmjs.org"
+            - name: Install
+              run: |
+                  npm ci
+                  if npm ls @mdfriday/core --parseable --long 2>/dev/null | grep -q 'file:'; then
+                    echo "::error::@mdfriday/core must not resolve via file: in CI"
+                    npm ls @mdfriday/core
+                    exit 1
+                  fi
+            - name: Lint
+              run: npm run lint:ci
+            - name: Unit tests
+              run: npm test
+            - name: Build (staging artifacts for smoke packaging checks)
+              run: npm run build:smoke
+            - name: Packaging / smoke-vault checks
+              run: npm run test:e2e -- --test-name-pattern='packaging'
+              env:
+                  E2E_SKIP: "1"
+            - name: Guard main.js size
+              run: |
+                  size=$(wc -c < main.js | tr -d ' ')
+                  echo "main.js bytes=$size"
+                  if [ "$size" -lt 500000 ]; then
+                    echo "::error::main.js is implausibly small ($size bytes)"
+                    exit 1
+                  fi

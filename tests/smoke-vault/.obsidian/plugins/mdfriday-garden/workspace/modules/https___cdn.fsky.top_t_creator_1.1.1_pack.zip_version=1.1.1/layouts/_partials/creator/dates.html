@@ -1,0 +1,6 @@
+{{- /* creator/dates.html — (dict "iso" "2026-01-02T…" "text" "Jan 2, 2006" "rel" true)
+     Server renders "Jan 2, 2006" (time.Format, never dateFormat/LocalDate — arch/26 §1.4);
+     creator.js rewrites .cr-rel to relative time ("3 days ago"). */ -}}
+{{- if .iso -}}
+<time class="cr-time{{ if .rel }} cr-rel{{ end }}" datetime="{{ .iso }}" title="{{ .text }}">{{ .text }}</time>
+{{- end -}}

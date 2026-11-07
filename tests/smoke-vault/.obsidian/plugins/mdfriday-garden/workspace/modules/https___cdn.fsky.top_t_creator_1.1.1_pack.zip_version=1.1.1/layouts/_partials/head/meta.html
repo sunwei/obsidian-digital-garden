@@ -1,0 +1,22 @@
+{{- /* head/meta.html — creator override of base head/meta.html (sanctioned head/ slot).
+     Same as base except: pages without a Title (auto folder pages, daily notes) fall back to
+     base page-title.html instead of rendering " | Site" (same fix as jasper), and taxonomy
+     lists read "Tags" instead of the engine's singular "tag" (creator/head-title.html). */ -}}
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- base-head -->
+
+<title>
+  {{- if .IsHome -}}
+    {{ .Site.Title }}{{ with .Site.Params.description }} — {{ . }}{{ end }}
+  {{- else -}}
+    {{ partial "creator/head-title.html" . }} | {{ .Site.Title }}
+  {{- end -}}
+</title>
+
+<meta name="description" content="{{ .Description | default .Site.Params.description | default .PlainSummary | truncate 155 "" }}">
+<meta name="author" content="{{ .Site.Author.Name }}">
+
+<link rel="canonical" href="{{ .Permalink }}">
+{{- partial "head/favicon" . -}}

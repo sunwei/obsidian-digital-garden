@@ -1,0 +1,24 @@
+{{- /* creator/prev-next.html — previous / next note in the same folder (card order). (dict "node" "nodes") */ -}}
+{{- $n := .node -}}
+{{- $sibs := where (where .nodes "parent" $n.parent) "g" 1 -}}
+{{- $sibs = partial "creator/sort-pages.html" (dict "nodes" $sibs "by" "cards") | transform.Unmarshal -}}
+{{- $prev := "" -}}{{- $next := "" -}}{{- $found := false -}}{{- $last := "" -}}
+{{- range $sibs -}}
+	{{- if $found -}}
+		{{- if not $next -}}{{- $next = . -}}{{- end -}}
+	{{- else if eq .slug $n.slug -}}
+		{{- $found = true -}}{{- $prev = $last -}}
+	{{- else -}}
+		{{- $last = . -}}
+	{{- end -}}
+{{- end -}}
+{{- if or $prev $next -}}
+<nav class="cr-prevnext" aria-label="More in this folder">
+	{{- with $prev -}}
+	<a class="cr-prevnext-link cr-prev" href="{{ .url }}"><span class="cr-prevnext-label">{{ partial "creator/icon.html" (dict "name" "arrow-left" "size" 14) }}{{ i18n "creator.previous" }}</span><span class="cr-prevnext-title">{{ .title }}</span></a>
+	{{- end -}}
+	{{- with $next -}}
+	<a class="cr-prevnext-link cr-next" href="{{ .url }}"><span class="cr-prevnext-label">{{ i18n "creator.next" }}{{ partial "creator/icon.html" (dict "name" "arrow-right" "size" 14) }}</span><span class="cr-prevnext-title">{{ .title }}</span></a>
+	{{- end -}}
+</nav>
+{{- end -}}

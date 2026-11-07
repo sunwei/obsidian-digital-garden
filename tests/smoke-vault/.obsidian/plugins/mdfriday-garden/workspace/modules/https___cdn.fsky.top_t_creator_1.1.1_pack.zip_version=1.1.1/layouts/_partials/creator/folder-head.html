@@ -1,0 +1,19 @@
+{{- /* creator/folder-head.html — (dict "page" . "node" <folder> "nodes" <model>) */ -}}
+{{- $page := .page -}}
+{{- $f := .node -}}
+{{- $back := $page.Site.Home.RelPermalink -}}
+{{- $backLabel := i18n "creator.backToGarden" -}}
+{{- with $f.parent -}}
+	{{- range first 1 (where $.nodes "slug" .) -}}{{- $back = .url -}}{{- $backLabel = .title -}}{{- end -}}
+{{- end -}}
+<header class="cr-folder-head popover-hint">
+	<div class="cr-kicker">
+		<span class="cr-count">{{ $f.n }}</span>
+		<a class="cr-back" href="{{ $back }}">{{ partial "creator/icon.html" (dict "name" "arrow-left" "size" 14) }}{{ $backLabel }}</a>
+	</div>
+	<h1 class="cr-page-title">{{ $f.title }}</h1>
+	{{- with $f.desc }}<p class="cr-lede">{{ . }}</p>{{ end }}
+	{{- with $page.WikilinkContent -}}
+	<div class="cr-prose cr-folder-body">{{ . }}</div>
+	{{- end -}}
+</header>

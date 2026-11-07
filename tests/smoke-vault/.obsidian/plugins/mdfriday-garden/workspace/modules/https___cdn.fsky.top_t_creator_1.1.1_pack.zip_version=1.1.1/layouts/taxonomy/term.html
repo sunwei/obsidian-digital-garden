@@ -1,0 +1,5 @@
+{{- /* Tag page — see creator/term-page.html. */ -}}
+{{ define "main" }}
+{{- $shell := partial "creator/term-page.html" . -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

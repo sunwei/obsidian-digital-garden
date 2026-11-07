@@ -1,0 +1,33 @@
+{{- /*
+  creator/megamenu.html — "The Garden ▾" (arch/26 §2.3).
+  Shown only when the site has top-level folders; then on every page.
+  Lists ALL top-level folders (no truncation, no 2nd level), 2-column grid,
+  icon (folder index.md `icon` → keyword → seedling) + title + description.
+*/ -}}
+{{- $_ := partial "creator/nodes.html" . -}}{{- $nodes := .Scratch.Get "creatorNodes" -}}
+{{- $folders := where (where $nodes "parent" "") "g" 0 -}}
+{{- if $folders -}}
+{{- $folders = partial "creator/sort-pages.html" (dict "nodes" $folders "by" "menu") | transform.Unmarshal -}}
+<div class="garden-menu" data-garden-menu>
+	<button class="garden-menu-toggle" type="button" aria-expanded="false" aria-controls="cr-garden-panel" aria-haspopup="true">
+		<span>{{ i18n "creator.garden" }}</span>
+		{{- partial "creator/icon.html" (dict "name" "chevron-down" "size" 16 "class" "garden-menu-chevron") -}}
+	</button>
+	<div class="garden-menu-panel" id="cr-garden-panel" hidden>
+		<div class="garden-menu-grid" role="list">
+			{{- range $folders -}}
+			<a class="garden-menu-item" role="listitem" href="{{ .url }}">
+				<span class="garden-menu-icon">{{ partial "creator/folder-icon.html" (dict "node" . "size" 24) }}</span>
+				<span class="garden-menu-text">
+					<span class="garden-menu-title">{{ .title }}</span>
+					{{- with .desc }}<span class="garden-menu-desc">{{ . }}</span>{{ end }}
+				</span>
+			</a>
+			{{- end -}}
+		</div>
+		{{- $tags := "tags/" | relURL -}}
+		{{- with $.Site.GetPage "tags" -}}{{- $tags = .RelPermalink -}}{{- end -}}
+		<a class="garden-menu-foot" href="{{ $tags }}">{{ i18n "creator.allTags" }} {{ partial "creator/icon.html" (dict "name" "arrow-right" "size" 16) }}</a>
+	</div>
+</div>
+{{- end -}}

@@ -1,0 +1,23 @@
+{{- /* Tag index — tag cloud with counts (arch/26 §2.7). */ -}}
+{{ define "main" }}
+{{- $terms := sort .Pages "Title" -}}
+<div class="cr-page cr-taxonomy">
+	<header class="cr-folder-head">
+		<div class="cr-kicker">
+			<span class="cr-count">{{ len $terms }}</span>
+			<a class="cr-back" href="{{ .Site.Home.RelPermalink }}">{{ partial "creator/icon.html" (dict "name" "arrow-left" "size" 14) }}{{ i18n "creator.backToGarden" }}</a>
+		</div>
+		<h1 class="cr-page-title">{{ partial "creator/head-title.html" . }}</h1>
+	</header>
+	<ul class="cr-tag-cloud">
+		{{- range $terms -}}
+		{{- $c := len .Pages -}}
+		<li><a class="cr-tag cr-tag--cloud" href="{{ .RelPermalink }}" data-count="{{ $c }}">
+			
+			{{- if in (slice "seedling" "budding" "evergreen") (lower .Title) -}}{{- partial "creator/growth-icon.html" (dict "stage" (lower .Title) "size" 16) -}}{{- end -}}
+			#{{ .Title }} <span class="cr-tag-n">{{ $c }}</span></a></li>
+		{{- end -}}
+	</ul>
+	{{- partial "subscribe.html" (dict "Page" . "variant" "compact" "placement" "term") -}}
+</div>
+{{ end }}

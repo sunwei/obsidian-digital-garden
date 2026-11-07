@@ -1,0 +1,12 @@
+{{- /* creator/growth.html — growth stage from tags only (arch/26 §1.3).
+     Input: normalized tag list (creator/tags.html). Output: seedling | budding | evergreen.
+     Most mature stage wins; no stage tag → seedling. Frontmatter growth/stage/status is ignored. */ -}}
+{{- $stage := "seedling" -}}
+{{- $set := dict -}}
+{{- range . -}}{{- $set = merge $set (dict (lower .) true) -}}{{- end -}}
+{{- if index $set "evergreen" -}}
+	{{- $stage = "evergreen" -}}
+{{- else if index $set "budding" -}}
+	{{- $stage = "budding" -}}
+{{- end -}}
+{{- return $stage -}}

@@ -1,0 +1,8 @@
+{{- /* creator/toc.html — sticky on desktop, collapsible on mobile. Keeps .toc / .toc-header / .toc-content
+     so Base toc-interactive.js would work if a user switches toc.variant to "interactive". */ -}}
+<nav class="toc cr-toc" aria-label="{{ i18n "creator.toc" }}">
+	<details class="cr-toc-details" open>
+		<summary class="toc-header cr-toc-title">{{ i18n "creator.toc" }}</summary>
+		<div class="toc-content">{{ .TableOfContents }}</div>
+	</details>
+</nav>

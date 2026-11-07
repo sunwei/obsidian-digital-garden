@@ -1,0 +1,6 @@
+{{- /* creator/growth-badge.html — note-page stage badge. Input: stage string. */ -}}
+{{- $s := . | default "seedling" -}}
+<span class="cr-badge" data-growth="{{ $s }}" title="{{ i18n (printf "creator.%sTip" $s) }}">
+	{{- partial "creator/growth-icon.html" (dict "stage" $s "size" 20) -}}
+	<span class="cr-badge-text">{{ i18n (printf "creator.%s" $s) }}</span>
+</span>

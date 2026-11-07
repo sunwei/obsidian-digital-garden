@@ -1,0 +1,20 @@
+name        = "Creator"
+description = "Digital-garden theme for Obsidian vaults — cards, growth stages, editorial typography. Inspired by Maggie Appleton's garden."
+license     = "MIT"
+licenselink = "https://github.com/mdfriday/theme/blob/main/LICENSE"
+homepage    = "https://mdfriday.com/"
+tags        = ["digital-garden", "obsidian", "notes", "wikilink", "personal", "cards", "responsive", "dark-mode"]
+features    = ["wikilink", "dark-mode", "responsive", "toc", "breadcrumbs", "tags", "backlinks", "graph", "search"]
+min_version = "0.1.0"
+
+[author]
+    name     = "MDFriday Team"
+    homepage = "https://github.com/mdfriday"
+
+[original]
+    name     = "Maggie Appleton (design inspiration only)"
+    homepage = "https://maggieappleton.com/"
+
+[module]
+  [[module.imports]]
+    path = "https://cdn.fsky.top/t/base/2.4.1/pack.zip?version=2.4.1"

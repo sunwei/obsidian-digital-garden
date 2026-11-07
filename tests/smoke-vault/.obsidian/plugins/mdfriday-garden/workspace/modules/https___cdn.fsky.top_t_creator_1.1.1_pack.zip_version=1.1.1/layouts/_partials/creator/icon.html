@@ -1,0 +1,4 @@
+{{- /* creator/icon.html — (dict "name" "arrow-right" "size" 18 "class" "") → sprite <use>. */ -}}
+{{- $px := .size | default 20 -}}
+<svg class="cr-icon {{ .class | default "" }}" width="{{ $px }}" height="{{ $px }}" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cr-i-{{ .name }}"></use></svg>
+{{- /**/ -}}

@@ -1,0 +1,1939 @@
+import {FileSystemAdapter, MarkdownView, Menu, Notice, Platform, Plugin, requestUrl, TAbstractFile, TFile, TFolder} from 'obsidian';
+import * as path from 'path';
+import {I18nService} from "./i18n";
+import {FridaySettingTab, OBSIDIAN_PROTOCOL_ACTION, OBSIDIAN_PROTOCOL_PLUGIN} from "./setting";
+// Foundry PC 专用服务类型
+import type {
+	ObsidianAuthService,
+	ObsidianBuildService,
+	ObsidianDomainService,
+	ObsidianFolderStructureInfo,
+	ObsidianGlobalConfigService,
+	ObsidianLicenseService,
+	ObsidianProjectInfo,
+	ObsidianProjectService,
+	ObsidianPublishService,
+	ObsidianServeService,
+} from '@mdfriday/core';
+// Mobile unsupported (isDesktopOnly) — no mobile Foundry import.
+import {createObsidianHttpClient, createObsidianIdentityHttpClient} from './http';
+import {LicenseStateManager} from './services/licenseState';
+import {ProjectServiceManager} from './services/project';
+import {
+	deletePathConfigKey,
+	migratePathConfigsOnRename,
+	normalizeVaultPath,
+	pathsEqual,
+	projectPrimaryVaultPath,
+	remapPathAfterRename,
+} from './services/project-path';
+import {allowFollow, type SelectionOrigin} from './selection/follow-policy';
+import type {ProgressUpdate, ProjectState, PublishProgressUpdate, SiteEventData, SiteEventType} from './types/events';
+import {normalizePublishMethod} from './types/publish';
+import {resolveDefaultTheme, shouldUseInternalRenderer} from './utils/theme';
+import {buildThemeConfigPatch} from './theme/theme-config';
+import {joinPath, joinVaultPath} from './utils/common';
+import {
+	DEFAULT_CLOUDFLARE_ENV,
+	type CloudflareEnvResolved,
+	endpointsForEnv,
+	logLevelForCloudflareEnv,
+	resolveAccountBaseUrl,
+} from './cloudflare-env';
+import {registerMdfridayApiBaseUrl, setMdfridayClientVersion} from './mdfriday-client';
+import {openSubscriberExportPicker} from './subscribe/subscribe-service';
+
+// PC-only module types (dynamically imported)
+import type {Site} from "./site";
+
+/** Factories not exported as classes — infer service instance types. */
+type FoundryModule = typeof import('@mdfriday/core');
+type ObsidianWorkspaceService = ReturnType<FoundryModule['createObsidianWorkspaceService']>;
+type ObsidianProjectConfigService = ReturnType<FoundryModule['createObsidianProjectConfigService']>;
+
+/** Site.svelte handle registered via registerSiteComponent. */
+export interface SiteComponentHandle {
+	initialize?: (projectState: ProjectState, epoch?: number) => void | Promise<void>;
+	updateBuildProgress?: (progress: ProgressUpdate) => void;
+	updatePublishProgress?: (progress: PublishProgressUpdate | Record<string, unknown>) => void;
+	onBuildComplete?: (result: unknown) => void;
+	onBuildError?: (error: unknown) => void;
+	onPreviewStarted?: (result: unknown) => void;
+	onPreviewError?: (error: unknown) => void;
+	onPreviewStopped?: () => void;
+	onPublishComplete?: (result: { url?: string; baseURL?: string; [key: string]: unknown }) => void;
+	onPublishError?: (error: unknown, code?: unknown) => void;
+	onAccountUpdated?: (info?: {
+		success?: boolean;
+		plan?: string;
+		kind?: string;
+		source?: string;
+	}) => void;
+	onConnectionTestSuccess?: (message: unknown) => void;
+	onConnectionTestError?: (error: unknown) => void;
+	setSitePath?: (path: string) => void;
+	startPreviewAndWait?: () => Promise<boolean>;
+	startPublish?: () => Promise<void>;
+	applyDefaultsAndPublish?: () => Promise<void>;
+	clearAllContent?: () => void;
+	followSelection?: (folder: TFolder | null, file: TFile | null) => void;
+	notifyTargetsChanged?: () => void;
+	openAccountFromGrowth?: () => void | Promise<void>;
+	enableAutoPublish?: () => void;
+}
+
+// Export view type for dynamic import
+export const FRIDAY_SERVER_VIEW_TYPE = 'MDFriday_Garden';
+
+interface FridaySettings {
+	/** Theme pack download region (fixed default; no Settings UI). */
+	downloadServer: 'global' | 'east';
+	/** Unified MDF_… Key (guest or user). Kind is not encoded in the string. */
+	mdfKey: string | null;
+	/**
+	 * Stable id for this Obsidian vault (workspace). Paired with note/folder sourcePath
+	 * on remote projects so the same account can publish identical relative paths from
+	 * different vaults / machines without colliding. Editable in Settings.
+	 */
+	workspaceId: string | null;
+	/**
+	 * Which Cloudflare env minted / last validated this Key.
+	 * Cleared when compile-time env (dev=staging vs build=production) no longer matches —
+	 * otherwise claim on fsky.top 404s with a production Key (and vice versa).
+	 */
+	mdfKeyEnv: CloudflareEnvResolved | null;
+	/** Cached kind from GET /v1/account — display only */
+	mdfKeyKind: 'guest' | 'user' | null;
+	/** Cached plan from GET /v1/account */
+	mdfKeyPlan: string | null;
+	/** Cached usage / quota snapshot from GET /v1/account */
+	mdfStorageBytes: number | null;
+	mdfQuotaStorageBytes: number | null;
+	mdfContentExpiresAt: number | null;
+	mdfProjectCount: number | null;
+	mdfQuotaMaxProjects: number | null;
+	mdfQuotaRetentionDays: number | null;
+	mdfQuotaMaxCustomDomains: number | null;
+	mdfQuotaFeatures: string[] | null;
+	/** Cached email from GET /v1/account (Google / Personal), display only */
+	mdfAccountEmail: string | null;
+	/** Set after first successful Cloudflare publish (Growth Card) */
+	hasPublishedOnce: boolean;
+	/**
+	 * Per vault-path publish UI config (mode / theme / hasPasswordFlag).
+	 * Never stores password plaintext — submitted only at publish time.
+	 */
+	pathConfigs: Record<string, import('./types/publish-config').PathPublishConfig>;
+	/** Migrated to mdfKey — still read for one-shot data.json migration */
+	cloudflareGuestToken?: string | null;
+	/** Migrated away — JWT not stored in plugin */
+	cloudflareUserToken?: string | null;
+	/**
+	 * Compile-time DEFAULT_CLOUDFLARE_ENV always wins; kept for data.json compat.
+	 */
+	cloudflareEnv?: string;
+	/** Last applied compile-time env */
+	cloudflareResolvedEnv: CloudflareEnvResolved | null;
+	/** Derived — refreshed by applyCloudflareEnv() */
+	cloudflareApiBaseUrl: string;
+	cloudflarePublicBaseUrl: string;
+	/** Account site for OAuth / claim (?key=) */
+	cloudflareAccountBaseUrl: string;
+}
+
+const DEFAULT_SETTINGS: FridaySettings = {
+	downloadServer: 'global',
+	mdfKey: null,
+	workspaceId: null,
+	mdfKeyEnv: null,
+	mdfKeyKind: null,
+	mdfKeyPlan: null,
+	mdfStorageBytes: null,
+	mdfQuotaStorageBytes: null,
+	mdfContentExpiresAt: null,
+	mdfProjectCount: null,
+	mdfQuotaMaxProjects: null,
+	mdfQuotaRetentionDays: null,
+	mdfQuotaMaxCustomDomains: null,
+	mdfQuotaFeatures: null,
+	mdfAccountEmail: null,
+	hasPublishedOnce: false,
+	pathConfigs: {},
+	cloudflareEnv: DEFAULT_CLOUDFLARE_ENV,
+	cloudflareResolvedEnv: null,
+	cloudflareApiBaseUrl: '',
+	cloudflarePublicBaseUrl: '',
+	cloudflareAccountBaseUrl: '',
+}
+
+export const FRIDAY_ICON = 'dice-2';
+
+export default class FridayPlugin extends Plugin {
+	settings: FridaySettings;
+	/** Settings tab — call update() when credential UI must refresh. */
+	settingTab: FridaySettingTab | null = null;
+	statusBar: HTMLElement
+
+	pluginDir: string
+	absWorkspacePath: string
+	vaultBasePath: string
+	
+	// Core services (always available)
+	i18n: I18nService
+	
+	// PC-only services (optional, only loaded on desktop)
+	site?: Site
+	workspaceService?: ObsidianWorkspaceService
+	// Foundry services
+	foundryProjectService?: ObsidianProjectService | null
+	foundryBuildService?: ObsidianBuildService | null
+	foundryGlobalConfigService?: ObsidianGlobalConfigService | null
+	foundryProjectConfigService?: ObsidianProjectConfigService | null
+	foundryServeService?: ObsidianServeService | null
+	foundryPublishService?: ObsidianPublishService | null
+	foundryAuthService?: ObsidianAuthService | null
+	foundryLicenseService?: ObsidianLicenseService | null
+	foundryDomainService?: ObsidianDomainService | null
+	projectServiceManager?: ProjectServiceManager | null
+	// License state manager (unified license state from Foundry)
+	licenseState?: LicenseStateManager | null
+	// Current project name for tracking
+	currentProjectName?: string | null
+	/**
+	 * Bumped on every openOrFollowSelection so stale async applies
+	 * (previous file) cannot overwrite the newer target's UI state.
+	 */
+	selectionEpoch: number = 0
+	/**
+	 * Why the current target is showing.
+	 * explicit targets stay put when the editor or the panel itself takes focus.
+	 * follow targets track notes the user opens. Null means the panel has no committed target.
+	 */
+	selectionOrigin: SelectionOrigin | null = null
+	/**
+	 * Bumped in applyCloudflareEnv so Svelte UIs re-read Account/API URLs
+	 * (settings field mutation alone does not trigger `$:`).
+	 */
+	cloudflareEnvEpoch: number = 0
+	
+	// Site.svelte component reference (for new event-driven architecture)
+	siteComponent?: SiteComponentHandle
+	
+	// Project initialization flag (prevents auto-save during new project creation)
+	isProjectInitializing: boolean = false
+
+	/** Pending Turnstile deep-link waiter (staging/prod guest challenge). */
+	private turnstileWaiter: {
+		resolve: (token: string) => void;
+		reject: (err: Error) => void;
+		timer: ReturnType<typeof setTimeout>;
+	} | null = null;
+
+	// Dynamic module references for PC-only features
+	private themeApiService?: typeof import("./theme/themeApiService").themeApiService
+
+	async onload() {
+		this.pluginDir = `${this.manifest.dir}`;
+		// X-MDFriday-Client: obsidian-garden/<version> on MDFriday API requests only
+		setMdfridayClientVersion(this.manifest.version);
+		await this.loadSettings();
+
+		// Unified deep link (all MDFriday plugins share action `mdfriday`):
+		//   obsidian://mdfriday?plugin=garden&event=auth&ok=1
+		//   obsidian://mdfriday?plugin=garden&event=claim&status=ok
+		//   obsidian://mdfriday?plugin=garden&event=upgrade&status=ok&plan=personal
+		this.registerObsidianProtocolHandler(OBSIDIAN_PROTOCOL_ACTION, async (params) => {
+			const pluginTag = (params.plugin || '').trim().toLowerCase();
+			if (pluginTag !== OBSIDIAN_PROTOCOL_PLUGIN) {
+				return; // ignore callbacks meant for publish / share / others
+			}
+			const event = params.event || params.action;
+			// Turnstile UI not on Garden main path — ignore legacy callbacks.
+			if (event === 'turnstile') {
+				return;
+			}
+			const statusOk =
+				params.status === 'ok' || params.ok === '1' || params.ok === 'true';
+			const accountRefreshOk =
+				(event === 'auth' && statusOk) ||
+				(event === 'claim' && statusOk) ||
+				(event === 'upgrade' && statusOk);
+			if (accountRefreshOk) {
+				const delivered = typeof params.key === 'string' ? params.key.trim() : '';
+				if (delivered.startsWith('MDF_')) {
+					this.settings.mdfKey = delivered;
+					this.settings.mdfKeyEnv = DEFAULT_CLOUDFLARE_ENV;
+					this.settings.mdfKeyKind = 'user';
+					await this.saveSettings();
+					this.foundryPublishService?.setKey?.(delivered, 'user');
+					this.refreshSettingsUi();
+				}
+				const mgr = this.projectServiceManager;
+				if (mgr) {
+					const r = await mgr.refreshCloudflareAccount();
+					const planLabel = r.plan || this.settings.mdfKeyPlan || '—';
+					new Notice(
+						r.success
+							? this.i18n?.t?.('ui.claim_refresh_ok')?.replace('{{plan}}', planLabel) ||
+									`Signed in — plan: ${planLabel}`
+							: this.i18n?.t?.('ui.claim_refresh_fail')?.replace('{{error}}', r.error || '') ||
+									`Account refresh failed: ${r.error}`,
+						5000,
+					);
+					this.siteComponent?.onAccountUpdated?.({
+						success: r.success,
+						plan: r.plan,
+						kind: r.kind,
+						source: event === 'upgrade' ? 'upgrade' : 'claim',
+					});
+				}
+			}
+		});
+		
+		// Initialize core services (always needed)
+		await this.initCore();
+		
+		// Platform-specific initialization
+		if (Platform.isDesktop) {
+			// Initialize absolute workspace path (PC-only)
+			const adapter = this.app.vault.adapter;
+			if (adapter instanceof FileSystemAdapter) {
+				const basePath = adapter.getBasePath();
+				this.vaultBasePath = basePath;
+				this.absWorkspacePath = joinPath(basePath, this.pluginDir, 'workspace');
+			}
+
+			await this.initDesktopFeatures();
+		} else {
+			// Garden is desktop-only (manifest isDesktopOnly). Skip mobile Foundry wiring.
+			await this.initMobileFeatures();
+		}
+
+		this.statusBar = this.addStatusBarItem();
+		this.settingTab = new FridaySettingTab(this.app, this);
+		this.addSettingTab(this.settingTab);
+	}
+
+	/**
+	 * Initialize core services (common for all platforms)
+	 */
+	private async initCore(): Promise<void> {
+		// Initialize i18n service first
+		this.i18n = new I18nService(this);
+		await this.i18n.init();
+		
+		// Note: License usage is fetched when user opens Settings page (not on startup)
+		// This improves plugin startup performance
+	}
+
+	/**
+	 * Initialize desktop-only features
+	 */
+	private async initDesktopFeatures(): Promise<void> {
+		const [
+			{ default: ServerView },
+			{ Site },
+			{ themeApiService },
+		] = await Promise.all([
+			import('./server'),
+			import('./site'),
+			import('./theme/themeApiService'),
+		]);
+		
+		await Promise.all([
+			import('./styles/mdf-tokens.css'),
+			import('./styles/apple-panel.css'),
+			import('./styles/capability-sections.css'),
+		]);
+		
+		this.themeApiService = themeApiService;
+		this.site = new Site(this);
+
+		await this.initializeWorkspace();
+		
+		try {
+			this.registerView(FRIDAY_SERVER_VIEW_TYPE, leaf => new ServerView(leaf, this));
+		} catch {
+			console.error('[Friday] View already registered, skipping');
+		}
+
+		// Do not auto-open the sidebar on startup — only on explicit user action
+		// (context menu, sidebar tab toggle, or commands that call activateView).
+
+		// Focusing the publish panel is not a new target. Seed only when nothing is selected.
+		this.registerEvent(
+			this.app.workspace.on('active-leaf-change', (leaf) => {
+				if (leaf?.view?.getViewType() !== FRIDAY_SERVER_VIEW_TYPE) return;
+				void this.syncPanelToActiveFile();
+			}),
+		);
+
+		// Register context menu for folders only (PC-only):
+		// Garden publishes wiki/sites; single-note as-is belongs to Share.
+		this.registerEvent(
+			this.app.workspace.on('file-menu', (menu, file) => {
+				if (file instanceof TFolder) {
+					this.addPublishMenuItems(menu, file);
+				}
+			})
+		);
+
+		// Keep pathConfigs / remote source_path in sync when vault paths change.
+		this.registerEvent(
+			this.app.vault.on('rename', (file, oldPath) => {
+				void this.onVaultPathRenamed(file, oldPath);
+			}),
+		);
+		this.registerEvent(
+			this.app.vault.on('delete', (file) => {
+				void this.onVaultPathDeleted(file.path);
+			}),
+		);
+
+		this.addCommand({
+			id: 'quick-share',
+			name: this.i18n.t('menu.quick_share'),
+			callback: () => {
+				new Notice(this.i18n.t('messages.garden_folder_only'), 3000);
+			},
+		});
+
+		this.addCommand({
+			id: 'export-subscribers',
+			name: this.i18n.t('ui.subscribe_command_export'),
+			callback: () => {
+				void openSubscriberExportPicker(this);
+			},
+		});
+
+		this.addCommand({
+			id: 'quick-publish',
+			name: this.i18n.t('menu.publish_to_web'),
+			callback: () => {
+				const folder = this.resolveActiveFolderForGarden();
+				if (!folder) {
+					new Notice(this.i18n.t('messages.garden_folder_only'), 3000);
+					return;
+				}
+				void this.publishToWeb(folder);
+			},
+		});
+	}
+
+	/**
+	 * Open sidebar for a folder without publishing (config + load existing project).
+	 */
+	private addOpenInMdfridayMenuItem(menu: Menu, folder: TFolder) {
+		menu.addItem(item => {
+			item
+				.setTitle(this.i18n.t('menu.open_in_mdfriday'))
+				.setIcon(FRIDAY_ICON)
+				.onClick(async () => {
+					await this.openOrFollowSelection(folder, null, { createIfMissing: true });
+				});
+		});
+	}
+
+	/**
+	 * Folder menus: Open in MDFriday Digital Garden + Publish with MDFriday Digital Garden.
+	 */
+	private addPublishMenuItems(menu: Menu, folder: TFolder) {
+		this.addOpenInMdfridayMenuItem(menu, folder);
+		menu.addItem(item => {
+			item
+				.setTitle(this.i18n.t('menu.publish_to_web'))
+				.setIcon(FRIDAY_ICON)
+				.onClick(async () => {
+					await this.publishToWeb(folder);
+				});
+		});
+	}
+
+	/**
+	 * Initialize workspace and Foundry services (PC-only)
+	 */
+	private async initializeWorkspace(): Promise<void> {
+		try {
+			// 动态导入 PC 专用的 Foundry 服务（从根目录）
+			const {
+				createObsidianWorkspaceService,
+				createObsidianProjectService,
+				createObsidianBuildService,
+				createObsidianGlobalConfigService,
+				createObsidianProjectConfigService,
+				createObsidianServeService,
+				createObsidianPublishService,
+				createObsidianAuthService,
+				createObsidianLicenseService,
+				createObsidianDomainService,
+				LogLevel,
+				setGlobalLogLevel,
+			} = await import('@mdfriday/core');
+
+		// Quiet in production builds; staging/local keep INFO/DEBUG for diagnostics
+		{
+			const name = logLevelForCloudflareEnv(DEFAULT_CLOUDFLARE_ENV);
+			const level =
+				name === 'debug' ? LogLevel.DEBUG
+				: name === 'info' ? LogLevel.INFO
+				: name === 'warn' ? LogLevel.WARN
+				: LogLevel.ERROR;
+			setGlobalLogLevel(level);
+		}
+			
+		// Create workspace service（无需参数，使用 Node.js 默认实现）
+		this.workspaceService = createObsidianWorkspaceService();
+		
+		// Get relative workspace path for Obsidian adapter
+		const relativeWorkspacePath = joinVaultPath(this.pluginDir, 'workspace');
+		
+		// Ensure workspace directory exists using Obsidian's adapter
+		if (!await this.app.vault.adapter.exists(relativeWorkspacePath)) {
+			await this.app.vault.adapter.mkdir(relativeWorkspacePath);
+		}
+			
+			// Check if workspace is already initialized (using absolute path)
+			const existsResult = await this.workspaceService.workspaceExists(this.absWorkspacePath);
+			
+			if (existsResult.success && !existsResult.data) {
+				// Workspace doesn't exist, initialize it
+				const initResult = await this.workspaceService.initWorkspace(this.absWorkspacePath);
+				
+				if (!initResult.success) {
+					console.error('[Friday] Failed to initialize workspace:', initResult.error);
+				}
+			} else if (!existsResult.success) {
+				console.error('[Friday] Failed to check workspace existence:', existsResult.error);
+			}
+			
+		// Initialize PC-only Foundry services（无参数，使用默认实现）
+		this.foundryProjectService = createObsidianProjectService();
+		this.foundryBuildService = createObsidianBuildService();
+		this.foundryGlobalConfigService = createObsidianGlobalConfigService();
+		this.foundryProjectConfigService = createObsidianProjectConfigService();
+		
+		// Create HTTP client for Serve service (with publish support)
+		const httpClient = createObsidianHttpClient();
+		this.foundryServeService = createObsidianServeService(httpClient, {
+			apiBaseUrl: this.settings.cloudflareApiBaseUrl,
+		});
+		this.foundryPublishService = createObsidianPublishService(httpClient, {
+			apiBaseUrl: this.settings.cloudflareApiBaseUrl,
+			publicBaseUrl: this.settings.cloudflarePublicBaseUrl,
+		});
+
+		// Resolve env (auto → local|staging) and wire live ControlPlane URL
+		await this.applyCloudflareEnv({ persist: true });
+		
+		// Create Identity HTTP client for Auth, License, and Domain services
+		const identityHttpClient = createObsidianIdentityHttpClient();
+		this.foundryAuthService = createObsidianAuthService(identityHttpClient);
+		this.foundryLicenseService = createObsidianLicenseService(identityHttpClient);
+		this.foundryDomainService = createObsidianDomainService(identityHttpClient);
+
+	// Create Project Service Manager
+	if (this.foundryProjectService && this.foundryProjectConfigService) {
+		this.projectServiceManager = new ProjectServiceManager(this);
+	}
+
+	// Create License State Manager (optional — Cloudflare guest publish does not require license)
+	if (this.foundryLicenseService && this.foundryAuthService && this.foundryDomainService) {
+		this.licenseState = new LicenseStateManager(
+			this.foundryLicenseService,
+			this.foundryAuthService,
+			this.foundryDomainService,
+			this.absWorkspacePath
+		);
+
+		try {
+			await this.licenseState.initialize();
+		} catch (error) {
+			console.debug('[Friday] License init skipped (Cloudflare guest mode):', error);
+		}
+	}
+
+		// Load settings from Foundry Global Config (merge with local settings)
+		await this.loadSettingsFromFoundryGlobalConfig();
+		} catch (error) {
+			console.error('[Friday] Error initializing workspace:', error);
+		}
+	}
+
+	/**
+	 * Mobile is unsupported for MDFriday Digital Garden (isDesktopOnly).
+	 * Keep a no-op so accidental loads do not pull mobile Foundry repos.
+	 */
+	private async initMobileFeatures(): Promise<void> {
+		new Notice(
+			this.i18n?.t?.('messages.garden_desktop_only') ||
+				'MDFriday Digital Garden is desktop only.',
+			5000,
+		);
+		console.debug('[MDFriday Digital Garden] Mobile init skipped (desktop-only plugin).');
+	}
+
+	async openPublishPanel(folder: TFolder | null, file: TFile | null) {
+		await this.openOrFollowSelection(folder, file, { createIfMissing: true });
+	}
+
+	/**
+	 * Panel focus may seed an empty publish target from the active note.
+	 * It never replaces a folder or note the user already chose.
+	 */
+	async syncPanelToActiveFile(): Promise<void> {
+		if (this.isProjectInitializing) return;
+		const contents = this.site?.getCurrentContents?.() ?? [];
+		const currentPath = contents[0]?.file?.path ?? contents[0]?.folder?.path ?? null;
+		if (!allowFollow(this.selectionOrigin, { type: 'panel-focused', hasTarget: !!currentPath })) {
+			return;
+		}
+		const file = this.app.workspace.getActiveFile();
+		if (!(file instanceof TFile) || file.extension !== 'md') return;
+		await this.openOrFollowSelection(null, file, {
+			createIfMissing: false,
+			reveal: false,
+			origin: 'follow',
+		});
+	}
+
+	/**
+	 * Open or soft-follow a vault selection in the publish sidebar.
+	 * createIfMissing=false (file-open): update UI only; load existing project if path matches.
+	 * createIfMissing=true (menu / publish): create local Foundry project when needed.
+	 * reveal defaults to createIfMissing — soft-follow never pops the sidebar.
+	 */
+	async openOrFollowSelection(
+		folder: TFolder | null,
+		file: TFile | null,
+		opts: { createIfMissing: boolean; reveal?: boolean; origin?: SelectionOrigin | 'preserve' },
+	) {
+		const reveal = opts.reveal ?? opts.createIfMissing;
+
+		if (reveal) {
+			const rightSplit = this.app.workspace.rightSplit;
+			if (!rightSplit) {
+				return;
+			}
+			if (rightSplit.collapsed) {
+				rightSplit.expand();
+			}
+		}
+
+		const vaultPath = normalizeVaultPath(folder?.path ?? file?.path ?? null);
+		if (!vaultPath) {
+			console.warn('Unable to determine vault path');
+			return;
+		}
+
+		const origin = opts.origin ?? 'explicit';
+		if (origin !== 'preserve') {
+			this.selectionOrigin = origin;
+		}
+		const epoch = ++this.selectionEpoch;
+
+		const existingByPath = await this.findLocalProjectByVaultPath(vaultPath);
+		if (epoch !== this.selectionEpoch) return;
+
+		if (existingByPath) {
+			this.site.clearAllContent(true);
+			await this.applyFoundryProjectToPanel(existingByPath, folder, file, epoch);
+			if (epoch !== this.selectionEpoch) return;
+			if (reveal) {
+				await this.activateView();
+			}
+			this.siteComponent?.notifyTargetsChanged?.();
+			return;
+		}
+
+		if (!opts.createIfMissing) {
+			this.currentProjectName = null;
+			if (this.siteComponent?.followSelection) {
+				this.siteComponent.followSelection(folder, file);
+			} else {
+				this.site.clearAllContent(true);
+				this.site.replaceSelection(folder, file);
+			}
+			this.siteComponent?.notifyTargetsChanged?.();
+			return;
+		}
+
+		const projectName = this.getProjectNameFromSelection(folder, file);
+		if (!projectName) {
+			console.warn('Unable to determine project name');
+			return;
+		}
+
+		// Fallback: same basename project (legacy) when path not indexed yet
+		const existingProject = await this.getFoundryProject(projectName);
+		if (epoch !== this.selectionEpoch) return;
+
+		if (existingProject) {
+			const primary = projectPrimaryVaultPath(this, existingProject);
+			if (primary && !pathsEqual(primary, vaultPath)) {
+				// Basename collision with a different path — create a distinct project name
+				const uniqueName = this.uniqueProjectNameForPath(vaultPath, projectName);
+				const created = await this.createFoundryProject(uniqueName, folder, file);
+				if (epoch !== this.selectionEpoch) return;
+				if (created) {
+					const newProject = await this.getFoundryProject(uniqueName);
+					if (epoch !== this.selectionEpoch) return;
+					if (newProject) {
+						this.isProjectInitializing = true;
+						this.site.clearAllContent(true);
+						await this.applyFoundryProjectToPanel(newProject, folder, file, epoch);
+						this.isProjectInitializing = false;
+					}
+				}
+			} else {
+				this.site.clearAllContent(true);
+				await this.applyFoundryProjectToPanel(existingProject, folder, file, epoch);
+			}
+		} else {
+			const created = await this.createFoundryProject(projectName, folder, file);
+			if (epoch !== this.selectionEpoch) return;
+			if (created) {
+				const newProject = await this.getFoundryProject(projectName);
+				if (epoch !== this.selectionEpoch) return;
+				if (newProject) {
+					this.isProjectInitializing = true;
+					this.site.clearAllContent(true);
+					await this.applyFoundryProjectToPanel(newProject, folder, file, epoch);
+					this.isProjectInitializing = false;
+				} else {
+					console.error('[Friday] Failed to retrieve newly created project');
+				}
+			}
+		}
+
+		if (epoch !== this.selectionEpoch) return;
+		if (reveal) {
+			await this.activateView();
+		}
+		this.siteComponent?.notifyTargetsChanged?.();
+	}
+
+	/**
+	 * Ensure a local Foundry project exists for the current sidebar selection (preview/publish).
+	 */
+	async ensureProjectForSelection(): Promise<boolean> {
+		if (this.currentProjectName) return true;
+		const contents = this.site.getCurrentContents();
+		const first = contents[0];
+		if (!first) return false;
+		await this.openOrFollowSelection(first.folder, first.file, { createIfMissing: true, origin: 'preserve' });
+		return !!this.currentProjectName;
+	}
+
+	private uniqueProjectNameForPath(vaultPath: string, baseName: string): string {
+		const safe = vaultPath.replace(/[\\/]/g, '__').replace(/\.md$/i, '');
+		return safe.length > 0 ? safe : baseName;
+	}
+
+	private async findLocalProjectByVaultPath(vaultPath: string): Promise<ObsidianProjectInfo | null> {
+		if (!this.foundryProjectService || !this.absWorkspacePath) return null;
+		try {
+			const result = await this.foundryProjectService.listProjects(this.absWorkspacePath);
+			if (!result.success || !result.data) return null;
+			for (const project of result.data) {
+				const primary = projectPrimaryVaultPath(this, project);
+				if (pathsEqual(primary, vaultPath)) {
+					return project;
+				}
+			}
+		} catch (error) {
+			console.error('[Friday] Error listing projects for path match:', error);
+		}
+		return null;
+	}
+
+	/**
+	 * Get project name from folder or file selection
+	 */
+	private getProjectNameFromSelection(folder: TFolder | null, file: TFile | null): string | null {
+		if (folder) {
+			return folder.name;
+		} else if (file) {
+			return file.basename;
+		}
+		return null;
+	}
+
+	/**
+	 * Get Foundry project by name
+	 */
+	private async getFoundryProject(projectName: string): Promise<ObsidianProjectInfo | null> {
+		if (!this.foundryProjectService) {
+			return null;
+		}
+
+		try {
+			const result = await this.foundryProjectService.getProjectInfo(this.absWorkspacePath, projectName);
+			if (result.success && result.data) {
+				return result.data;
+			}
+		} catch (error) {
+			console.error('[Friday] Error getting project:', error);
+		}
+		return null;
+	}
+
+	/**
+	 * Register Site component
+	 */
+	/**
+	 * Register Site.svelte component for direct method calls
+	 * Part of new event-driven architecture
+	 */
+	registerSiteComponent(component: SiteComponentHandle) {
+		this.siteComponent = component;
+	}
+
+	/**
+	 * Handle Site component events
+	 */
+	async handleSiteEvent<T extends SiteEventType>(
+		type: T,
+		data: SiteEventData[T]
+	): Promise<void> {
+		switch (type) {
+			case 'initialized':
+				await this.onSiteInitialized(data as SiteEventData['initialized']);
+				break;
+
+			case 'configChanged':
+				await this.onConfigChanged(data as SiteEventData['configChanged']);
+				break;
+
+			case 'buildRequested':
+				await this.onBuildRequested(data as SiteEventData['buildRequested']);
+				break;
+
+			case 'previewRequested':
+				await this.onPreviewRequested(data as SiteEventData['previewRequested']);
+				break;
+
+			case 'publishRequested':
+				await this.onPublishRequested(data as SiteEventData['publishRequested']);
+				break;
+
+			case 'buildAndPublishRequested':
+				await this.onBuildAndPublishRequested(
+					data as SiteEventData['buildAndPublishRequested'],
+				);
+				break;
+
+			case 'testConnection':
+				await this.onTestConnection(data as SiteEventData['testConnection']);
+				break;
+
+			case 'stopPreview':
+				await this.onStopPreview(data as SiteEventData['stopPreview']);
+				break;
+		}
+	}
+
+	// ==================== Event Handlers ====================
+
+	private async onSiteInitialized(data: SiteEventData['initialized']) {}
+
+	private async onConfigChanged(data: SiteEventData['configChanged']) {
+		if (!this.currentProjectName || !this.projectServiceManager) {
+			return;
+		}
+
+		// Save configuration to Foundry
+		const success = await this.projectServiceManager.saveConfig(
+			this.currentProjectName,
+			data.key,
+			data.value
+		);
+
+		if (!success) {
+			console.error(`Failed to save configuration: ${data.key}`);
+		}
+	}
+
+	private async onBuildRequested(data: SiteEventData['buildRequested']) {
+		if (!this.projectServiceManager) {
+			return;
+		}
+
+		// Create progress callback
+		const onProgress = (progress: ProgressUpdate) => {
+			// Send progress updates to Site component
+			this.siteComponent?.updateBuildProgress?.(progress);
+		};
+
+		// Execute build
+		const result = await this.projectServiceManager.build(
+			data.projectName,
+			onProgress
+		);
+
+		if (result.success) {
+			this.siteComponent?.onBuildComplete?.(result);
+		} else {
+			this.siteComponent?.onBuildError?.(result.error);
+		}
+	}
+
+	private async onPreviewRequested(data: SiteEventData['previewRequested']) {
+		if (!this.projectServiceManager) {
+			return;
+		}
+
+		const { projectName, port, renderer, publishConfig } = data;
+
+		const onProgress = (progress: ProgressUpdate) => {
+			if (
+				publishConfig &&
+				(progress.phase === 'publishing' || progress.phase === 'publish-success')
+			) {
+				if (progress.phase === 'publish-success') {
+					this.siteComponent?.onPublishComplete?.({
+						url: progress.data?.publishUrl,
+					});
+					return;
+				}
+				this.siteComponent?.updatePublishProgress?.({
+					phase: progress.phase === 'publishing' ? 'uploading' : 'complete',
+					percentage: progress.percentage ?? 0,
+					message: progress.message,
+				});
+				return;
+			}
+			this.siteComponent?.updateBuildProgress?.(progress);
+		};
+
+		const result = await this.projectServiceManager.startPreview(
+			projectName,
+			{ port, renderer, onProgress, publishConfig }
+		);
+
+		if (result.success) {
+			if (result.publishUrl) {
+				this.siteComponent?.onPublishComplete?.({ url: result.publishUrl });
+			} else {
+				this.siteComponent?.onPreviewStarted?.(result);
+			}
+		} else {
+			if (publishConfig) {
+				this.siteComponent?.onPublishError?.(
+					result.error || 'Publish failed',
+					(result as { code?: string }).code,
+				);
+			} else {
+				this.siteComponent?.onPreviewError?.(result.error);
+			}
+		}
+	}
+
+	private async onBuildAndPublishRequested(
+		data: SiteEventData['buildAndPublishRequested'],
+	) {
+		if (!this.projectServiceManager) {
+			return;
+		}
+
+		const onProgress = (progress: ProgressUpdate | PublishProgressUpdate) => {
+			// Single progress bar under Publish button owns the whole pipeline
+			if (
+				'phase' in progress &&
+				(progress.phase === 'building' || progress.phase === 'build-success')
+			) {
+				this.siteComponent?.updateBuildProgress?.(progress);
+				if (this.siteComponent?.updatePublishProgress) {
+					const pct =
+						progress.phase === 'build-success'
+							? 40
+							: Math.min(40, (progress.percentage ?? 0) * 0.4);
+					this.siteComponent.updatePublishProgress({
+						phase: 'scanning',
+						percentage: pct,
+						message: progress.message,
+					});
+				}
+			} else {
+				this.siteComponent?.updatePublishProgress?.(progress);
+			}
+		};
+
+		const result = await this.projectServiceManager.buildAndPublishCloudflare(
+			data.projectName,
+			{ onProgress, skipBuild: !!data.skipBuild },
+		);
+
+		if (result.success) {
+			this.siteComponent?.onPublishComplete?.(result);
+			if (result.baseURL && this.siteComponent?.setSitePath) {
+				this.siteComponent.setSitePath(result.baseURL);
+			}
+		} else {
+			this.siteComponent?.onPublishError?.(result.error || 'Publish failed', result.code);
+		}
+	}
+
+	private async onPublishRequested(data: SiteEventData['publishRequested']) {
+		if (!this.projectServiceManager) {
+			return;
+		}
+
+		const { projectName, method, config } = data;
+
+		// Create progress callback
+		const onProgress = (progress: PublishProgressUpdate) => {
+			// Send progress updates to Site component
+			this.siteComponent?.updatePublishProgress?.(progress);
+		};
+
+		// Execute publish
+		const result = await this.projectServiceManager.publish(
+			projectName,
+			{ method, config, onProgress }
+		);
+
+		if (result.success) {
+			this.siteComponent?.onPublishComplete?.(result);
+		} else {
+			this.siteComponent?.onPublishError?.(result.error, result.code);
+		}
+	}
+
+	private async onTestConnection(data: SiteEventData['testConnection']) {
+		if (!this.projectServiceManager) {
+			return;
+		}
+
+		const result = await this.projectServiceManager.testConnection(
+			data.projectName,
+			data.config
+		);
+
+		if (result.success) {
+			this.siteComponent?.onConnectionTestSuccess?.(result.message);
+		} else {
+			this.siteComponent?.onConnectionTestError?.(result.error);
+		}
+	}
+
+	private async onStopPreview(data: SiteEventData['stopPreview']) {
+		if (!this.projectServiceManager) {
+			return;
+		}
+
+		const success = await this.projectServiceManager.stopPreview(data.projectName);
+
+		if (success) {
+			this.siteComponent?.onPreviewStopped?.();
+		}
+	}
+
+	// ==================== Project Management ====================
+
+	/**
+	 * Create new Foundry project (simplified - only creates project)
+	 */
+	private async createFoundryProject(projectName: string, folder: TFolder | null, file: TFile | null): Promise<boolean> {
+		try {
+			// Collect initial configuration with project context (now async)
+			const initialConfig = await this.collectInitialConfig(projectName, folder, file);
+
+			// Create project through ProjectServiceManager
+			const result = await this.projectServiceManager.createProject({
+				name: projectName,
+				folder,
+				file,
+				initialConfig
+			});
+
+			if (!result.success) {
+				throw new Error(result.error);
+			}
+
+			return true;
+
+		} catch (error) {
+			console.error('[Friday] Error creating project:', error);
+			return false;
+		}
+	}
+
+	/**
+	 * Collect initial configuration for new project
+	 * Prepares complete configuration including baseURL, title, theme, etc.
+	 * 
+	 * @param projectName - Project name
+	 * @param folder - Selected folder (if folder project)
+	 * @param file - Selected file (if file project)
+	 * @returns Complete initial configuration
+	 */
+	private async collectInitialConfig(projectName: string, folder: TFolder | null, file: TFile | null): Promise<Record<string, unknown>> {
+		const publishMethod = normalizePublishMethod();
+		
+		// Determine if this is a folder project
+		const isFolder = folder !== null;
+		
+		// Default theme from catalog (Foundry downloads pack from module.imports.path)
+		const defaultEntry = await resolveDefaultTheme(this, isFolder);
+		
+		// Cloudflare V2 guest sites use root baseURL; public URL comes from control plane
+		const baseURL = '/';
+		
+		// Build complete configuration
+		const config: Record<string, unknown> = {
+			// Basic settings
+			baseURL,
+			title: projectName,
+			contentDir: 'content',
+			publishDir: 'public',
+			defaultContentLanguage: 'en',
+			
+			// Taxonomies (default Hugo taxonomies)
+			taxonomies: {
+				tag: 'tags',
+				category: 'categories'
+			},
+			
+			// Theme — Foundry downloads pack.zip from module.imports[0].path at build time
+			...(defaultEntry?.packUrl
+				? { module: buildThemeConfigPatch(defaultEntry).module }
+				: {}),
+
+			// Markdown renderer settings
+			markdown: {
+				useInternalRenderer: defaultEntry?.tags
+					? shouldUseInternalRenderer(defaultEntry.tags)
+					: true,
+			},
+			
+			// Site parameters
+			params: {
+				branding: true,
+				...(defaultEntry?.packUrl ? buildThemeConfigPatch(defaultEntry).params : {}),
+			},
+			
+			// Publish configuration
+			publish: {
+				method: publishMethod
+			}
+		};
+
+		// Scan folder structure if this is a folder project
+		if (folder && this.projectServiceManager && this.vaultBasePath) {
+			try {
+				const absoluteFolderPath = path.join(this.vaultBasePath, folder.path);
+				
+				const scanResult = await this.projectServiceManager.scanFolderStructure(absoluteFolderPath);
+				
+				if (scanResult && scanResult.success && scanResult.data) {
+					// Generate languages configuration from scan result
+					config.languages = this.generateLanguagesConfig(scanResult.data);
+				} else {
+					console.warn('[Friday] Folder scan failed, using default language config');
+					// Fallback: default single language
+					config.languages = {
+						en: {
+							contentDir: 'content',
+							weight: 1
+						}
+					};
+				}
+			} catch (error) {
+				console.error('[Friday] Error scanning folder structure:', error);
+				// Fallback: default single language
+				config.languages = {
+					en: {
+						contentDir: 'content',
+						weight: 1
+					}
+				};
+			}
+		}
+
+		return config;
+	}
+
+	/**
+	 * 从文件夹路径获取 vault-relative 路径
+	 */
+	getVaultRelativePath(absolutePath: string): string {
+		if (this.vaultBasePath) {
+			// Use path.relative to get the relative path
+			const relativePath = path.relative(this.vaultBasePath, absolutePath);
+			
+			// Convert Windows backslashes to forward slashes (Obsidian convention)
+			// This ensures cross-platform compatibility
+			return relativePath.replace(/\\/g, '/');
+		}
+		// Fallback: return the path as-is if we can't determine the base path
+		return absolutePath;
+	}
+
+	/**
+	 * 从路径字符串获取 TFolder 对象
+	 */
+	private getFolderFromPath(absolutePath: string): TFolder | null {
+		const relativePath = this.getVaultRelativePath(absolutePath);
+		const abstractFile = this.app.vault.getAbstractFileByPath(relativePath);
+		
+		if (abstractFile instanceof TFolder) {
+			return abstractFile;
+		}
+		
+		return null;
+	}
+
+	/**
+	 * 从扫描结果生成 languages 配置
+	 */
+	private generateLanguagesConfig(scanResult: ObsidianFolderStructureInfo): Record<string, unknown> {
+		const languages: Record<string, unknown> = {};
+
+		if (scanResult.isStructured && scanResult.contentFolders.length > 0) {
+			// 多语言结构：根据扫描结果生成配置
+			for (const contentFolder of scanResult.contentFolders) {
+				languages[contentFolder.languageCode] = {
+					contentDir: this.extractContentDirName(contentFolder.path),
+					weight: contentFolder.weight
+				};
+			}
+		} else {
+			// 非结构化或空文件夹：生成默认单语言配置
+			languages['en'] = {
+				contentDir: 'content',
+				weight: 1
+			};
+		}
+
+		return languages;
+	}
+
+	/**
+	 * 从完整路径中提取 content 目录名
+	 * 例如: /path/to/vault/myfolder/content.zh -> content.zh
+	 */
+	private extractContentDirName(absolutePath: string): string {
+		return path.basename(absolutePath);
+	}
+
+	/**
+	 * Apply existing Foundry project configuration to panel
+	 * Uses new architecture: Main.ts as Controller, Site.svelte as View
+	 */
+	private async applyFoundryProjectToPanel(
+		project: ObsidianProjectInfo,
+		folder: TFolder | null,
+		file: TFile | null,
+		epoch?: number,
+	) {
+		if (!this.foundryProjectConfigService) {
+			return;
+		}
+		const stillCurrent = () => epoch === undefined || epoch === this.selectionEpoch;
+
+		try {
+			if (!stillCurrent()) return;
+
+			// Step 1: Set current project name FIRST before any operations
+			this.currentProjectName = project.name;
+
+			// Step 2: Load content based on project type (clear first so links can re-init)
+			this.site.clearAllContent(true);
+			await this.loadExistingProjectContent(project);
+			if (!stillCurrent()) return;
+
+			// First open (no publish yet): still seed content from the selection so
+			// local preview works without requiring a prior publish.
+			if (!this.site.hasContent() && (folder || file)) {
+				this.site.replaceSelection(folder, file);
+			}
+
+			// Step 3: Get complete project configuration from Foundry
+			if (!this.projectServiceManager) {
+				console.error('[Friday] ProjectServiceManager not available');
+				return;
+			}
+
+			const config = await this.projectServiceManager.getConfig(project.name);
+			if (!stillCurrent()) return;
+
+			// Step 4: Prepare complete ProjectState
+			const projectState: ProjectState = {
+				name: project.name,
+				path: project.path,
+				folder,
+				file,
+				config,
+				status: 'active',
+			};
+
+			// Step 5: Call Site.svelte's initialize method (NEW ARCHITECTURE)
+			if (this.siteComponent?.initialize) {
+				await this.siteComponent.initialize(projectState, epoch);
+			} else {
+				console.error('[Friday] Site component not registered - cannot apply configuration');
+			}
+		} catch (error) {
+			if (!stillCurrent()) return;
+			console.error('[Friday] Error applying project to panel:', error);
+			// Fallback: at least initialize content
+			this.site.initializeContent(folder, file);
+		}
+	}
+
+	/**
+	 * Resolve a Foundry source path against the vault.
+	 * Foundry stores absolute paths; fall back to the path as-is when needed.
+	 */
+	private resolveVaultAbstractFile(sourcePath: string | undefined | null): TAbstractFile | null {
+		if (!sourcePath) {
+			return null;
+		}
+		const candidates = [
+			this.getVaultRelativePath(sourcePath),
+			sourcePath,
+		];
+		for (const candidate of candidates) {
+			const abstractFile = this.app.vault.getAbstractFileByPath(candidate);
+			if (abstractFile) {
+				return abstractFile;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Load content from existing project's contentLinks, fileLink and staticLink
+	 */
+	private async loadExistingProjectContent(project: ObsidianProjectInfo) {
+		let contentLoaded = false;
+		
+		// Load content links (for folder-based projects)
+		if (project.contentLinks && project.contentLinks.length > 0) {
+			for (let i = 0; i < project.contentLinks.length; i++) {
+				const contentLink = project.contentLinks[i];
+				const abstractFile = this.resolveVaultAbstractFile(contentLink.sourcePath);
+
+				if (!abstractFile) {
+					console.warn(`[Friday] Content path not found: ${contentLink.sourcePath}`);
+					continue;
+				}
+
+				let contentFolder: TFolder | null = null;
+				let contentFile: TFile | null = null;
+
+				if (abstractFile instanceof TFolder) {
+					contentFolder = abstractFile;
+				} else if (abstractFile instanceof TFile && abstractFile.extension === 'md') {
+					contentFile = abstractFile;
+				}
+
+				if (i === 0) {
+					// First content: initialize with language
+					this.site.initializeContentWithLanguage(
+						contentFolder,
+						contentFile,
+						contentLink.languageCode
+					);
+				} else {
+					// Additional contents: add with language
+					this.site.addLanguageContentWithCode(
+						contentFolder,
+						contentFile,
+						contentLink.languageCode
+					);
+				}
+			}
+			contentLoaded = true;
+		}
+		
+		// Load single file (for file-based projects)
+		if (project.fileLink) {
+			const abstractFile = this.resolveVaultAbstractFile(project.fileLink.sourcePath);
+			
+			if (abstractFile instanceof TFile && abstractFile.extension === 'md') {
+				// Use project's language configuration, default to 'en' if not set
+				const language = project.language || 'en';
+				this.site.initializeContentWithLanguage(
+					null,
+					abstractFile,
+					language
+				);
+				contentLoaded = true;
+			} else if (!abstractFile) {
+				console.warn(`[Friday] File path not found: ${project.fileLink.sourcePath}`);
+			} else {
+				console.warn(`[Friday] Invalid file type for fileLink: ${project.fileLink.sourcePath}`, abstractFile);
+			}
+		}
+		
+		// If no content was loaded, log a warning
+		if (!contentLoaded) {
+			console.warn('[Friday] No content links or file link found in project');
+		}
+
+		// Load static link
+		if (project.staticLink) {
+			const abstractFile = this.resolveVaultAbstractFile(project.staticLink.sourcePath);
+			
+			if (abstractFile instanceof TFolder) {
+				this.site.setSiteAssets(abstractFile);
+			} else {
+				console.warn(`[Friday] Static assets path not found or not a folder: ${project.staticLink.sourcePath}`);
+			}
+		}
+	}
+
+	/**
+	 * Get Foundry project config as a map
+	 */
+	async getFoundryProjectConfigMap(projectName: string): Promise<Record<string, unknown>> {
+		if (!this.foundryProjectConfigService) {
+			return {};
+		}
+
+		try {
+			const result = await this.foundryProjectConfigService.list(
+				this.absWorkspacePath,
+				projectName
+			);
+
+			if (result.success && result.data) {
+				return result.data.config || {};
+			}
+		} catch (error) {
+			console.error('[Friday] Error getting project config:', error);
+		}
+		return {};
+	}
+
+
+	async setSiteAssets(folder: TFolder) {
+		// Set the site assets folder
+		const success = this.site.setSiteAssets(folder);
+		
+		if (success) {
+			// Open the publish panel to show the updated assets
+			const rightSplit = this.app.workspace.rightSplit;
+			if (!rightSplit) {
+				return;
+			}
+			if (rightSplit.collapsed) {
+				rightSplit.expand();
+			}
+
+			// Use unified method to activate view
+			await this.activateView();
+		}
+	}
+
+	/**
+	 * Active file's parent folder, or the selected folder in the file explorer when available.
+	 */
+	private resolveActiveFolderForGarden(): TFolder | null {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		const file = view?.file;
+		if (file instanceof TFile) {
+			const parent = file.parent;
+			if (parent instanceof TFolder) return parent;
+		}
+		return null;
+	}
+
+	/**
+	 * Right-click "Publish with MDFriday Digital Garden": open panel, apply defaults, publish immediately.
+	 * Folder → themed wiki site. Ignores saved path config. Notes are not published here.
+	 */
+	private async publishToWeb(folder: TFolder) {
+		if (!(folder instanceof TFolder)) {
+			new Notice(this.i18n.t('messages.garden_folder_only'), 3000);
+			return;
+		}
+
+		try {
+			new Notice(this.i18n.t('messages.quick_share_starting'), 2000);
+
+			if (this.siteComponent?.clearAllContent) {
+				this.siteComponent.clearAllContent();
+			}
+
+			await this.openPublishPanel(folder, null);
+
+			await new Promise(resolve => window.setTimeout(resolve, 500));
+			await new Promise(resolve => window.setTimeout(resolve, 100));
+
+			if (this.siteComponent?.applyDefaultsAndPublish) {
+				await this.siteComponent.applyDefaultsAndPublish();
+			} else if (this.siteComponent?.startPublish) {
+				await this.siteComponent.startPublish();
+			}
+		} catch (error) {
+			console.error('Publish to web failed:', error);
+			new Notice(this.i18n.t('messages.quick_share_failed', { error: (error as Error).message }), 5000);
+		}
+	}
+
+	/**
+	 * Quick share current file — open panel and generate preview (Cloudflare path).
+	 */
+	private async quickShareCurrentFile(view: MarkdownView) {
+		if (!Platform.isDesktop) {
+			new Notice(this.i18n.t('messages.quick_share_desktop_only'));
+			return;
+		}
+
+		const file = view.file;
+		if (!file || file.extension !== 'md') {
+			new Notice(this.i18n.t('messages.no_markdown_file'), 3000);
+			return;
+		}
+
+		try {
+			new Notice(this.i18n.t('messages.quick_share_starting'), 2000);
+
+			if (this.siteComponent?.clearAllContent) {
+				this.siteComponent.clearAllContent();
+			}
+
+			await this.openPublishPanel(null, file);
+			await new Promise(resolve => window.setTimeout(resolve, 500));
+
+			if (this.siteComponent?.setSitePath) {
+				this.siteComponent.setSitePath('/');
+			}
+
+			await new Promise(resolve => window.setTimeout(resolve, 100));
+
+			if (this.siteComponent?.startPreviewAndWait) {
+				const previewSuccess = await this.siteComponent.startPreviewAndWait();
+				if (!previewSuccess) {
+					new Notice(this.i18n.t('messages.preview_failed_generic'), 5000);
+					return;
+				}
+			}
+
+			new Notice(this.i18n.t('messages.quick_share_ready'), 3000);
+		} catch (error) {
+			console.error('Quick share failed:', error);
+			new Notice(this.i18n.t('messages.quick_share_failed', { error: (error as Error).message }), 5000);
+		}
+	}
+
+	/**
+	 * Quick publish — one-click Cloudflare publish of the active note's parent folder.
+	 */
+	private async quickPublishToFree(_view: MarkdownView) {
+		if (!Platform.isDesktop) {
+			new Notice(this.i18n.t('messages.quick_share_desktop_only'));
+			return;
+		}
+
+		const folder = this.resolveActiveFolderForGarden();
+		if (!folder) {
+			new Notice(this.i18n.t('messages.garden_folder_only'), 3000);
+			return;
+		}
+
+		await this.publishToWeb(folder);
+	}
+
+	private async onVaultPathRenamed(file: TAbstractFile, oldPath: string) {
+		const newPath = file.path;
+		const configsChanged = migratePathConfigsOnRename(this, oldPath, newPath);
+		if (configsChanged) {
+			await this.saveSettings();
+		}
+
+		// Soft-update sidebar selection if it was pointing at the renamed path
+		const contents = this.site?.getCurrentContents?.() ?? [];
+		const current = contents[0];
+		const currentPath = current?.folder?.path ?? current?.file?.path;
+		if (currentPath && (pathsEqual(currentPath, oldPath) || normalizeVaultPath(currentPath)?.startsWith(normalizeVaultPath(oldPath) + '/'))) {
+			if (file instanceof TFile && file.extension === 'md') {
+				this.site.replaceSelection(null, file);
+			} else if (file instanceof TFolder) {
+				this.site.replaceSelection(file, null);
+			}
+		}
+
+		const matched = await this.findLocalProjectByVaultPath(oldPath);
+		// Also match projects whose path is under a renamed folder
+		let projectsToRemap: ObsidianProjectInfo[] = matched ? [matched] : [];
+		if (!matched && this.foundryProjectService && this.absWorkspacePath) {
+			try {
+				const listed = await this.foundryProjectService.listProjects(this.absWorkspacePath);
+				const oldN = normalizeVaultPath(oldPath);
+				projectsToRemap = (listed.data || []).filter((p) => {
+					const primary = projectPrimaryVaultPath(this, p);
+					return primary === oldN || (primary?.startsWith(oldN + '/') ?? false);
+				});
+			} catch {
+				/* ignore */
+			}
+		}
+
+		for (const project of projectsToRemap) {
+			if (!this.foundryProjectService || !this.absWorkspacePath) break;
+			const beforePrimary = projectPrimaryVaultPath(this, project);
+			const remapped = await this.foundryProjectService.remapProjectSourcePaths(
+				this.absWorkspacePath,
+				project.name,
+				(stored) => remapPathAfterRename(stored, oldPath, newPath, this),
+			);
+			const cfId = remapped.data?.cloudflareProjectId;
+			if (cfId && this.settings.mdfKey && this.foundryPublishService) {
+				const nextPrimary = beforePrimary
+					? normalizeVaultPath(
+							remapPathAfterRename(beforePrimary, oldPath, newPath, this),
+						)
+					: normalizeVaultPath(newPath);
+				if (nextPrimary) {
+					await this.foundryPublishService.updateRemoteProject(
+						this.settings.mdfKey,
+						cfId,
+						{ sourcePath: nextPrimary },
+					);
+				}
+			}
+		}
+
+		this.siteComponent?.notifyTargetsChanged?.();
+	}
+
+	private async onVaultPathDeleted(vaultPath: string) {
+		if (deletePathConfigKey(this, vaultPath)) {
+			await this.saveSettings();
+		}
+		this.siteComponent?.notifyTargetsChanged?.();
+	}
+
+
+	// ==================== View Management Methods ====================
+	// These methods manage the Friday Service view lifecycle and ensure only one instance exists
+
+	/**
+	 * Unified method to activate/reveal Friday Service view
+	 * This should be used by all features that need to show the panel
+	 *
+	 * Behavior:
+	 * - If view exists: reveals the first instance
+	 * - If no view exists: creates a new one in the right sidebar
+	 *
+	 * @returns Promise that resolves when view is activated
+	 */
+	async activateView(): Promise<void> {
+		const leaves = this.app.workspace.getLeavesOfType(FRIDAY_SERVER_VIEW_TYPE);
+
+		// If view exists, reveal the first one
+		if (leaves.length > 0) {
+			await this.app.workspace.revealLeaf(leaves[0]);
+			return;
+		}
+
+		// Create new view if none exists
+		const leaf = this.app.workspace.getRightLeaf(false);
+		if (leaf) {
+			await leaf.setViewState({
+				type: FRIDAY_SERVER_VIEW_TYPE,
+				active: true,
+			});
+		}
+	}
+
+	/**
+	 * Check if Friday Service view is currently open
+	 * @returns true if at least one view instance exists
+	 */
+	isViewOpen(): boolean {
+		return this.app.workspace.getLeavesOfType(FRIDAY_SERVER_VIEW_TYPE).length > 0;
+	}
+
+	/**
+	 * Get all Friday Service view leaves
+	 * Useful for advanced view management
+	 * @returns Array of WorkspaceLeaf instances
+	 */
+	getViewLeaves() {
+		return this.app.workspace.getLeavesOfType(FRIDAY_SERVER_VIEW_TYPE);
+	}
+
+	onunload() {
+		// Do not detach leaves — Obsidian restores leaf location; detaching resets it.
+	}
+
+	/**
+	 * Open Account in the system browser for plugin claim / upgrade.
+	 * - With a local Key: pass it for claim / upgrade (Guest→Free or paid).
+	 * - Without a Key: open intent-only URL (no Turnstile / Guest mint).
+	 *   Account mints a user MDF_ Key after Google and returns it via deep link.
+	 * Guest Key is minted silently on publish (no Turnstile UI on Garden main path).
+	 */
+	async openAccountInBrowser(opts?: {
+		intent?: 'claim' | 'upgrade';
+	}): Promise<void> {
+		const intent: 'claim' | 'upgrade' =
+			opts?.intent === 'upgrade' ? 'upgrade' : 'claim';
+		const key = this.settings.mdfKey || null;
+		const base = resolveAccountBaseUrl(this.settings);
+		const q = new URLSearchParams({
+			intent,
+			source: 'obsidian',
+			plugin: OBSIDIAN_PROTOCOL_PLUGIN,
+		});
+		if (key) q.set('key', key);
+		if (intent === 'upgrade') {
+			q.set('plan', 'personal');
+			q.set('upgrade', 'personal'); // compat with older Account pages
+		}
+		q.set(
+			'return_protocol',
+			`obsidian://${OBSIDIAN_PROTOCOL_ACTION}?plugin=${OBSIDIAN_PROTOCOL_PLUGIN}&event=${intent}&status=ok`,
+		);
+		window.open(`${base}/?${q.toString()}`);
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as FridaySettings;
+		// Compile-time env always wins — ignore persisted cloudflareEnv / auto.
+		this.settings.cloudflareEnv = DEFAULT_CLOUDFLARE_ENV;
+		if (!this.settings.downloadServer) {
+			this.settings.downloadServer = 'global';
+		}
+		if (!this.settings.pathConfigs) {
+			this.settings.pathConfigs = {};
+		}
+		// Migrate legacy guest token → mdfKey (one-shot)
+		if (!this.settings.mdfKey && this.settings.cloudflareGuestToken) {
+			this.settings.mdfKey = this.settings.cloudflareGuestToken;
+			this.settings.mdfKeyKind = 'guest';
+			this.settings.mdfKeyEnv = this.settings.mdfKeyEnv ?? DEFAULT_CLOUDFLARE_ENV;
+			this.settings.cloudflareGuestToken = null;
+			await this.saveData(this.settings);
+		}
+		// Ensure every vault has a stable workspace id (syncs with this vault's data.json).
+		if (!this.settings.workspaceId || !String(this.settings.workspaceId).trim()) {
+			this.settings.workspaceId = this.generateWorkspaceId();
+			await this.saveData(this.settings);
+		}
+	}
+
+	/** New UUID for this vault — also used when the user regenerates in Settings. */
+	generateWorkspaceId(): string {
+		if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+			return crypto.randomUUID();
+		}
+		return `ws_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
+	}
+
+	/** Current vault workspace id (never empty after loadSettings). */
+	getWorkspaceId(): string {
+		const id = (this.settings.workspaceId || '').trim();
+		if (id) return id;
+		const next = this.generateWorkspaceId();
+		this.settings.workspaceId = next;
+		return next;
+	}
+
+	/** Drop Key + account cache (env mismatch or revoked Key). */
+	clearMdfKey(_reason?: string): void {
+		if (!this.settings.mdfKey && !this.settings.mdfKeyEnv) return;
+		this.settings.mdfKey = null;
+		this.settings.mdfKeyEnv = null;
+		this.settings.mdfKeyKind = null;
+		this.settings.mdfKeyPlan = null;
+		this.settings.mdfStorageBytes = null;
+		this.settings.mdfQuotaStorageBytes = null;
+		this.settings.mdfContentExpiresAt = null;
+		this.settings.mdfProjectCount = null;
+		this.settings.mdfQuotaMaxProjects = null;
+		this.settings.mdfQuotaRetentionDays = null;
+		this.settings.mdfQuotaMaxCustomDomains = null;
+		this.settings.mdfQuotaFeatures = null;
+		this.settings.mdfAccountEmail = null;
+		this.foundryPublishService?.setKey?.('', 'guest');
+		this.refreshSettingsUi();
+	}
+
+	/** GET /v1/account with this Key against the given API — false if unknown / revoked. */
+	async probeMdfKey(key: string, apiBaseUrl: string): Promise<boolean> {
+		const base = apiBaseUrl.replace(/\/$/, '');
+		if (!key || !base) return false;
+		try {
+			const res = await requestUrl({
+				url: `${base}/v1/account`,
+				method: 'GET',
+				headers: { Authorization: `Bearer ${key}` },
+				throw: false,
+			});
+			return res.status >= 200 && res.status < 300;
+		} catch {
+			return false;
+		}
+	}
+
+	/**
+	 * Apply compile-time Cloudflare env → endpoints + live Foundry client.
+	 * Drops a Key that belongs to another env (dev=staging vs release=production).
+	 */
+	async applyCloudflareEnv(opts: { persist?: boolean; noticeOnSwitch?: boolean } = {}): Promise<CloudflareEnvResolved> {
+		const resolved = DEFAULT_CLOUDFLARE_ENV;
+		const endpoints = endpointsForEnv(resolved);
+		const keyEnv = this.settings.mdfKeyEnv;
+		const existingKey = this.settings.mdfKey;
+
+		this.settings.cloudflareEnv = resolved;
+		this.settings.cloudflareResolvedEnv = resolved;
+		this.settings.cloudflareApiBaseUrl = endpoints.apiBaseUrl;
+		registerMdfridayApiBaseUrl(endpoints.apiBaseUrl);
+		this.settings.cloudflarePublicBaseUrl = endpoints.publicBaseUrl;
+		this.settings.cloudflareAccountBaseUrl = endpoints.accountBaseUrl;
+		this.cloudflareEnvEpoch += 1;
+
+		if (Platform.isDesktop && this.themeApiService) {
+			this.themeApiService.clearCache();
+		}
+
+		this.foundryPublishService?.applyCloudflareEndpoints({
+			apiBaseUrl: endpoints.apiBaseUrl,
+			publicBaseUrl: endpoints.publicBaseUrl,
+		});
+
+		if (existingKey) {
+			if (keyEnv && keyEnv !== resolved) {
+				this.clearMdfKey(`env ${keyEnv} → ${resolved}`);
+				if (opts.noticeOnSwitch !== false) {
+					new Notice(
+						`MDFriday Key was for ${keyEnv}; cleared for ${resolved}. Publish once to mint a new Guest Key.`,
+						6000,
+					);
+				}
+			} else if (!keyEnv) {
+				// Legacy installs: Key may be from production while this build is staging (or reverse).
+				const alive = await this.probeMdfKey(existingKey, endpoints.apiBaseUrl);
+				if (alive) {
+					this.settings.mdfKeyEnv = resolved;
+				} else {
+					this.clearMdfKey('legacy key not on current API');
+					if (opts.noticeOnSwitch !== false) {
+						new Notice(
+							`MDFriday Key is not valid on ${resolved} (${endpoints.apiBaseUrl}). Cleared — publish once to mint a new Guest Key.`,
+							7000,
+						);
+					}
+				}
+			}
+		}
+
+		if (opts.persist !== false) {
+			await this.saveData(this.settings);
+		}
+		return resolved;
+	}
+
+	/**
+	 * Open hosted Turnstile challenge and wait for deep link token.
+	 * Local env returns null (API skips Turnstile).
+	 */
+	async requestTurnstileToken(timeoutMs = 120_000): Promise<string | null> {
+		const resolved = this.settings.cloudflareResolvedEnv || 'staging';
+		const challengeUrl = endpointsForEnv(resolved).guestChallengeUrl;
+		if (!challengeUrl) return null;
+
+		if (this.turnstileWaiter) {
+			this.turnstileWaiter.reject(new Error('Turnstile challenge superseded'));
+			window.clearTimeout(this.turnstileWaiter.timer);
+			this.turnstileWaiter = null;
+		}
+
+		new Notice('Complete the security check in your browser…', 6000);
+		window.open(challengeUrl, '_blank');
+
+		return new Promise<string>((resolve, reject) => {
+			const timer = window.setTimeout(() => {
+				this.turnstileWaiter = null;
+				reject(new Error('Turnstile challenge timed out — open Account / try again'));
+			}, timeoutMs);
+			this.turnstileWaiter = { resolve, reject, timer };
+		});
+	}
+
+	resolveTurnstileToken(token: string): void {
+		if (!this.turnstileWaiter) {
+			new Notice('Received turnstile token (no pending challenge). Try publish again.', 4000);
+			return;
+		}
+		window.clearTimeout(this.turnstileWaiter.timer);
+		const { resolve } = this.turnstileWaiter;
+		this.turnstileWaiter = null;
+		resolve(token);
+		new Notice('Security check OK — continuing…', 3000);
+	}
+
+	/** Re-index / re-render Obsidian settings after mdfKey or related fields change. */
+	refreshSettingsUi(): void {
+		try {
+			this.settingTab?.update();
+		} catch (e) {
+			console.warn('[Friday] settings UI refresh failed', e);
+		}
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+		
+		if (Platform.isDesktop && this.foundryGlobalConfigService && this.absWorkspacePath) {
+			await this.saveSettingsToFoundryGlobalConfig();
+		}
+	}
+	
+	private async saveSettingsToFoundryGlobalConfig() {
+		if (!this.foundryGlobalConfigService || !this.absWorkspacePath) {
+			return;
+		}
+		
+		try {
+			const config = this.foundryGlobalConfigService;
+			const workspace = this.absWorkspacePath;
+
+			await config.set(workspace, 'site.downloadServer', this.settings.downloadServer);
+			await config.set(workspace, 'publish.method', 'cloudflare');
+		} catch (error) {
+			console.error('[Friday] Error saving settings to Global Config:', error);
+		}
+	}
+
+	private async loadSettingsFromFoundryGlobalConfig() {
+		if (!this.foundryGlobalConfigService || !this.absWorkspacePath) {
+			return;
+		}
+		
+		try {
+			const config = this.foundryGlobalConfigService;
+			const workspace = this.absWorkspacePath;
+			const listResult = await config.list(workspace);
+			
+			if (!listResult.success || !listResult.data?.config) {
+				return;
+			}
+			
+			const foundryConfig = listResult.data.config as Record<string, unknown>;
+			const siteConfig = foundryConfig['site'];
+			const downloadServer =
+				siteConfig &&
+				typeof siteConfig === 'object' &&
+				'downloadServer' in siteConfig
+					? (siteConfig as { downloadServer?: unknown }).downloadServer
+					: undefined;
+			if (downloadServer === 'global' || downloadServer === 'east') {
+				this.settings.downloadServer = downloadServer;
+			}
+		} catch (error) {
+			console.error('[Friday] Error loading settings from Global Config:', error);
+		}
+	}
+
+	async status(text: string) {
+		this.statusBar.setText(text)
+	}
+	
+}

@@ -1,0 +1,2347 @@
+/* MDFriday Digital Garden — Apple sidebar panel (from ux/DESIGN.md + ux/index.html) */
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .view-content {
+  background: #f5f5f7;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel {
+  --apple-bg: #f5f5f7;
+  --apple-section: #fbfbfd;
+  --apple-white: #ffffff;
+  --apple-text: #1d1d1f;
+  --apple-secondary: #86868b;
+  --apple-tertiary: #6e6e73;
+  --apple-blue: #0071e3;
+  --apple-blue-hover: #0077ed;
+  --apple-gray-fill: #e8e8ed;
+  --apple-gray-hover: #d2d2d7;
+  --apple-divider: rgba(0, 0, 0, 0.08);
+  --apple-success: #34c759;
+  --apple-warning: #ff9f0a;
+  --apple-danger: #ff3b30;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 980px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--apple-bg);
+  color: var(--apple-text);
+  font-family: var(--font-apple);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel *,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel *::before,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel *::after {
+  box-sizing: border-box;
+}
+
+
+/* Reset host button/input chrome inside the panel.
+ * Leaf + panel scope raises specificity so host app defaults lose without overrides.
+ */
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel :is(button, input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel a.btn {
+  font: inherit;
+  box-shadow: none;
+  -webkit-app-region: no-drag;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  color: inherit;
+}
+
+
+/* Host button/link chrome — scoped; shadow cleared in panel reset above */
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel button,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel a.btn {
+  box-shadow: none;
+  -webkit-app-region: no-drag;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel button:not(.btn):not(.pp-cta):not(.ub-cta):not(.toggle):not(.plan-pill):not(.theme-demo):not(.link):not(.pl-stop) {
+  color: inherit;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel a {
+  text-decoration: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-header {
+  padding: 16px 22px 0;
+  background: var(--apple-section);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mdf-brand-header {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mdf-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mdf-brand-link:hover .mdf-brand-title {
+  color: var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mdf-logo {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: block;
+  border-radius: 4px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mdf-brand-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--apple-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-pill {
+  appearance: none;
+  border: none;
+  background: var(--apple-gray-fill);
+  color: var(--apple-text);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-pill:hover {
+  background: var(--apple-gray-hover);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-pill.guest {
+  background: #fff3e0;
+  color: #b25e00;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-pill.free {
+  background: #e8f1ff;
+  color: #0058b0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-pill.personal {
+  background: #e8f8ed;
+  color: #1b7a3a;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-pill.open {
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.25);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--apple-divider);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-tab {
+  flex: 1;
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 10px 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--apple-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  position: relative;
+  transition: color 0.15s;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-tab:hover {
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-tab.active {
+  color: var(--apple-text);
+  font-weight: 600;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 28%;
+  right: 28%;
+  bottom: 0;
+  height: 2px;
+  background: var(--apple-blue);
+  border-radius: 2px 2px 0 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-popover {
+  position: absolute;
+  top: 52px;
+  right: 14px;
+  left: 14px;
+  max-width: 312px;
+  margin-left: auto;
+  max-height: min(78vh, 640px);
+  overflow-y: auto;
+  z-index: 40;
+  background: var(--apple-section);
+  border: 1px solid var(--apple-divider);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+  padding: 12px;
+  scrollbar-width: thin;
+  animation: mdf-pop-in 0.2s var(--ease);
+}
+
+@keyframes mdf-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-popover .pp-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .plan-popover .pp-note {
+  font-size: 11px;
+  color: var(--apple-secondary);
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier {
+  border: 1px solid var(--apple-divider);
+  border-radius: var(--radius-md);
+  padding: 12px 12px 10px;
+  margin-bottom: 8px;
+  background: var(--apple-white);
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  display: block;
+  box-sizing: border-box;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier.current {
+  border-color: var(--apple-blue);
+  box-shadow: 0 0 0 1px var(--apple-blue);
+  background: #f7fbff;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier .pp-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier .pp-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier .pp-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--apple-gray-fill);
+  color: var(--apple-secondary);
+  flex-shrink: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier.current .pp-tag {
+  background: rgba(0, 113, 227, 0.12);
+  color: var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier .pp-best {
+  font-size: 11px;
+  color: var(--apple-secondary);
+  margin: 4px 0 2px;
+  line-height: 1.35;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier .pp-price {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--apple-text);
+  margin-bottom: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier .pp-price .muted {
+  font-weight: 500;
+  color: var(--apple-secondary);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier ul.pp-benefits {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  font-size: 11px;
+  color: var(--apple-tertiary);
+  line-height: 1.55;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier ul.pp-benefits li {
+  padding-left: 14px;
+  position: relative;
+  margin-bottom: 3px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier ul.pp-benefits li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: var(--apple-success);
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier ul.pp-benefits li.note {
+  color: var(--apple-secondary);
+  font-size: 10.5px;
+  margin-top: 4px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-tier ul.pp-benefits li.note::before {
+  content: "";
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel button.pp-cta,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel a.pp-cta,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-cta {
+  appearance: none;
+  border: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  background: var(--apple-blue);
+  color: #fff;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+  box-sizing: border-box;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-cta:hover {
+  background: var(--apple-blue-hover);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-cta.secondary {
+  background: var(--apple-gray-fill);
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-cta.secondary:hover {
+  background: var(--apple-gray-hover);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-cta.current-cta {
+  background: transparent;
+  color: var(--apple-secondary);
+  border: 1px solid var(--apple-divider);
+  cursor: default;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-footer {
+  font-size: 11px;
+  color: var(--apple-secondary);
+  line-height: 1.45;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--apple-divider);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .pp-footer strong {
+  color: var(--apple-text);
+  font-weight: 600;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 22px 24px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-scroll.hidden {
+  display: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-actions {
+  display: flex;
+  padding: 14px 22px calc(35px + env(safe-area-inset-bottom, 0px));
+  gap: 10px;
+  align-items: center;
+  justify-content: stretch;
+  background: var(--apple-section);
+  border-top: 1px solid var(--apple-divider);
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 5;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-actions.is-hidden {
+  display: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn {
+  appearance: none;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 11px 18px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel a.btn {
+  color: #fff;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel a.btn.btn-secondary {
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn:active {
+  transform: scale(0.98);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-primary {
+  background: var(--apple-blue);
+  color: #fff;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-primary:hover:not(:disabled) {
+  background: var(--apple-blue-hover);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-secondary {
+  background: var(--apple-gray-fill);
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-secondary:hover:not(:disabled) {
+  background: var(--apple-gray-hover);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-full {
+  width: 100%;
+  flex: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-sm {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  min-height: 30px;
+  border-radius: var(--radius-pill);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-pill {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  min-height: 32px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-ghost {
+  background: transparent;
+  color: var(--apple-blue);
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-ghost:hover {
+  text-decoration: underline;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-danger-soft {
+  appearance: none;
+  background: transparent;
+  color: var(--apple-danger);
+  border: 1px solid rgba(255, 59, 48, 0.28);
+  font-size: 13px;
+  padding: 10px 14px;
+  min-height: 40px;
+  border-radius: var(--radius-pill);
+  width: 100%;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 0;
+  box-shadow: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-danger-soft:hover {
+  background: rgba(255, 59, 48, 0.06);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-actions .btn {
+  min-height: 44px;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-actions .btn-secondary {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .panel-actions .btn-primary {
+  flex: 1.6;
+  min-width: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .card {
+  background: var(--apple-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--apple-divider);
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .card.card-modes {
+  padding: 10px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--apple-secondary);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  margin: 2px 0 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .helper {
+  font-size: 12px;
+  color: var(--apple-secondary);
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .helper.warn {
+  color: #b25e00;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .helper.lock {
+  color: var(--apple-secondary);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip {
+  background: linear-gradient(135deg, #f0f7ff 0%, #f8fbff 100%);
+  border: 1px solid rgba(0, 113, 227, 0.15);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip.revoked {
+  background: linear-gradient(135deg, #fff8ee 0%, #fffcf7 100%);
+  border-color: rgba(255, 159, 10, 0.3);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip .status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip .status-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip .url-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip .strip-unpublish {
+  grid-column: 2;
+  justify-self: end;
+  align-self: baseline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--apple-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1.4;
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip .strip-unpublish:hover {
+  color: var(--apple-text);
+  background: transparent;
+  text-decoration: underline;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--apple-success);
+  flex-shrink: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .status-dot.unpublished {
+  background: var(--apple-secondary);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .status-dot.revoked {
+  background: var(--apple-warning);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip .url-line {
+  grid-column: 1;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  display: block;
+  font-size: 12px;
+  color: var(--apple-blue);
+  font-family: var(--font-mono);
+  word-break: break-all;
+  margin: 0;
+  cursor: pointer;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip .url-line.disabled {
+  color: var(--apple-secondary);
+  text-decoration: line-through;
+  cursor: default;
+  opacity: 0.7;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .project-strip .meta-line {
+  font-size: 11px;
+  color: var(--apple-secondary);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .remember-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #1b7a3a;
+  background: rgba(52, 199, 89, 0.12);
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-live-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 113, 227, 0.12);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-live-row .pl-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--apple-blue);
+  margin-top: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+  animation: mdf-pl-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes mdf-pl-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(0, 113, 227, 0.08);
+  }
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-live-row .pl-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-live-row .pl-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-live-row .pl-url {
+  font-size: 11px;
+  color: var(--apple-blue);
+  font-family: var(--font-mono);
+  word-break: break-all;
+  margin-top: 2px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-live-row .pl-stop {
+  appearance: none;
+  border: none;
+  background: var(--apple-gray-fill);
+  color: var(--apple-text);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-live-row .pl-stop:hover {
+  background: var(--apple-gray-hover);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-stopped-row {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--apple-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .preview-stopped-row .ps-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--apple-secondary);
+  opacity: 0.55;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-card:focus-visible {
+  outline: 2px solid var(--interactive-accent, #5b7cfa);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-switcher {
+  position: relative;
+  /* Keep normal .card padding — do not zero it out */
+  overflow: visible;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-card.open .target-chevron {
+  transform: rotate(180deg);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-chevron {
+  flex-shrink: 0;
+  color: var(--apple-secondary);
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+  transition: transform 0.15s ease;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 40;
+  background: var(--apple-white, var(--background-primary));
+  border: 1px solid var(--apple-divider, var(--background-modifier-border));
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: var(--apple-text);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+  outline: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-item:hover,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-item.active {
+  background: var(--apple-gray-fill, var(--background-modifier-hover));
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-icon {
+  flex-shrink: 0;
+  width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-sep {
+  margin: 0 4px;
+  color: var(--apple-secondary);
+  font-weight: 400;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-check {
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-empty,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-menu-hint {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--apple-secondary);
+  line-height: 1.4;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--apple-gray-fill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--apple-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-path {
+  font-size: 11px;
+  color: var(--apple-secondary);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  word-break: break-all;
+  line-height: 1.35;
+}
+
+/* Compact kind tag — right of file row, not a full-width control */
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .target-kind-tag {
+  flex-shrink: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--apple-gray-fill);
+  color: var(--apple-secondary);
+  letter-spacing: 0.01em;
+  user-select: none;
+  pointer-events: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-seg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * Mode options MUST NOT be <button> — Obsidian themes force pill radius / inline-flex
+ * on buttons and destroy this layout (title leaks left, desc sits in a capsule).
+ * Markup mirrors ux/index.html: .mode-option > .mode-row > (.mode-copy + .radio)
+ */
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option {
+  appearance: none;
+  border: 1.5px solid var(--apple-divider);
+  background: var(--apple-white);
+  border-radius: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  color: var(--apple-text);
+  line-height: 1.35;
+  box-sizing: border-box;
+  display: block;
+  height: auto;
+  min-height: 0;
+  box-shadow: none;
+  outline: none;
+  margin: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option:hover:not(.is-disabled) {
+  border-color: rgba(0, 113, 227, 0.35);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option.active {
+  border-color: var(--apple-blue);
+  background: #f0f7ff;
+  box-shadow: 0 0 0 1px var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #fafafa;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option .mode-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option .mode-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option .mode-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-text);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  line-height: 1.3;
+  margin: 0;
+  padding: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option .mode-desc {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--apple-secondary);
+  margin-top: 3px;
+  line-height: 1.4;
+  padding: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option .radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--apple-gray-hover);
+  margin-left: auto;
+  margin-top: 1px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--apple-white);
+  box-sizing: border-box;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option.active .radio {
+  border-color: var(--apple-blue);
+  background: var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-option.active .radio::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .mode-helper {
+  margin: 4px 2px 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .disabled-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--apple-secondary);
+  background: var(--apple-gray-fill);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-list {
+  max-height: none;
+  overflow: visible;
+  border: 1px solid var(--apple-divider);
+  border-radius: var(--radius-md);
+  background: var(--apple-white);
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+  border: none;
+  border-bottom: 1px solid var(--apple-divider);
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-row:last-child {
+  border-bottom: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-row:hover {
+  background: #f8f8fa;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-row.selected {
+  background: #f0f7ff;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-demo {
+  font-size: 11px;
+  color: var(--apple-blue);
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 2px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-demo:hover {
+  text-decoration: underline;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--apple-gray-hover);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: transparent;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .theme-row.selected .theme-check {
+  background: var(--apple-blue);
+  border-color: var(--apple-blue);
+  color: #fff;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .upgrade-banner {
+  background: #fff8ee;
+  border: 1px solid rgba(255, 159, 10, 0.25);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #8a5a00;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .upgrade-banner .ub-lead {
+  font-weight: 600;
+  color: #6b4500;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .upgrade-banner .ub-meta {
+  margin-top: 2px;
+  opacity: 0.92;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .upgrade-banner .ub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .upgrade-banner .ub-sep {
+  opacity: 0.5;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .upgrade-banner button.link,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .upgrade-banner a.link {
+  color: var(--apple-blue);
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+  text-decoration: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .upgrade-banner .ub-cta {
+  font-weight: 700;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .quota-error {
+  margin: 8px 0 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 59, 48, 0.06);
+  border: 1px solid rgba(255, 59, 48, 0.18);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .quota-error.is-quota {
+  background: #fff8ee;
+  border-color: rgba(255, 159, 10, 0.28);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .quota-error .helper.warn {
+  margin: 0 0 10px;
+  color: #8a5a00;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .quota-error .btn {
+  width: 100%;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .softgate-benefits {
+  width: 100%;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--apple-secondary, var(--text-muted));
+  text-align: left;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .softgate-benefits div::before {
+  content: "✓ ";
+  color: #1b7a3a;
+  font-weight: 700;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-card {
+  margin: 4px 0 12px;
+  background: var(--apple-white);
+  border: 1px solid var(--apple-divider);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-card.open {
+  border-color: rgba(0, 113, 227, 0.28);
+  box-shadow: 0 0 0 1px rgba(0, 113, 227, 0.08), 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--apple-text);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-toggle:hover {
+  background: #f8f8fa;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-card.open .advanced-toggle {
+  background: #f7fbff;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-toggle .adv-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-toggle .adv-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--apple-text);
+  line-height: 1.3;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-toggle .adv-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--apple-secondary);
+  line-height: 1.35;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-toggle .chev {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--apple-gray-fill);
+  color: var(--apple-text);
+  transition: transform 0.2s var(--ease), background 0.15s, color 0.15s;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-toggle .chev svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-card.open .advanced-toggle .chev {
+  transform: rotate(180deg);
+  background: rgba(0, 113, 227, 0.12);
+  color: var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 14px;
+  border-top: 1px solid var(--apple-divider);
+  background: #f5f5f7;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .advanced-body .field-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Advanced ▸ per-feature cards (Basic / Brand / Nav / Password / Subscribe / Domain) */
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block {
+  margin: 0;
+  padding: 0;
+  background: var(--apple-white);
+  border: 1px solid var(--apple-divider);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 12px 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block-icon {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f2f2f7;
+  color: #3a3a3c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block-text {
+  flex: 1;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block-title {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--apple-text);
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block-desc {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--apple-secondary);
+  line-height: 1.35;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block-head .toggle {
+  margin-top: 2px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block-body {
+  padding: 10px 12px 12px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-title-row {
+  position: relative;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-title-row .field-input {
+  padding-right: 52px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-char-count {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--apple-secondary);
+  pointer-events: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-brand-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 360px) {
+  .workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-brand-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-brand-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-brand-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-brand-hint {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-frame--sm {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-upload-btn,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 5px 10px;
+  min-height: 0;
+  height: auto;
+  border: 1px solid var(--apple-divider);
+  border-radius: 8px;
+  background: var(--apple-white);
+  color: var(--apple-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-upload-btn:hover,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-secondary-btn:hover {
+  border-color: rgba(0, 113, 227, 0.35);
+  color: var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-secondary-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block .brand-path {
+  text-align: left;
+  font-size: 10px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block .apple-domain-slot {
+  margin: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block .embedded-status {
+  margin-bottom: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-table th,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-table td {
+  border: 1px solid var(--apple-divider);
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-table th {
+  color: var(--apple-secondary);
+  font-weight: 500;
+  background: var(--apple-section);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-table th:last-child,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-table td.nav-links-actions {
+  width: 52px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-input {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--apple-text);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 2px 0;
+  margin: 0;
+  box-shadow: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-input::placeholder {
+  color: var(--apple-secondary);
+  opacity: 0.75;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-remove {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--apple-secondary);
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: none;
+  min-height: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-remove:hover {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--apple-danger, #ff3b30);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-add {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--apple-blue);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0;
+  margin: 0 0 4px;
+  cursor: pointer;
+  box-shadow: none;
+  min-height: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .nav-links-add:hover {
+  text-decoration: underline;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--apple-text);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .field-input {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--apple-divider);
+  background: var(--apple-white);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--apple-text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: none;
+  min-height: 0;
+  height: auto;
+  box-sizing: border-box;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .field-input:focus {
+  border-color: var(--apple-blue);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .field-input:disabled {
+  background: #fafafa;
+  color: var(--apple-secondary);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .field-input::placeholder {
+  color: #aeaeb2;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .field-group {
+  margin-bottom: 14px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-frame {
+  width: 72px;
+  height: 72px;
+  padding: 6px;
+  border: 1px dashed var(--apple-divider);
+  border-radius: 14px;
+  background: var(--apple-gray-fill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-frame:hover {
+  border-color: var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-frame:not(.is-empty) {
+  border-style: solid;
+  background: var(--apple-white);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-placeholder {
+  width: 32px;
+  height: 32px;
+  background: center / 28px 28px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='1.6' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='8.5' cy='9' r='1.3' fill='%2386868b' stroke='none'/%3E%3Cpath d='M4 17l5-4 3 2.5L14.5 13 20 17.5'/%3E%3C/svg%3E");
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-path {
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--apple-secondary);
+  text-align: center;
+  word-break: break-all;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .brand-clear {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--apple-blue);
+  cursor: pointer;
+}
+
+.brand-pick-modal {
+  width: min(560px, 92vw);
+}
+
+.brand-pick-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.brand-pick-modal input.brand-pick-search {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 10px;
+  height: var(--input-height);
+}
+
+.brand-pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: min(60vh, 480px);
+  overflow: auto;
+}
+
+.brand-pick-modal button.brand-pick-row {
+  appearance: none;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  height: auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-normal);
+  font: inherit;
+  font-weight: inherit;
+  white-space: normal;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brand-pick-modal button.brand-pick-row:hover,
+.brand-pick-modal button.brand-pick-row:focus-visible {
+  background: var(--background-modifier-hover);
+}
+
+.brand-pick-modal img.brand-pick-thumb {
+  width: 40px;
+  height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+  flex: 0 0 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--background-secondary);
+}
+
+.brand-pick-path {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.brand-pick-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .toggle {
+  width: 42px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--apple-gray-fill);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+  box-shadow: none;
+  min-height: 0;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .toggle.on {
+  background: var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .toggle.is-disabled,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s var(--ease);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .toggle.on::after {
+  transform: translateX(16px);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .domain-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  margin-top: 0;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--apple-gray-fill);
+  color: var(--apple-secondary);
+  font-weight: 500;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .domain-status.bound {
+  background: rgba(52, 199, 89, 0.12);
+  color: #1b7a3a;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .capability-section.is-embedded {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .capability-section.is-embedded .capability-body {
+  padding: 0;
+  border-top: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .embedded-status {
+  margin-bottom: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot input.form-input {
+  border-radius: 8px;
+  border: 1px solid var(--apple-divider);
+  padding: 9px 12px;
+  box-shadow: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .state-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 4px 12px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .state-view.state-result {
+  padding-top: 20px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--apple-gray-fill);
+  border-top-color: var(--apple-blue);
+  border-radius: 50%;
+  animation: mdf-spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes mdf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--apple-gray-fill);
+  border-radius: 2px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .progress-fill {
+  height: 100%;
+  background: var(--apple-blue);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .state-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .state-desc {
+  font-size: 13px;
+  color: var(--apple-secondary);
+  line-height: 1.5;
+  max-width: 260px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .verify-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 113, 227, 0.12);
+  color: var(--apple-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .verify-steps {
+  width: 100%;
+  text-align: left;
+  background: var(--apple-white);
+  border: 1px solid var(--apple-divider);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin: 16px 0 12px;
+  font-size: 12px;
+  color: var(--apple-tertiary);
+  line-height: 1.55;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .verify-steps ol {
+  margin-left: 18px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .verify-steps li {
+  margin-bottom: 4px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .success-check {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(52, 199, 89, 0.14);
+  color: var(--apple-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 14px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .success-check.preview {
+  background: rgba(0, 113, 227, 0.12);
+  color: var(--apple-blue);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .success-url-box {
+  width: 100%;
+  background: var(--apple-white);
+  border: 1px solid var(--apple-divider);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin: 18px 0 14px;
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .success-url-box .url {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--apple-blue);
+  word-break: break-all;
+  margin-bottom: 12px;
+  line-height: 1.45;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .success-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 14px;
+  letter-spacing: 0.01em;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .result-badge.publish {
+  background: rgba(52, 199, 89, 0.15);
+  color: #1b7a3a;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .result-badge.preview {
+  background: #e8eef5;
+  color: #3a4a5c;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .result-helper {
+  font-size: 11px;
+  color: var(--apple-secondary);
+  line-height: 1.45;
+  max-width: 260px;
+  margin: 0 0 10px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .result-secondary-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .history-locked {
+  text-align: center;
+  padding: 40px 20px 32px;
+  color: var(--apple-secondary);
+  background: var(--apple-white);
+  border: 1px dashed #d2d2d7;
+  border-radius: var(--radius-md);
+  margin-top: 4px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .history-locked .ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  opacity: 1;
+  font-size: inherit;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .history-locked .hl-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--apple-text);
+  margin-bottom: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .history-locked .hl-desc {
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0 auto 16px;
+  max-width: 240px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .history-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--apple-secondary);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .history-empty .ico {
+  font-size: 28px;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+/* Domain / History embedded in Apple panel */
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .capability-section,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .capability-section {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .subsection-toggle.mdf-fold-toggle {
+  display: none;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .capability-body {
+  display: block;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .history-list {
+  max-height: min(52vh, 420px);
+  gap: 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .history-item {
+  background: var(--apple-white);
+  border: 1px solid var(--apple-divider);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: block;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .history-item.is-live {
+  border-color: rgba(0, 113, 227, 0.28);
+  box-shadow: 0 0 0 1px rgba(0, 113, 227, 0.08);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-text);
+  letter-spacing: -0.01em;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: rgba(52, 199, 89, 0.12);
+  color: #1b7a3a;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-meta {
+  font-size: 11px;
+  color: var(--apple-secondary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-btn,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .url-action-btn,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .action-button {
+  appearance: none;
+  border: none;
+  background: var(--apple-gray-fill);
+  color: var(--apple-text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.2;
+  box-shadow: none;
+  min-height: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-btn:hover:not(:disabled),
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .url-action-btn:hover,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .action-button:hover {
+  background: var(--apple-gray-hover);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-btn-danger {
+  background: transparent;
+  color: var(--apple-danger);
+  padding: 6px 8px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .hi-btn-danger:hover:not(:disabled) {
+  background: rgba(255, 59, 48, 0.06);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-history-slot .history-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--apple-secondary);
+  font-size: 13px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .capability-section {
+  border: 1px solid var(--apple-divider);
+  border-radius: var(--radius-md);
+  background: var(--apple-white);
+  overflow: hidden;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .mdf-fold-toggle,
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .subsection-toggle {
+  min-height: 40px;
+  padding: 10px 12px;
+  background: transparent;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .capability-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--apple-divider);
+  background: transparent;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .setting-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-text);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .capability-summary {
+  font-size: 11px;
+  color: var(--apple-secondary);
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .btn {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  min-height: 0;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .capability-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .apple-domain-slot .dns-guide {
+  border-color: var(--apple-divider);
+  background: var(--apple-gray-fill);
+}
+
+/* Guest content expiry — local wording, server is source of truth */
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .expiry-line {
+	margin-top: 6px;
+	font-size: 12px;
+	line-height: 1.35;
+	color: var(--text-muted, #86868B);
+}
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .expiry-line.is-expired {
+	color: var(--text-error, #C0392B);
+	font-weight: 500;
+}
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .expiry-line .expiry-claim {
+	margin-left: 8px;
+	font-size: 12px;
+}

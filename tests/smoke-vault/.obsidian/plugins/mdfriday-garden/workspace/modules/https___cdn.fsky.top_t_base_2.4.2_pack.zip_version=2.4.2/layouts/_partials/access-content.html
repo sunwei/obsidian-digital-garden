@@ -1,0 +1,59 @@
+{{- /*
+  [CAP:access] → see caps/access/manifest.json
+  Prefer mdfAccessInfo (Foundry plan) so inherited protection works without page-level access: param.
+*/ -}}
+{{- $page := . -}}
+{{- $html := "" -}}
+{{- if reflect.IsMap . -}}
+  {{- $page = index . "Page" -}}
+  {{- $html = index . "HTML" | default "" -}}
+{{- else -}}
+  {{- $html = .Content -}}
+{{- end -}}
+{{- $info := mdfAccessInfo $page -}}
+{{- if $info -}}
+  {{- $api := $info.api | default "" -}}
+  {{- if not $api -}}
+    {{- with $page.Site.Params.mdfriday -}}
+      {{- $api = .api | default .apiBaseUrl | default "" -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $api -}}
+    {{- $api = $page.Site.Params.mdfriday_api | default "https://api.mdfriday.com" -}}
+  {{- end -}}
+  {{- with $page.Params.teaser -}}
+{{- /* Teaser is plain text (Foundry has no markdownify). Escape via default print. */ -}}
+<div class="mdf-access-teaser">{{ . }}</div>
+  {{- end -}}
+{{- partial "access-card.html" $page -}}
+  {{- $attrs := mdfAccessEncrypt $page $html -}}
+  {{- if $attrs -}}
+<div
+  id="mdf-encrypt-content"
+  data-format="2"
+  data-api="{{ $api }}"
+  data-project="{{ $attrs.projectId }}"
+  data-scope="{{ $attrs.scope }}"
+  data-resource="{{ $attrs.resourceId }}"
+  data-key="{{ $attrs.keyId }}"
+  data-encrypted="{{ $attrs.data }}"
+></div>
+  {{- else -}}
+<div
+  id="mdf-encrypt-content"
+  data-format="2"
+  data-api="{{ $api }}"
+  data-project="{{ $info.projectId }}"
+  data-scope="{{ $info.scope }}"
+  data-resource="{{ $info.resourceId }}"
+  data-key="{{ $info.keyId }}"
+  data-encrypted=""
+></div>
+  {{- end -}}
+{{- else if eq $page.Params.access "protected" -}}
+  {{- /* Fallback when SSG access runtime was not started */ -}}
+{{- partial "access-card.html" $page -}}
+<div id="mdf-encrypt-content" data-format="2" data-encrypted=""></div>
+{{- else -}}
+{{- $html | safeHTML -}}
+{{- end -}}

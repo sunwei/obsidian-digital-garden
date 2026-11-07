@@ -1,0 +1,4 @@
+{{ define "main" }}
+{{- $shell := partial "creator/home.html" . -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

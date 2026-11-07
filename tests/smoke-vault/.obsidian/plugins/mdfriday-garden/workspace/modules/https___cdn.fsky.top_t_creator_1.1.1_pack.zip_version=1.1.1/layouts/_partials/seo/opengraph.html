@@ -1,0 +1,18 @@
+{{- /* seo/opengraph.html — creator override (arch/26 §1.5): og:image = cover → (TODO foundry M3: .FirstImage) → logo.
+     Base reads params.image; creator uses the card-image rule instead. */ -}}
+{{- $ogTitle := .Site.Title -}}
+{{- with .Title }}{{ $ogTitle = partial "creator/head-title.html" $ }}{{ end -}}
+{{- with $ogTitle }}
+<meta property="og:title" content="{{ . }}" />
+{{- end }}
+{{- with .Description | default .Site.Params.description }}
+<meta property="og:description" content="{{ . }}">
+{{- end }}
+{{- $img := partial "creator/card-image.html" . -}}
+{{- if not $img -}}{{- with .Site.Params.logo -}}{{- $img = trim (partial "resolve-asset" .) "\n\r\t " -}}{{- end -}}{{- end -}}
+{{- with $img }}
+<meta property="og:image" content="{{ . }}" />
+{{- end }}
+<meta property="og:url" content="{{ .Permalink }}" />
+<meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}" />
+<meta property="og:site_name" content="{{ .Site.Title }}" />

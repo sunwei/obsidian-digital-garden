@@ -1,0 +1,20 @@
+{{- /* creator/backlinks.html — mini cards; hidden when empty unless params.backlinks.hideWhenEmpty = false. */ -}}
+{{- $page := .page -}}
+{{- $backlinks := $page.Backlinks -}}
+{{- $hideWhenEmpty := true -}}
+{{- with $page.Site.Params.backlinks -}}{{- if eq .hideWhenEmpty false -}}{{- $hideWhenEmpty = false -}}{{- end -}}{{- end -}}
+{{- if or (not $hideWhenEmpty) (gt (len $backlinks) 0) -}}
+<section class="cr-backlinks backlinks" aria-labelledby="cr-backlinks-h">
+	<h2 class="cr-block-title" id="cr-backlinks-h">{{ i18n "creator.backlinks" }}</h2>
+	<div class="cr-mini-grid">
+		{{- range $backlinks -}}
+		{{- $url := .RelPermalink -}}
+		{{- $hit := false -}}
+		{{- range first 1 (where $.nodes "url" $url) -}}{{- $hit = true -}}{{- partial "creator/card.html" (dict "node" . "kind" "mini") -}}{{- end -}}
+		{{- if not $hit -}}
+		<a class="cr-mini" href="{{ $url }}"><span class="cr-mini-body"><span class="cr-mini-title">{{ partial "page-title.html" . }}</span></span></a>
+		{{- end -}}
+		{{- end -}}
+	</div>
+</section>
+{{- end -}}

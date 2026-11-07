@@ -1,0 +1,41 @@
+/* MDFriday design tokens — design PNG sampled; Obsidian vars as soft fallbacks */
+.site-builder,
+.friday-setting-tab {
+  --mdf-panel: #eff1f5;
+  --mdf-card: #ffffff;
+  --mdf-soft: #e7e9ee;
+  --mdf-stroke: #bdc0cb;
+  --mdf-ink: #2e303b;
+  --mdf-muted: #4d4f67;
+  --mdf-hint: #8b8fa3;
+  --mdf-primary: #9375ef;
+  --mdf-danger: #e05454;
+  --mdf-radius: 8px;
+  --mdf-gap: 12px;
+  --mdf-border: var(--mdf-stroke, var(--background-modifier-border));
+  --mdf-error: var(--mdf-danger, var(--text-error));
+  --mdf-radius-sm: 6px;
+  --mdf-radius-md: 8px;
+  --mdf-accent: var(--mdf-primary);
+  --mdf-primary-soft: rgba(147, 117, 239, 0.12);
+}
+
+/* Sticky account footer needs a filled view height */
+.workspace-leaf-content[data-type="MDFriday_Garden"] {
+  height: 100%;
+}
+
+.workspace-leaf-content[data-type="MDFriday_Garden"] .view-content {
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f7;
+}
+
+/* Settings tab — workspace ID text control */
+.mdfriday-workspace-id-input {
+  width: 100%;
+  min-width: 16rem;
+}

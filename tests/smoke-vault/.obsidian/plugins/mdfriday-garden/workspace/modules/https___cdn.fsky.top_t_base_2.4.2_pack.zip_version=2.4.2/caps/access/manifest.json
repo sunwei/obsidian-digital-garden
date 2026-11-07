@@ -1,0 +1,79 @@
+{
+  "$schema": "https://mdfriday.com/schemas/capability-manifest/v1",
+  "name": "access",
+  "version": "2.0.0",
+  "type": "conditional",
+  "description": "Member access control (access keys + scopes). Encrypts page bodies with per-page CEK; readers unlock via access key. Replaces the password-based encrypt cap for new sites.",
+
+  "entry": "partial:access-content.html",
+
+  "config": {
+    "scope": "page",
+    "note": "Declare access: protected and optional access_scope in index.md / frontmatter. Keys are issued in the Dashboard.",
+    "params": [
+      {
+        "key": "access",
+        "in": "front-matter",
+        "type": "string",
+        "required": false,
+        "description": "public | protected. Nearest ancestor wins.",
+        "example": "protected"
+      },
+      {
+        "key": "access_scope",
+        "in": "front-matter",
+        "type": "string",
+        "required": false,
+        "description": "Scope slug for this page/folder. Only set when creating an independent scope.",
+        "example": "skill"
+      },
+      {
+        "key": "teaser",
+        "in": "front-matter",
+        "type": "string",
+        "required": false,
+        "description": "Public preview shown before unlock."
+      }
+    ],
+    "example_frontmatter": "---\ntitle: Skills\naccess: protected\naccess_scope: skill\nteaser: Open with your access key.\n---\n"
+  },
+
+  "assets": {
+    "js": [
+      {
+        "file": "static/access.js",
+        "published_at": "access.js",
+        "size": "~12KB",
+        "locked": true,
+        "cdn": null,
+        "note": "Reader runtime (session + CEK fetch + AES-GCM). Implemented in I3."
+      }
+    ],
+    "future_lazy_load": false,
+    "size_impact": "~12KB"
+  },
+
+  "locked": {
+    "html_ids": [
+      "mdf-encrypt-content",
+      "mdf-access-key-input",
+      "mdf-access-cta",
+      "mdf-access-status",
+      "mdf-access-another",
+      "mdf-access-signout"
+    ],
+    "html_data_attrs": ["data-format", "data-project", "data-scope", "data-resource", "data-key", "data-encrypted"],
+    "js_files": ["static/access.js"],
+    "reason": "access.js reads these IDs/data-attrs"
+  },
+
+  "child_override": {
+    "partials": [
+      {
+        "file": "layouts/_partials/access-content.html",
+        "level": "safe",
+        "note": "Wrap encrypted vs teaser content"
+      }
+    ]
+  }
+}

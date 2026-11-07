@@ -1,0 +1,20 @@
+{{- /* Locked IDs for access.js — inline unlock card (cap access). */ -}}
+<div id="mdf-access-card" class="mdf-access-card" hidden>
+  <p class="mdf-access-card__title">Protected content</p>
+  <p class="mdf-access-card__body">Enter an access key to unlock this page.</p>
+  <label class="mdf-access-card__label" for="mdf-access-key-input">Access key</label>
+  <input
+    type="text"
+    id="mdf-access-key-input"
+    class="mdf-access-card__input"
+    placeholder="K7QM-2XPA-9RTD-4HNB-Y"
+    autocomplete="off"
+    spellcheck="false"
+  >
+  <p id="mdf-access-status" class="mdf-access-card__status" hidden role="alert"></p>
+  <button type="button" id="mdf-access-unlock-btn" class="mdf-access-card__btn">Unlock</button>
+  <button type="button" id="mdf-access-another" class="mdf-access-card__link" hidden>Use another key</button>
+  <button type="button" id="mdf-access-signout" class="mdf-access-card__link">Sign out</button>
+  <a id="mdf-access-cta" class="mdf-access-card__cta" hidden href="#"></a>
+</div>
+<script defer src="{{ partial "base-asset" "access.js" }}"></script>

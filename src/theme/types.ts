@@ -1,0 +1,58 @@
+/**
+ * Catalog entry from GET /v1/theme-catalog (arch/19 §7.4).
+ * Foundry downloads pack via module.imports.path; plugin does not fetch zips.
+ */
+export type ThemeAccess = 'free' | 'plan' | 'purchase';
+export type LockReason = 'purchase_required' | 'plan_required' | null;
+
+export interface CatalogEntry {
+	slug: string;
+	family: string;
+	variant: string;
+	name: string;
+	tier: string;
+	access: ThemeAccess;
+	entitled: boolean;
+	lockReason: LockReason;
+	version: string;
+	/** Canonical pack URL for Foundry — null when not entitled */
+	packUrl: string | null;
+	coverUrl?: string;
+	demoUrl?: string;
+	kinds: string[];
+	tags: string[];
+	official?: boolean;
+	description?: string;
+	thumbnail?: string;
+	userAssets?: UserAssetSlot[];
+	/**
+	 * Resolved Site.Params from theme catalog (capabilities + overrides + customParams).
+	 * Written into config.json when the theme is applied.
+	 */
+	siteParams?: Record<string, unknown>;
+	/** Manifest capabilities that are true (e.g. "subscribe" = the theme places the subscribe form). */
+	capabilities?: string[];
+}
+
+/** @deprecated Use CatalogEntry */
+export type ThemeItem = CatalogEntry;
+
+export interface ThemeSearchResult {
+	themes: CatalogEntry[];
+	hasMore: boolean;
+}
+
+export interface MdfridayThemeParams {
+	family: string;
+	variant: string;
+	version: string;
+	/** Paths present in project static/ (plugin scan before build). */
+	userStatic?: Record<string, true>;
+}
+
+export interface UserAssetSlot {
+	id: string;
+	path: string;
+	label?: string;
+	description?: string;
+}

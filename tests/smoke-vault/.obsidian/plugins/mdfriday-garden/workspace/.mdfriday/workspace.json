@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "id": "workspace-1794010692366-bfb665aeb",
+  "name": "workspace",
+  "createdAt": 1794010692366,
+  "updatedAt": 1794010692366,
+  "paths": {
+    "modules": "modules",
+    "projects": "projects"
+  },
+  "defaults": {
+    "modulesDir": "modules",
+    "language": "en"
+  }
+}

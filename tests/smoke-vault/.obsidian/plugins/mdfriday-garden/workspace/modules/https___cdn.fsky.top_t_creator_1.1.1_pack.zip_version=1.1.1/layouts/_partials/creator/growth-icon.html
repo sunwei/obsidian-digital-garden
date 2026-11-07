@@ -1,0 +1,5 @@
+{{- /* creator/growth-icon.html — (dict "stage" "budding" "size" 24) */ -}}
+{{- $s := .stage | default "seedling" -}}
+{{- $px := .size | default 24 -}}
+<svg class="growth-icon" data-icon="{{ $s }}" width="{{ $px }}" height="{{ $px }}" viewBox="0 0 25 25" aria-hidden="true" focusable="false"><use href="#cr-g-{{ $s }}"></use></svg>
+{{- /**/ -}}

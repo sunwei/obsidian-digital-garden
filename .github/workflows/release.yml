@@ -1,0 +1,52 @@
+name: Release Obsidian plugin
+
+on:
+    push:
+        tags:
+            - "*"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Use Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "18.x"
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Install (registry only — no file: core)
+              run: |
+                  npm ci
+                  if npm ls @mdfriday/core --parseable --long 2>/dev/null | grep -q 'file:'; then
+                    echo "::error::@mdfriday/core resolved via file: — tag builds must use the published npm package"
+                    npm ls @mdfriday/core
+                    exit 1
+                  fi
+
+            - name: Build plugin
+              run: npm run build
+
+            - name: Guard main.js bundles core
+              run: |
+                  size=$(wc -c < main.js | tr -d ' ')
+                  echo "main.js bytes=$size"
+                  # Without @mdfriday/core the bundle is far smaller than a real ship build.
+                  if [ "$size" -lt 500000 ]; then
+                    echo "::error::main.js is implausibly small ($size bytes) — core may be missing from the bundle"
+                    exit 1
+                  fi
+
+            - name: Create release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+              run: |
+                  tag="${GITHUB_REF#refs/tags/}"
+
+                  gh release create "$tag" \
+                    --title="$tag" \
+                    --draft \
+                    main.js manifest.json styles.css

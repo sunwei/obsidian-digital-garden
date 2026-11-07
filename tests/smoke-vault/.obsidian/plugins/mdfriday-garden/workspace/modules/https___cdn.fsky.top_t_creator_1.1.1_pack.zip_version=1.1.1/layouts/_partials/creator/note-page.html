@@ -1,0 +1,60 @@
+{{- /*
+  creator/note-page.html — note page (arch/26 §2.6). Input: (dict "page" . "node" <note node>)
+  Header: breadcrumbs · growth badge · h1 · description · "Planted <date> · <relative>" · tags · cover.
+  Body ~680px serif. Sticky TOC (≥ 2 headings). Footer: backlinks (mini cards, hidden when empty),
+  local graph, previous/next within the same folder.
+*/ -}}
+{{- $page := .page -}}
+{{- $n := .node -}}
+{{- $_ := partial "creator/nodes.html" $page -}}{{- $nodes := $page.Scratch.Get "creatorNodes" -}}
+{{- $toc := $page.TableOfContents -}}
+{{- $showToc := ge (len (split (printf "%v" $toc) "<li")) 3 -}}
+{{- if eq $page.Params.toc false -}}{{- $showToc = false -}}{{- end -}}
+<div class="cr-page cr-note-page">
+	<div class="cr-note-grid{{ if $showToc }} has-toc{{ end }}">
+		<article class="cr-note" data-growth="{{ $n.growth }}">
+			<div class="popover-hint">
+			{{- partial "creator/breadcrumbs.html" (dict "page" $page "node" $n "nodes" $nodes) -}}
+			<header class="cr-note-head">
+				{{- partial "creator/growth-badge.html" $n.growth -}}
+				<h1 class="cr-page-title cr-note-title">{{ $n.title }}</h1>
+				{{- with $page.Params.description }}<p class="cr-lede">{{ . }}</p>{{ end }}
+				<div class="cr-note-dates">
+					{{- with $n.date -}}
+					<span>{{ i18n "creator.planted" }} {{ partial "creator/dates.html" (dict "iso" . "text" $n.dateText "rel" false) }}</span>
+					<span class="cr-dot" aria-hidden="true">·</span>
+					{{- partial "creator/dates.html" (dict "iso" . "text" $n.dateText "rel" true) -}}
+					{{- end -}}
+				</div>
+				<div class="cr-note-actions">
+					{{- partial "llm-copy.html" $page -}}
+				</div>
+				{{- with $n.tags -}}
+				<ul class="cr-tags">
+					{{- range . -}}
+					{{- $href := printf "tags/%s" (. | urlize) | relURL -}}
+					{{- with $page.Site.GetPage (printf "tags/%s" .) -}}{{- $href = .RelPermalink -}}{{- end -}}
+					<li><a class="cr-tag" href="{{ $href }}">#{{ . }}</a></li>
+					{{- end -}}
+				</ul>
+				{{- end -}}
+			</header>
+			{{- with $n.cover -}}
+			<figure class="cr-cover"><img src="{{ . }}" alt="" decoding="async"></figure>
+			{{- end -}}
+			<div class="cr-prose article-content">
+				{{- $page.WikilinkContent -}}
+			</div>
+			</div>
+			{{- partial "subscribe.html" (dict "Page" $page "variant" "full" "placement" "article") -}}
+			{{- partial "creator/backlinks.html" (dict "page" $page "nodes" $nodes) -}}
+			{{- if $page.Site.Params.graph -}}{{- partial "creator/local-graph.html" $page -}}{{- end -}}
+			{{- partial "creator/prev-next.html" (dict "node" $n "nodes" $nodes) -}}
+		</article>
+		{{- if $showToc -}}
+		<aside class="cr-note-aside">
+			{{- partial "creator/toc.html" $page -}}
+		</aside>
+		{{- end -}}
+	</div>
+</div>

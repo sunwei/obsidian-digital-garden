@@ -1,0 +1,37 @@
+{{- /*
+  creator/folder-page.html — folder card page (arch/26 §2.4). Input: (dict "page" . "node" <folder node>)
+  Header: big count · back link · h1 · description · folder index.md body.
+  Sub-folders first (Folder cards), then direct notes as masonry cards + growth filter.
+  No Paginator (engine fixes 10/page) — range the model directly. Streams → stream.html.
+*/ -}}
+{{- $page := .page -}}
+{{- $f := .node -}}
+{{- $_ := partial "creator/nodes.html" $page -}}{{- $nodes := $page.Scratch.Get "creatorNodes" -}}
+{{- $subVariant := cond (eq $page.Kind "section") "compact" "full" -}}
+{{- if $f.stream -}}
+	{{- partial "creator/stream.html" (dict "page" $page "node" $f) -}}
+{{- else -}}
+{{- $children := where $nodes "parent" $f.slug -}}
+{{- $subs := partial "creator/sort-pages.html" (dict "nodes" (where $children "g" 0) "by" "menu") | transform.Unmarshal -}}
+{{- $cards := partial "creator/sort-pages.html" (dict "nodes" (where $children "g" 1) "by" "cards") | transform.Unmarshal -}}
+<div class="cr-page cr-folder" data-folder="{{ $f.slug }}">
+	{{- partial "creator/folder-head.html" (dict "page" $page "node" $f "nodes" $nodes) -}}
+	{{- if $subs -}}
+	<div class="cr-folder-grid">
+		{{- range $subs -}}{{- partial "creator/card.html" (dict "node" . "kind" "folder") -}}{{- end -}}
+	</div>
+	{{- end -}}
+	{{- if $cards -}}
+	<div class="cr-filter" role="toolbar" aria-label="Filter by growth stage" data-cr-filter>
+		<button type="button" class="cr-filter-btn" data-filter="all" aria-pressed="true">{{ i18n "creator.all" }}</button>
+		{{- range slice "seedling" "budding" "evergreen" -}}
+		<button type="button" class="cr-filter-btn" data-filter="{{ . }}" aria-pressed="false">{{ partial "creator/growth-icon.html" (dict "stage" . "size" 18) }}<span>{{ i18n (printf "creator.%s" .) }}</span></button>
+		{{- end -}}
+	</div>
+	<div class="cr-masonry" data-cr-filter-target>
+		{{- range $cards -}}{{- partial "creator/card.html" (dict "node" . "kind" "auto" "showSec" false) -}}{{- end -}}
+	</div>
+	{{- end -}}
+	{{- partial "subscribe.html" (dict "Page" $page "variant" $subVariant "placement" "list") -}}
+</div>
+{{- end -}}

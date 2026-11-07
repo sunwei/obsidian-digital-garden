@@ -1,0 +1,47 @@
+# Base 2.4 — 订阅能力文案（params.subscribe.<key> 优先）
+- id: subscribe.title
+  translation: "订阅更新"
+- id: subscribe.description
+  translation: "通过邮件获取新文章。"
+- id: subscribe.button
+  translation: "订阅"
+- id: subscribe.placeholder
+  translation: "you@example.com"
+- id: subscribe.success
+  translation: "感谢订阅！"
+- id: subscribe.error
+  translation: "出了点问题，请稍后重试。"
+- id: subscribe.invalid
+  translation: "请输入有效的邮箱地址。"
+- id: subscribe.rate_limited
+  translation: "尝试次数过多，请稍后再试。"
+- id: subscribe.preview
+  translation: "仅预览：表单可用，但不会保存任何数据。"
+- id: subscribe.powered
+  translation: "Powered by MDFriday"
+- id: subscribe.notice
+  translation: "订阅即表示你同意接收本站发送的邮件，可随时要求退订。"
+
+# Bases 视图。{name}、{type}、{count}、{total} 由引擎填入。
+- id: bases.noData
+  translation: "没有找到数据。"
+- id: bases.noViews
+  translation: "没有视图"
+- id: bases.viewNotFound
+  translation: "未找到视图「{name}」"
+- id: bases.unknownView
+  translation: "未知的视图类型：{type}"
+- id: bases.parseFile
+  translation: "无法解析这个 base 文件。"
+- id: bases.parseBlock
+  translation: "无法解析这个 base 代码块。"
+- id: bases.uncategorized
+  translation: "未分类"
+- id: bases.allEntries
+  translation: "全部条目"
+- id: bases.showingCount
+  translation: "显示 {count} / {total} 条"
+- id: bases.mapPlaceholder
+  translation: "静态构建不提供地图视图。"
+- id: bases.noImage
+  translation: "没有图片"

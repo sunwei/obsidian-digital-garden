@@ -1,0 +1,23 @@
+{{- /* creator/sort-pages.html — (dict "nodes" <list> "by" "cards|date|menu")
+     cards: weight asc (weighted first) → date desc   (arch/26 §1.7)
+     date : date desc
+     menu : weight asc → lower title → slug          (jasper rule)
+     Stable sort passes, least significant key first. */ -}}
+{{- $l := .nodes -}}
+{{- $by := .by | default "cards" -}}
+{{- if eq $by "menu" -}}
+	{{- $l = sort $l "slug" -}}
+	{{- $l = sort $l "t" -}}
+	{{- $l = sort $l "w" -}}
+	{{- $l = sort $l "wg" -}}
+{{- else if eq $by "date" -}}
+	{{- $l = sort $l "date" "desc" -}}
+{{- else -}}
+	{{- $l = sort $l "date" "desc" -}}
+	{{- $l = sort $l "w" -}}
+	{{- $l = sort $l "wg" -}}
+{{- end -}}
+{{- /* Foundry stringifies non-string returns → JSON; callers pipe to transform.Unmarshal. */ -}}
+{{- $out := "[]" -}}
+{{- with $l -}}{{- $out = . | jsonify -}}{{- end -}}
+{{- return $out -}}

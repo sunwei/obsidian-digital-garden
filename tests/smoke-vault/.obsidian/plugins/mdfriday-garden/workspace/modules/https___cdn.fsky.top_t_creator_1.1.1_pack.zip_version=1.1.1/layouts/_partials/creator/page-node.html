@@ -1,0 +1,12 @@
+{{- /* creator/page-node.html — node for the current page (by slug), or a minimal fallback. Input: page. */ -}}
+{{- $_ := partial "creator/nodes.html" . -}}{{- $nodes := .Scratch.Get "creatorNodes" -}}
+{{- $slug := partial "page-slug.html" . -}}
+{{- $out := dict -}}
+{{- range first 1 (where $nodes "slug" $slug) -}}{{- $out = . -}}{{- end -}}
+{{- if not $out.slug -}}
+	{{- $tags := partial "creator/tags.html" . | transform.Unmarshal -}}
+	{{- $iso := "" -}}{{- $txt := "" -}}
+	{{- $iso = time.Format "2006-01-02" .Date -}}{{- $txt = time.Format "Jan 2, 2006" .Date -}}
+	{{- $out = dict "slug" $slug "parent" "" "top" "" "title" (partial "page-title.html" .) "hasTitle" true "url" .RelPermalink "desc" (.Description | default "") "date" $iso "dateText" $txt "growth" (partial "creator/growth.html" $tags) "tags" $tags "cover" (partial "creator/card-image.html" .) "g" 1 "n" 0 "stream" false -}}
+{{- end -}}
+{{- return ($out | jsonify) -}}

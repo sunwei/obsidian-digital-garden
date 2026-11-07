@@ -1,0 +1,13 @@
+{{ define "main" }}
+<div class="cr-page cr-404">
+	<div class="cr-404-art">{{ partial "creator/growth-icon.html" (dict "stage" "seedling" "size" 72) }}</div>
+	<h1 class="cr-page-title">{{ i18n "creator.notFound" }}</h1>
+	<p class="cr-lede">{{ i18n "creator.notFoundBody" }}</p>
+	<p class="cr-404-actions">
+		<a class="cr-button" href="{{ .Site.Home.RelPermalink }}">{{ partial "creator/icon.html" (dict "name" "arrow-left" "size" 16) }}{{ i18n "creator.home" }}</a>
+		{{- with .Site.Params.search -}}{{- if .enable -}}
+		<button class="cr-button cr-button--ghost" type="button" data-cr-open-search>{{ partial "creator/icon.html" (dict "name" "magnifying-glass" "size" 16) }}{{ i18n "creator.search" }}</button>
+		{{- end -}}{{- end -}}
+	</p>
+</div>
+{{ end }}

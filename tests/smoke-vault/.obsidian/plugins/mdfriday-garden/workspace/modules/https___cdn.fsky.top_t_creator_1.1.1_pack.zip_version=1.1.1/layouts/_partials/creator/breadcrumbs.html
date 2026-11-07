@@ -1,0 +1,15 @@
+{{- /* creator/breadcrumbs.html — Home / ancestor folders / (current). (dict "page" "node" "nodes") */ -}}
+{{- if $.page.Site.Params.breadcrumbs -}}
+<nav class="cr-crumbs" aria-label="Breadcrumb">
+	<a href="{{ $.page.Site.Home.RelPermalink }}">{{ i18n "creator.garden" }}</a>
+	{{- $parts := split $.node.slug "/" -}}
+	{{- if gt (len $parts) 1 -}}
+		{{- range $i := seq 1 (sub (len $parts) 1) -}}
+			{{- $anc := delimit (first $i $parts) "/" -}}
+			{{- range first 1 (where $.nodes "slug" $anc) -}}
+			<span class="cr-crumb-sep" aria-hidden="true">/</span><a href="{{ .url }}">{{ .title }}</a>
+			{{- end -}}
+		{{- end -}}
+	{{- end -}}
+</nav>
+{{- end -}}

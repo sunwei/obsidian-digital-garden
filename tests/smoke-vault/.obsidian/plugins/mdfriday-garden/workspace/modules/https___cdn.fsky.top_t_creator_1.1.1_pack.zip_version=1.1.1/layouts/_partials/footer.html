@@ -1,0 +1,23 @@
+{{- /* layouts/_partials/footer.html — creator footer: site map (top-level folders + navLinks) + copyright. */ -}}
+{{- $_ := partial "creator/nodes.html" . -}}{{- $nodes := .Scratch.Get "creatorNodes" -}}
+{{- $folders := where (where $nodes "parent" "") "g" 0 -}}
+{{- $folders = partial "creator/sort-pages.html" (dict "nodes" $folders "by" "menu") | transform.Unmarshal -}}
+<footer class="cr-footer">
+	<div class="cr-footer-inner">
+		<div class="cr-footer-brand">
+			<a class="cr-footer-title" href="{{ .Site.Home.RelPermalink }}">{{ .Site.Title }}</a>
+			<p class="cr-footer-copy">© {{ now.Format "2006" }} {{ .Site.Title }}</p>
+			<p class="cr-footer-credit">{{ i18n "footer.built_with" | default "Built with" }} <a href="https://mdfriday.com">MDFriday</a></p>
+		</div>
+		{{- if or $folders .Site.Params.navLinks -}}
+		<nav class="cr-sitemap" aria-label="Sitemap">
+			{{- range $folders -}}<a href="{{ .url }}">{{ .title }}</a>{{- end -}}
+			{{- range .Site.Params.navLinks -}}
+				{{- $href := .url | default .href | default "#" -}}
+				{{- if not (or (strings.HasPrefix $href "http://") (strings.HasPrefix $href "https://") (strings.HasPrefix $href "mailto:") (strings.HasPrefix $href "#")) -}}{{- $href = $href | relURL -}}{{- end -}}
+				<a href="{{ $href }}">{{ .title | default .name }}</a>
+			{{- end -}}
+		</nav>
+		{{- end -}}
+	</div>
+</footer>

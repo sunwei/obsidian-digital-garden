@@ -1,0 +1,17 @@
+{{- /* Auto-generated folder pages (folders without index.md) → folder card page.
+     Foundry also renders tag term pages through this template → creator/term-page.html. */ -}}
+{{ define "main" }}
+{{- $shell := "" -}}
+{{- $slug := partial "page-slug.html" . -}}
+{{- if or (eq .Kind "term") (strings.HasPrefix $slug "tags/") -}}
+	{{- $shell = partial "creator/term-page.html" . -}}
+{{- else -}}
+	{{- $n := partial "creator/page-node.html" . | transform.Unmarshal -}}
+	{{- if eq $n.g 0 -}}
+		{{- $shell = partial "creator/folder-page.html" (dict "page" . "node" $n) -}}
+	{{- else -}}
+		{{- $shell = partial "creator/note-page.html" (dict "page" . "node" $n) -}}
+	{{- end -}}
+{{- end -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

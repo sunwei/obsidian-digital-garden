@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+{{ with .Site.CanonicalHost }}
+Sitemap: {{ . }}{{ $.Site.BaseURL }}sitemap.xml
+{{ end }}
