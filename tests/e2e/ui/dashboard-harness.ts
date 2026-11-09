@@ -5,6 +5,7 @@
  */
 import { setTimeout as sleep } from 'node:timers/promises';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
+import { playwrightLaunchOptions } from './playwright-launch.ts';
 
 export interface DashboardSession {
 	browser: Browser;
@@ -36,7 +37,9 @@ export async function openDashboardAccess(opts: {
 	headless?: boolean;
 }): Promise<DashboardSession> {
 	const siteBaseUrl = opts.siteBaseUrl.replace(/\/$/, '');
-	const browser = await chromium.launch({ headless: opts.headless === true });
+	const browser = await chromium.launch(
+		playwrightLaunchOptions({ headless: opts.headless === true }),
+	);
 	const context = await browser.newContext();
 	const page = await context.newPage();
 

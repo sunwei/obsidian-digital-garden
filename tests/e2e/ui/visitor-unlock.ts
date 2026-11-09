@@ -5,6 +5,7 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 import { chromium, type Browser, type Page } from 'playwright';
 import { inventWrongAccessKey, unlockPublishedPage } from '../access-unlock.ts';
+import { playwrightLaunchOptions } from './playwright-launch.ts';
 
 export interface VisitorUnlockOpts {
 	pageUrl: string;
@@ -48,7 +49,7 @@ export async function unlockPublishedSiteInBrowser(
 	};
 
 	try {
-		browser = await chromium.launch({ headless: false });
+		browser = await chromium.launch(playwrightLaunchOptions({ headless: false }));
 		const context = await browser.newContext();
 		const page = await context.newPage();
 
@@ -171,7 +172,9 @@ export async function tryUnlockPublishedPageInBrowser(opts: TryUnlockOpts): Prom
 }> {
 	let browser: Browser | undefined;
 	try {
-		browser = await chromium.launch({ headless: opts.headless === true ? true : false });
+		browser = await chromium.launch(
+			playwrightLaunchOptions({ headless: opts.headless === true ? true : false }),
+		);
 		const context = await browser.newContext();
 		const page = await context.newPage();
 		let lastNavErr: unknown;
