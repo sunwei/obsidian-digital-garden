@@ -4,6 +4,9 @@
 	"description": "MDFriday Digital Garden \u2014 publish a folder as a wiki or digital garden site. Desktop.",
 	"main": "main.js",
 	"type": "module",
+	"engines": {
+		"node": ">=22.6.0"
+	},
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "node esbuild.config.mjs production",
@@ -15,19 +18,19 @@
 		"lint:fix": "eslint src/ --fix",
 		"lint:ci": "eslint src/ --max-warnings=0",
 		"verify:theme-config": "node scripts/verify-theme-config.mjs",
-		"test": "node --test tests/*.test.ts",
+		"test": "node --experimental-strip-types --test tests/*.test.ts",
 		"build:with-core": "npm run build --prefix ../core && npm install --no-save ../core && npm run build",
 		"build:staging": "MDF_CF_ENV=staging node esbuild.config.mjs production",
 		"sync:smoke-vault": "node scripts/sync-smoke-vault.mjs",
 		"build:smoke": "npm run build:staging && npm run sync:smoke-vault",
 		"open:smoke-vault": "node scripts/open-smoke-vault.mjs",
-		"test:e2e": "node --test --test-timeout=300000 tests/e2e/*.test.ts",
+		"test:e2e": "node --experimental-strip-types --test --test-timeout=300000 tests/e2e/*.test.ts",
 		"test:e2e:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e",
-		"test:e2e:ui": "node --test --test-timeout=420000 tests/e2e/ui/*.test.ts",
+		"test:e2e:ui": "node --experimental-strip-types --test --test-timeout=420000 tests/e2e/ui/*.test.ts",
 		"test:e2e:ui:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:ui",
-		"test:e2e:access": "node --test --test-timeout=480000 tests/e2e/03-access-headless.test.ts tests/e2e/04-access-multiscope-dashboard.test.ts",
+		"test:e2e:access": "node --experimental-strip-types --test --test-timeout=480000 tests/e2e/03-access-headless.test.ts tests/e2e/04-access-multiscope-dashboard.test.ts",
 		"test:e2e:access:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:access",
-		"test:e2e:ui:access": "node --test --test-timeout=480000 tests/e2e/ui/03-ui-access-journey.test.ts",
+		"test:e2e:ui:access": "node --experimental-strip-types --test --test-timeout=480000 tests/e2e/ui/03-ui-access-journey.test.ts",
 		"test:e2e:ui:access:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:ui:access"
 	},
 	"keywords": [
