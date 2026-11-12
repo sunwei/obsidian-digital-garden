@@ -19,7 +19,7 @@ jobs:
                   node-version: "22.x"
                   registry-url: "https://registry.npmjs.org"
 
-            - name: Install (registry only — no file: core)
+            - name: "Install (registry only — no file: core)"
               run: |
                   npm ci
                   if npm ls @mdfriday/core --parseable --long 2>/dev/null | grep -q 'file:'; then
