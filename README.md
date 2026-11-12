@@ -26,7 +26,7 @@ Digital Garden is the site product (folder/wiki). Single-note public links live 
 | Plugin id | `mdfriday-garden` |
 | Sidebar view | `MDFriday_Garden` |
 | Icon | `dice-2` |
-| Protocol | `obsidian://mdfriday?plugin=garden&event=…` |
+| Protocol | `obsidian://mdfriday-garden?event=…` |
 | Client header | `obsidian-garden/<version>` |
 | Engine | `@mdfriday/core` (`26.11.0` from npm; local: `npm run build:with-core`) |
 

@@ -1,9 +1,9 @@
 import { App, Notice, PluginSettingTab, type SettingDefinitionItem } from 'obsidian';
 import type FridayPlugin from './main';
 
-/** Unified MDFriday protocol: obsidian://mdfriday?plugin=garden&event=… */
-export const OBSIDIAN_PROTOCOL_ACTION = 'mdfriday';
-/** This plugin only handles callbacks tagged for Digital Garden. */
+/** Per-plugin Obsidian action (must be unique across plugins): obsidian://mdfriday-garden?event=… */
+export const OBSIDIAN_PROTOCOL_ACTION = 'mdfriday-garden';
+/** Tag used in Account / guest-challenge query + return_protocol telemetry. */
 export const OBSIDIAN_PROTOCOL_PLUGIN = 'garden';
 
 const WORKSPACE_ID_RE = /^[a-zA-Z0-9._:-]{1,128}$/;

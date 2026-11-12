@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-digital-garden",
-	"version": "26.11.0",
+	"version": "26.11.1",
 	"description": "MDFriday Digital Garden \u2014 publish a folder as a wiki or digital garden site. Desktop.",
 	"main": "main.js",
 	"type": "module",
