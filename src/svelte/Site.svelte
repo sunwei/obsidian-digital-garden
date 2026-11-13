@@ -39,6 +39,15 @@
 		writeZipFile,
 	} from "../utils/export-site";
 	import { classifyBuildError, reportBuildEvent } from "../services/build-analytics";
+	import {
+		applyProjectSettingsToConfig,
+		extractProjectSettings,
+		fetchProjectSettings,
+		settingsFromProjectRow,
+		shouldReplaceCachedSettings,
+		upsertProjectSettingsAfterPublish,
+		type GardenProjectSettings,
+	} from "../services/project-settings-sync";
 
 	// Receive props
 	export let app: App;
@@ -169,6 +178,7 @@
 	let publishProgress = 0;
 	let publishSuccess = false;
 	let publishUrl = '';
+	let lastRemoteProjects: Array<Record<string, unknown> & { id: string; sourcePath?: string | null; workspaceId?: string | null; status?: string; settings?: Record<string, unknown>; settingsRevision?: number }> = [];
 	let publishError = '';
 	/** When set, show upgrade CTA under the error (quota / plan limits). */
 	let publishErrorAction: 'claim_free' | 'upgrade_personal' | null = null;
@@ -490,6 +500,10 @@
 			lastHydratedPath = null;
 			await hydrateFromPathConfig(activeVaultPath);
 		}
+
+		if (!stillCurrent()) return;
+
+		await syncRemoteSettingsForPath(statePath || currentPath, epoch);
 
 		if (!stillCurrent()) return;
 
@@ -825,6 +839,13 @@
 		}
 		void refreshQuotaSnapshot();
 		void syncExpiryFromRemote(activeVaultPath);
+		const publishedProjectId =
+			(typeof result?.cloudflareProjectId === 'string' && result.cloudflareProjectId) ||
+			boundCloudflareProjectId ||
+			'';
+		if (publishedProjectId) {
+			void uploadSettingsAfterPublish(publishedProjectId);
+		}
 	}
 
 	
@@ -1233,10 +1254,9 @@
 			await loadThemeList();
 		}
 		const filtered = filterThemesForSelection(themeList, 'folder');
+		// Keep a saved / cloud slug even when the theme is locked on this device.
 		const slug =
-			(cfg.themeSlug && filtered.some((t) => t.slug === cfg.themeSlug)
-				? cfg.themeSlug
-				: null) ||
+			cfg.themeSlug ||
 			filtered[0]?.slug ||
 			DEFAULT_THEME_SLUGS.QUARTZ;
 		selectedThemeSlug = slug;
@@ -1669,6 +1689,183 @@
 	 * Local Foundry params.lastPublishUrl is only a cache and can be polluted across
 	 * projects — never use it as the sole source of truth when switching targets.
 	 */
+
+	async function getSettingsApiAuth(): Promise<{ apiBase: string; token: string } | null> {
+		const mgr = plugin.projectServiceManager;
+		if (!mgr) return null;
+		const auth = await mgr.resolveAuthToken();
+		const apiBase = (plugin.settings.cloudflareApiBaseUrl || '').replace(/\/$/, '');
+		if (!auth?.token || !apiBase) return null;
+		return { apiBase, token: auth.token };
+	}
+
+	function matchRemoteProjectForPath(path: string) {
+		const workspaceId = plugin.getWorkspaceId();
+		return lastRemoteProjects.find((p) => {
+			if (!pathsEqual(p.sourcePath as string | null | undefined, path)) return false;
+			if (p.status === 'deleted' || p.status === 'draft') return false;
+			const rowWs =
+				typeof p.workspaceId === 'string' && p.workspaceId.trim()
+					? p.workspaceId.trim()
+					: null;
+			return !rowWs || rowWs === workspaceId;
+		});
+	}
+
+	async function waitForInitComplete() {
+		for (let i = 0; i < 20 && plugin.isProjectInitializing; i++) {
+			await new Promise((r) => setTimeout(r, 25));
+		}
+	}
+
+	async function applyRemoteSettingsToSidebar(
+		settings: GardenProjectSettings,
+		revision: number,
+		vaultPath: string,
+	) {
+		if (settings.title) siteName = settings.title;
+		if (settings.branding) {
+			if (settings.branding.logo !== undefined) siteLogo = brandPathForUi(settings.branding.logo);
+			if (settings.branding.favicon !== undefined) {
+				siteFavicon = brandPathForUi(settings.branding.favicon);
+			}
+		}
+		if (settings.navLinks) siteNavLinks = normalizeNavLinks(settings.navLinks);
+		if (settings.subscribe) {
+			subscribeEnabled = settings.subscribe.enabled === true;
+			subscribeTitle = settings.subscribe.title ?? '';
+			subscribeDescription = settings.subscribe.description ?? '';
+		}
+		if (settings.theme?.slug) {
+			if (themeList.length === 0) {
+				await loadThemeList();
+			}
+			selectedThemeSlug = settings.theme.slug;
+			userHasSelectedTheme = true;
+			const theme = themeList.find((item) => item.slug === settings.theme?.slug);
+			selectedThemeName = theme?.name || settings.theme.slug;
+			if (theme?.packUrl) {
+				selectedThemeDownloadUrl = theme.packUrl;
+				currentThemeWithSample = theme;
+			}
+		}
+
+		await waitForInitComplete();
+		if (plugin.currentProjectName) {
+			const existing = (await plugin.getFoundryProjectConfigMap(plugin.currentProjectName)) as
+				| Record<string, unknown>
+				| null;
+			const merged = applyProjectSettingsToConfig(existing || {}, settings);
+			if (plugin.handleSiteEvent) {
+				if (typeof merged.title === 'string') {
+					await plugin.handleSiteEvent('configChanged', { key: 'title', value: merged.title });
+				}
+				if (merged.params) {
+					await plugin.handleSiteEvent('configChanged', { key: 'params', value: merged.params });
+				}
+			}
+			const theme = themeList.find((item) => item.slug === settings.theme?.slug);
+			if (theme?.packUrl) {
+				await applyThemeFromCatalog(theme);
+				const afterTheme = (await plugin.getFoundryProjectConfigMap(plugin.currentProjectName)) as
+					| Record<string, unknown>
+					| null;
+				const restored = applyProjectSettingsToConfig(afterTheme || {}, settings);
+				if (plugin.handleSiteEvent && restored.params) {
+					await plugin.handleSiteEvent('configChanged', { key: 'params', value: restored.params });
+				}
+			}
+		}
+		if (vaultPath) {
+			await savePathPublishConfig(plugin, vaultPath, {
+				mode: 'themed',
+				themeSlug: settings.theme?.slug || selectedThemeSlug || undefined,
+				settingsRevision: revision,
+			});
+		}
+	}
+
+	async function syncRemoteSettingsForPath(
+		vaultPath: string | null | undefined,
+		epoch?: number,
+	) {
+		const stillCurrent = () => epoch === undefined || epoch === plugin.selectionEpoch;
+		const path = normalizeVaultPath(vaultPath);
+		if (!path || !plugin.settings.mdfKey) return;
+
+		try {
+			if (!lastRemoteProjects.length && plugin.projectServiceManager) {
+				const res = await plugin.projectServiceManager.listRemoteCloudflareProjects();
+				if (!stillCurrent()) return;
+				lastRemoteProjects = (res.projects || []) as typeof lastRemoteProjects;
+			}
+			const match = matchRemoteProjectForPath(path);
+			if (!match?.id) return;
+
+			const fromRow = settingsFromProjectRow(match);
+			let remote = fromRow;
+			if (!remote) {
+				const auth = await getSettingsApiAuth();
+				if (!auth) return;
+				const doc = await fetchProjectSettings({ ...auth, projectId: match.id });
+				if (doc) remote = { revision: doc.revision, settings: doc.settings };
+			}
+			if (!stillCurrent() || !remote) return;
+
+			const cached = getPathPublishConfig(plugin, path)?.settingsRevision ?? null;
+			if (plugin.currentProjectName && !shouldReplaceCachedSettings(cached, remote.revision)) {
+				return;
+			}
+			await applyRemoteSettingsToSidebar(remote.settings, remote.revision, path);
+		} catch (err) {
+			console.warn('[Site] syncRemoteSettingsForPath failed', err);
+		}
+	}
+
+	async function uploadSettingsAfterPublish(projectId: string) {
+		const auth = await getSettingsApiAuth();
+		if (!auth || !projectId) return;
+		try {
+			await persistSiteFields();
+			const config = plugin.currentProjectName
+				? ((await plugin.getFoundryProjectConfigMap(plugin.currentProjectName)) as
+						| Record<string, unknown>
+						| null)
+				: null;
+			const settings = extractProjectSettings(config || {
+				title: siteName,
+				params: {
+					logo: siteLogo,
+					favicon: siteFavicon,
+					navLinks: siteNavLinks,
+					subscribe: {
+						enabled: subscribeEnabled,
+						title: subscribeTitle,
+						description: subscribeDescription,
+					},
+				},
+			}, selectedThemeSlug);
+			const localRev = activeVaultPath
+				? getPathPublishConfig(plugin, activeVaultPath)?.settingsRevision ?? null
+				: null;
+			const doc = await upsertProjectSettingsAfterPublish({
+				...auth,
+				projectId,
+				settings,
+				localRevision: localRev,
+			});
+			if (activeVaultPath) {
+				await savePathPublishConfig(plugin, activeVaultPath, {
+					mode: 'themed',
+					themeSlug: selectedThemeSlug || undefined,
+					settingsRevision: doc.revision,
+				});
+			}
+		} catch (err) {
+			console.warn('[Site] uploadSettingsAfterPublish failed', err);
+		}
+	}
+
 	async function refreshPublishStatusForVaultPath(
 		vaultPath: string | null | undefined,
 		epoch?: number,
@@ -1692,6 +1889,7 @@
 		try {
 			const res = await mgr.listRemoteCloudflareProjects();
 			if (!stillCurrent()) return;
+			lastRemoteProjects = (res.projects || []) as typeof lastRemoteProjects;
 			if (!res.success || !res.projects?.length) {
 				// No remote match → scrub stale local cache for the open project
 				if (plugin.currentProjectName) {

@@ -33,6 +33,8 @@ export interface PathPublishConfig {
 	 * cleanup is always decided by the API. Never invent client-side TTL.
 	 */
 	contentExpiresAt?: number | null;
+	/** Last applied project settings document revision (cloud cache). */
+	settingsRevision?: number | null;
 	updatedAt?: number;
 }
 

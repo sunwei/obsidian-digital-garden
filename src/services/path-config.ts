@@ -55,6 +55,7 @@ export function resolvePathPublishConfig(
 		mode: coercePublishMode(kind, saved.mode),
 		themeSlug: saved.themeSlug,
 		hasPasswordFlag: !!saved.hasPasswordFlag,
+		settingsRevision: saved.settingsRevision ?? null,
 		updatedAt: saved.updatedAt,
 	};
 }

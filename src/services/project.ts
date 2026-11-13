@@ -808,6 +808,8 @@ export class ProjectServiceManager {
 			sourcePath?: string | null;
 			workspaceId?: string | null;
 			publicUrl?: string;
+			settingsRevision?: number;
+			settings?: Record<string, unknown>;
 		}>;
 		error?: string;
 	}> {
@@ -853,6 +855,10 @@ export class ProjectServiceManager {
 				const sourcePath = (p.sourcePath ?? p.source_path) as string | null | undefined;
 				const workspaceId = (p.workspaceId ?? p.workspace_id) as string | null | undefined;
 				const publicUrl = (p.publicUrl ?? p.public_url) as string | undefined;
+				const settingsRevision = (p.settingsRevision ?? p.settings_revision) as number | undefined;
+				const settings = (p.settings && typeof p.settings === 'object' ? p.settings : undefined) as
+					| Record<string, unknown>
+					| undefined;
 				return {
 					id: String(p.id || ''),
 					...(siteId ? { siteId } : {}),
@@ -869,6 +875,8 @@ export class ProjectServiceManager {
 					...(sourcePath !== undefined ? { sourcePath: sourcePath } : {}),
 					...(workspaceId !== undefined ? { workspaceId } : {}),
 					...(typeof publicUrl === 'string' ? { publicUrl } : {}),
+					...(typeof settingsRevision === 'number' ? { settingsRevision } : {}),
+					...(settings ? { settings } : {}),
 				};
 			});
 			return { success: true, projects };
