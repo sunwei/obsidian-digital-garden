@@ -71,7 +71,7 @@ export const en = {
 		preview_live: "Local preview running",
 		preview_stopped: "Last preview · stopped",
 		target_label: "Target",
-		theme_section_wiki: "Wiki skins",
+		theme_section_wiki: "Skins",
 		theme_empty: "No themes available",
 		banner_guest_lead: "Guest plan",
 		banner_free_lead: "Free plan · upgrade for domain, more storage & history",

@@ -70,7 +70,7 @@ export const zhCn = {
 		preview_live: "本地预览进行中",
 		preview_stopped: "上次预览 · 已停止",
 		target_label: "发布对象",
-		theme_section_wiki: "Wiki 皮肤",
+		theme_section_wiki: "皮肤",
 		theme_empty: "暂无可用主题",
 		banner_guest_lead: "Guest 计划",
 		banner_free_lead: "Free 计划 · 升级可解锁域名 / 更大存储 / 历史",
