@@ -315,7 +315,7 @@ export class GardenPluginDriver {
 	async buildAndPublish(
 		site: PluginSite,
 		auth: { token: string; guest: boolean },
-		opts: { force?: boolean } = {},
+		opts: { force?: boolean; beforeBuild?: () => Promise<void> } = {},
 	): Promise<PluginPublishResult> {
 		const binding = await this.publish.ensureCloudflareBinding({
 			workspacePath: this.workspaceDir,
@@ -362,6 +362,8 @@ export class GardenPluginDriver {
 		} catch {
 			/* first publish / API optional */
 		}
+
+		if (opts.beforeBuild) await opts.beforeBuild();
 
 		const b0 = Date.now();
 		const built = await this.build.buildProject({

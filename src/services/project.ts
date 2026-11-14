@@ -25,6 +25,7 @@ import {
 } from '../media/note-media';
 import { brandPathsFromParams } from '../branding/brand-path';
 import { syncSubscribeOnPublish } from '../subscribe/subscribe-service';
+import { ensureCommerceStubPages, syncCommerceOnPublish } from '../commerce/commerce-service';
 import { stageBrandAssets } from '../branding/stage-brand-assets';
 import { primaryDomain } from './domain-order';
 import { classifyBuildError, reportBuildEvent } from './build-analytics';
@@ -781,6 +782,14 @@ export class ProjectServiceManager {
 				getConfig: (name) => this.getConfig(name),
 				saveConfig: (name, key, value) => this.saveConfig(name, key, value),
 			});
+			await syncCommerceOnPublish(this.plugin, {
+				projectName,
+				projectId: binding.cloudflareProjectId,
+				auth,
+				hostingMode,
+				getConfig: (name) => this.getConfig(name),
+				saveConfig: (name, key, value) => this.saveConfig(name, key, value),
+			});
 		}
 
 		return {
@@ -1045,6 +1054,21 @@ export class ProjectServiceManager {
 		await this.prepareThemedSingleNoteMedia(projectName);
 		await this.stageProjectBrandAssets(projectName);
 		await this.syncUserStaticConfig(projectName);
+		try {
+			const info = await this.plugin.foundryProjectService.getProjectInfo(
+				this.plugin.absWorkspacePath,
+				projectName,
+			);
+			if (info.success && info.data?.path) {
+				const config = await this.getConfig(projectName);
+				const locale =
+					(typeof config.defaultContentLanguage === 'string' && config.defaultContentLanguage) ||
+					info.data.language;
+				await ensureCommerceStubPages({ projectPath: info.data.path, locale });
+			}
+		} catch (error) {
+			console.warn('[ProjectServiceManager] ensureCommerceStubPages failed:', error);
+		}
 	}
 
 	async build(

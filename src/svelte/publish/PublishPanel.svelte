@@ -6,6 +6,7 @@
 	import { vaultImageSrc } from '../../branding/pick-vault-image';
 	import DomainSection from '../DomainSection.svelte';
 	import SubscribeSection from '../SubscribeSection.svelte';
+	import SalesSection from '../SalesSection.svelte';
 	import HistorySection from '../HistorySection.svelte';
 	import { filterThemesForSelection } from '../../utils/theme';
 	import { resolveSiteBaseUrl } from '../../cloudflare-env';
@@ -1071,7 +1072,16 @@
 								</div>
 							</section>
 
-							<!-- 5. Subscribe -->
+							<!-- 5. Selling (read-only) -->
+							<SalesSection
+								{plugin}
+								{t}
+								{remoteProjectId}
+								{isGuest}
+								refreshKey={historyRefreshKey + accountEpoch * 1000}
+							/>
+
+							<!-- 6. Subscribe -->
 							<SubscribeSection
 								{plugin}
 								{t}
@@ -1086,7 +1096,7 @@
 								onChange={onSubscribeChange}
 							/>
 
-							<!-- 6. Custom domain -->
+							<!-- 7. Custom domain -->
 							<section class="adv-block">
 								<header class="adv-block-head">
 									<span class="adv-block-icon" aria-hidden="true">
