@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "originalTarget": "/Users/sunwei/github/sunwei/workspace/obsidian-digital-garden/tests/smoke-vault/Garden",
+  "stubs": [
+    "purchase",
+    "pricing",
+    "privacy"
+  ]
+}

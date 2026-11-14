@@ -67,6 +67,7 @@
 			<button
 				type="button"
 				class="nav-links-add"
+				data-mdf-sales-dashboard
 				on:click={openDashboard}
 				disabled={!remoteProjectId}
 			>

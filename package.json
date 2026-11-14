@@ -31,7 +31,14 @@
 		"test:e2e:access": "node --experimental-strip-types --test --test-timeout=480000 tests/e2e/03-access-headless.test.ts tests/e2e/04-access-multiscope-dashboard.test.ts",
 		"test:e2e:access:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:access",
 		"test:e2e:ui:access": "node --experimental-strip-types --test --test-timeout=480000 tests/e2e/ui/03-ui-access-journey.test.ts",
-		"test:e2e:ui:access:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:ui:access"
+		"test:e2e:ui:access:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:ui:access",
+		"test:e2e:commerce": "node --experimental-strip-types --test --test-timeout=720000 tests/e2e/06-commerce-author-reader-journey.test.ts",
+		"test:e2e:commerce:staging": "npm run build:smoke && E2E_COMMERCE=1 MDF_E2E_ENV=staging npm run test:e2e:commerce",
+		"test:e2e:commerce:domain:staging": "npm run build:smoke && E2E_COMMERCE=1 E2E_COMMERCE_DOMAIN=1 MDF_E2E_ENV=staging node --experimental-strip-types --test --test-timeout=1200000 tests/e2e/06-commerce-author-reader-journey.test.ts",
+		"test:e2e:ui:commerce": "node --experimental-strip-types --test --test-timeout=720000 tests/e2e/ui/04-ui-commerce-journey.test.ts",
+		"test:e2e:ui:commerce:staging": "npm run build:smoke && E2E_COMMERCE=1 MDF_E2E_ENV=staging npm run test:e2e:ui:commerce",
+		"test:e2e:ui:commerce:domain": "node --experimental-strip-types --test --test-timeout=1200000 tests/e2e/ui/05-ui-commerce-domain-journey.test.ts",
+		"test:e2e:ui:commerce:domain:staging": "npm run build:smoke && E2E_COMMERCE=1 E2E_COMMERCE_DOMAIN=1 MDF_E2E_ENV=staging npm run test:e2e:ui:commerce:domain"
 	},
 	"keywords": [
 		"mdfriday",

@@ -1,0 +1,6 @@
+{{- /* [CAP:commerce] runtime — loaded when the plugin wrote params.commerce.project + endpoint. */ -}}
+{{- with .Site.Params.commerce -}}
+{{- if and .project .endpoint -}}
+<script defer src="{{ partial "base-asset" "caps/commerce/commerce.js" }}"></script>
+{{- end -}}
+{{- end -}}

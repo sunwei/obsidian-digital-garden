@@ -1,0 +1,8 @@
+{{- /* Footer Data & Privacy link. Shown when the plugin wrote params.commerce.pages.privacy. */ -}}
+{{- with .Site.Params.commerce -}}
+{{- with .pages -}}
+{{- with .privacy -}}
+<a class="mdf-commerce-footer-link" href="{{ partial "commerce-page-href.html" . }}">{{ i18n "commerce.footer.privacy" | default "Data & Privacy" }}</a>
+{{- end -}}
+{{- end -}}
+{{- end -}}

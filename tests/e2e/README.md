@@ -10,7 +10,11 @@ Owned by **obsidian-digital-garden**. Does **not** modify `obsidian-publish`.
 | `01-guest-garden-folder` | Staging network (headless) | Guest mint → folder bind/build/publish → `share.fsky.top` 200 → `expiresAt` ≈ **7d** → client `obsidian-garden/<ver>` |
 | `03-access-headless` | Staging network (headless) | **G2 access MVP**: guest protect folder → publish ciphertext → no plaintext canary → public `session`/`keys` + AES-GCM unlock; wrong key fails. Spec: `arch/encryption-system/garden-access-e2e.md` |
 | `04-access-multiscope-dashboard` | Staging network + Dashboard UI | **G4**: public homepage + independent `docs`/`members` scopes → Dashboard multi-grant key unlocks both; single-scope key cannot cross; revoke re-locks |
+| `05-commerce-publish` | Staging network | Commerce stub pages on publish; purchase zone hidden without offers |
+| `06-commerce-author-reader-journey` | Staging + Creem test (**opt-in**) | **G6** authoritative happy path: Personal → scoped publish → Dashboard Sales → republish → reader purchase → Key unlocks docs. Spec: `arch/commerce/12-e2e-author-reader-journey.md` |
 | `ui/02-ui-guest-garden-folder` | **Headed Obsidian UI** (macOS) | Launch real Obsidian → click `Garden` → Publish panel → public URL 200 |
+| `ui/04-ui-commerce-journey` | **Headed Obsidian** + Chromium (**opt-in**) | Share: Publish → Sales → Creem → unlock |
+| `ui/05-ui-commerce-domain-journey` | **Headed Obsidian** + Chromium + DNS (**opt-in**) | Domain: Publish → bind → Publish again → Sales → unlock on hostname |
 
 Headless tests use the same path as the plugin (`@mdfriday/core` + Garden `theme-config`), not Obsidian UI.
 
@@ -102,9 +106,50 @@ npm run test:e2e:access:staging
 Also honors `E2E_SKIP=1`, `E2E_SKIP_ACCESS=1`, `E2E_KEEP_DATA=1`.
 
 
+## Commerce author→reader journey (G6, opt-in)
+
+Authoritative end-to-end path for selling access (see `arch/commerce/12-e2e-author-reader-journey.md`).
+Not part of default `test:e2e:staging` (needs Creem test key + Personal bootstrap).
+
+```bash
+# Share-host full journey (Playwright UI: Sales + Creem + unlock; headless by default)
+E2E_COMMERCE=1 MDF_E2E_ENV=staging npm run test:e2e:commerce:staging
+
+# Watch the browsers (Dashboard / Creem checkout / unlock)
+E2E_HEADED=1 E2E_COMMERCE=1 MDF_E2E_ENV=staging npm run test:e2e:commerce:staging
+
+# Keep the site for manual inspection
+E2E_KEEP_DATA=1 E2E_COMMERCE=1 MDF_E2E_ENV=staging npm run test:e2e:commerce:staging
+
+# Custom domain (Aliyun + CF SaaS; SSL wait ~5–15 min)
+E2E_COMMERCE=1 E2E_COMMERCE_DOMAIN=1 MDF_E2E_ENV=staging npm run test:e2e:commerce:staging
+```
+
+Requires sibling `cloudflare/.staging.vars` (`JWT_SECRET`, `CLOUDFLARE_ACCOUNT_ID`, `E2E_CREEM_TEST_API_KEY` — never platform `CREEM_API_KEY`). Domain path also needs `ALIYUN_*`, `E2E_EXTERNAL_DOMAIN`, `SAAS_ZONE_ID`, `CLOUDFLARE_API_TOKEN` / `CF_API_TOKEN`, `CNAME_TARGET`.
+
+Cloudflare `11` / `12` / `13` remain step-level suites (subscription, domain regression, after-sales, Dashboard order copy).
+
+## Headed full commerce journeys (opt-in)
+
+Chromium is **headed by default**; `E2E_HEADLESS=1` hides it. Obsidian is always headed.
+
+| Suite | Path |
+| --- | --- |
+| `ui/04` | Obsidian Publish → Sales → Creem → unlock on **share** |
+| `ui/05` | Obsidian Publish → bind domain → Publish again (custom) → Sales → unlock on **custom domain** |
+
+```bash
+# Share (ui/04)
+E2E_COMMERCE=1 MDF_E2E_ENV=staging npm run test:e2e:ui:commerce:staging
+
+# Custom domain (ui/05) — needs Aliyun + CF SaaS; ~5–15 min for SSL
+E2E_COMMERCE=1 E2E_COMMERCE_DOMAIN=1 MDF_E2E_ENV=staging npm run test:e2e:ui:commerce:domain:staging
+```
+
+API-only / no Obsidian: G6 `test:e2e:commerce:staging` (+ `E2E_COMMERCE_DOMAIN=1` for domain).
+
 ## Not covered (yet)
 
 - Claim / Free upgrade OAuth
-- Custom domain attach
-- Subscribe form end-to-end
+- Subscribe form end-to-end (non-commerce audience)
 - Native OS right-click context menu (CDP limitation; panel path covers the same publish handler)

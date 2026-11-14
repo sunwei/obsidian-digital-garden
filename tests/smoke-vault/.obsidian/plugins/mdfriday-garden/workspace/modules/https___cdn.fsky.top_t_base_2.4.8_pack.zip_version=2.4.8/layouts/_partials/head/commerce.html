@@ -1,0 +1,12 @@
+{{- /* Commerce CSS when enabled; purchase completion page is noindex + no-referrer (query string must stay). */ -}}
+{{- with .Site.Params.commerce -}}
+{{- if and .project .endpoint -}}
+<link rel="stylesheet" href="{{ partial "base-asset" "caps/commerce/style.css" }}">
+{{- end -}}
+{{- end -}}
+{{- $name := "" -}}
+{{- with .File -}}{{- $name = .BaseFileName -}}{{- end -}}
+{{- if eq $name "purchase" -}}
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+{{- end -}}

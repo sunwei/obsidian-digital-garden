@@ -442,13 +442,142 @@ export async function publishGardenFolderViaUi(page: Page): Promise<string> {
 export function readSmokePluginData(): {
 	mdfKey: string | null;
 	pathConfigs?: Record<string, unknown>;
+	mdfKeyKind?: string | null;
+	mdfKeyPlan?: string | null;
 } {
 	const p = path.join(SMOKE_VAULT, '.obsidian/plugins', PLUGIN_ID, 'data.json');
 	if (!existsSync(p)) return { mdfKey: null };
 	return JSON.parse(readFileSync(p, 'utf8')) as {
 		mdfKey: string | null;
 		pathConfigs?: Record<string, unknown>;
+		mdfKeyKind?: string | null;
+		mdfKeyPlan?: string | null;
 	};
+}
+
+/**
+ * Seed smoke-vault plugin data.json with a Personal MDF_ key so headed UI
+ * sees Sales (not guest-disabled) without Google OAuth.
+ */
+export function seedPersonalPluginData(opts: {
+	mdfKey: string;
+	email?: string;
+	apiBase?: string;
+	shareBase?: string;
+}): void {
+	const dataPath = path.join(SMOKE_VAULT, '.obsidian/plugins', PLUGIN_ID, 'data.json');
+	const prev = existsSync(dataPath)
+		? (JSON.parse(readFileSync(dataPath, 'utf8')) as Record<string, unknown>)
+		: {};
+	const next: Record<string, unknown> = {
+		...prev,
+		mdfKey: opts.mdfKey,
+		mdfKeyKind: 'user',
+		mdfKeyPlan: 'personal',
+		mdfKeyEnv: 'staging',
+		mdfAccountEmail: opts.email ?? null,
+		mdfQuotaFeatures: ['commerce', 'custom_domain', 'ai', 'rollback', 'permanent_retention', 'unlimited_projects'],
+		mdfQuotaMaxCustomDomains: 1,
+		cloudflareEnv: 'staging',
+		cloudflareResolvedEnv: 'staging',
+		cloudflareApiBaseUrl: opts.apiBase ?? 'https://api.fsky.top',
+		cloudflarePublicBaseUrl: opts.shareBase ?? 'https://share.fsky.top',
+		pathConfigs: {
+			Garden: {
+				mode: 'themed',
+				themeSlug: 'quartz',
+				hasPasswordFlag: false,
+				updatedAt: Date.now(),
+			},
+		},
+	};
+	writeFileSync(dataPath, JSON.stringify(next, null, 2));
+
+	const localProject = path.join(
+		SMOKE_VAULT,
+		'.obsidian/plugins',
+		PLUGIN_ID,
+		'workspace/projects/Garden',
+	);
+	if (existsSync(localProject)) {
+		rmSync(localProject, { recursive: true, force: true });
+	}
+}
+
+export interface SalesPanelLinkResult {
+	visible: boolean;
+	enabled: boolean;
+	text: string;
+	line: string;
+}
+
+/** Advanced ▸ Selling block: status line + Manage in Dashboard control. */
+export async function assertSalesSectionInPanel(page: Page): Promise<SalesPanelLinkResult> {
+	await expandAdvancedOptions(page);
+	await page.waitForSelector('.mdf-sales-settings', { timeout: 15_000 });
+	const result = await page.evaluate(() => {
+		const block = document.querySelector('.mdf-sales-settings');
+		const btn = document.querySelector(
+			'[data-mdf-sales-dashboard]',
+		) as HTMLButtonElement | null;
+		const line = (document.querySelector('.mdf-sales-line')?.textContent || '').trim();
+		const guestHint = Array.from(block?.querySelectorAll('p.helper') || []).some((p) =>
+			/Not enabled|未启用|guest/i.test(p.textContent || ''),
+		);
+		return {
+			hasBlock: !!block,
+			hasBtn: !!btn,
+			disabled: btn ? !!btn.disabled : true,
+			text: (btn?.textContent || '').trim().slice(0, 80),
+			line: line.slice(0, 120),
+			guestHint,
+		};
+	});
+	if (!result.hasBlock) throw new Error('Sales (.mdf-sales-settings) missing from Advanced panel');
+	if (result.guestHint && !result.hasBtn) {
+		throw new Error('Sales still shows guest-disabled state — Personal key seed failed?');
+	}
+	if (!result.hasBtn) throw new Error('Sales "Manage in Dashboard" button missing');
+	return {
+		visible: true,
+		enabled: !result.disabled,
+		text: result.text,
+		line: result.line || '(loading)',
+	};
+}
+
+/**
+ * Click Sales ▸ Manage in Dashboard; capture the window.open URL (no real browser popup).
+ */
+export async function clickSalesManageCaptureUrl(page: Page): Promise<string> {
+	await expandAdvancedOptions(page);
+	await page.waitForSelector('[data-mdf-sales-dashboard]:not([disabled])', { timeout: 30_000 });
+	const opened = await page.evaluate(() => {
+		return new Promise<string>((resolve, reject) => {
+			const btn = document.querySelector(
+				'[data-mdf-sales-dashboard]',
+			) as HTMLButtonElement | null;
+			if (!btn || btn.disabled) {
+				reject(new Error('Sales dashboard button missing or disabled'));
+				return;
+			}
+			const prev = window.open;
+			window.open = ((url?: string | URL) => {
+				window.open = prev;
+				resolve(String(url || ''));
+				return null;
+			}) as typeof window.open;
+			btn.click();
+			setTimeout(() => {
+				window.open = prev;
+				reject(new Error('window.open was not called after Sales manage click'));
+			}, 5_000);
+		});
+	});
+	if (!/\/dashboard\/sales\//i.test(opened)) {
+		throw new Error(`expected Dashboard Sales URL, got: ${opened.slice(0, 200)}`);
+	}
+	return opened;
 }
 
 export async function deleteStagingProject(opts: {
@@ -662,9 +791,13 @@ export async function readSharedKeyFromNotice(page: Page): Promise<string | null
 /**
  * Product path: select Garden → open panel → Publish.
  * Also captures shared access key from the success Notice when present.
+ *
+ * @param opts.expectHostname — after custom-domain bind, wait for this host
+ *   (e.g. e2e-….jiashu.ink) instead of only share.fsky.top.
  */
 export async function publishGardenFolderViaUiWithAccess(
 	page: Page,
+	opts: { expectHostname?: string; timeoutMs?: number } = {},
 ): Promise<PublishUiResult> {
 	await leaveCommunityPluginUi(page);
 	await dismissHarmlessModals(page);
@@ -719,17 +852,25 @@ export async function publishGardenFolderViaUiWithAccess(
 		await publishBtn.last().click({ force: true });
 	}
 
-	const deadline = Date.now() + 180_000;
+	const expectHost = (opts.expectHostname || '').toLowerCase();
+	const deadline = Date.now() + (opts.timeoutMs ?? 180_000);
 	let publicUrl = '';
 	let sharedKey: string | null = null;
 	while (Date.now() < deadline) {
 		await leaveCommunityPluginUi(page);
-		const state = await page.evaluate(() => {
-			const urlText =
+		const state = await page.evaluate((host) => {
+			// Prefer the publish result URL only — DomainSection also shows the hostname.
+			const resultUrl =
 				document.querySelector('.success-url-box .url, .state-result .url')?.textContent?.trim() ||
 				'';
 			const body = document.body?.innerText || '';
-			const match = body.match(/https:\/\/share\.fsky\.top\/s\/[A-Za-z0-9_-]+\/?/);
+			const shareFromBody = body.match(/https:\/\/share\.fsky\.top\/s\/[A-Za-z0-9_-]+\/?/);
+			const shareMatch =
+				/share\.fsky\.top\/s\//i.test(resultUrl) ? resultUrl : shareFromBody?.[0] || '';
+			let customMatch = '';
+			if (host && resultUrl.toLowerCase().includes(host.toLowerCase())) {
+				customMatch = resultUrl;
+			}
 			const noticeNodes = Array.from(document.querySelectorAll('.notice'));
 			let noticeKey: string | null = null;
 			for (const n of noticeNodes) {
@@ -745,28 +886,31 @@ export async function publishGardenFolderViaUiWithAccess(
 				if (km2?.[1]) noticeKey = km2[1];
 			}
 			return {
-				urlText,
-				match: match?.[0] || '',
+				resultUrl,
+				shareMatch,
+				customMatch,
 				building: !!document.querySelector('.spinner'),
 				badge: document.querySelector('.result-badge')?.textContent?.trim() || '',
 				stateTitle: document.querySelector('.state-title')?.textContent?.trim() || '',
 				noticeKey,
 			};
-		});
+		}, expectHost);
 		if (state.noticeKey) {
 			const norm = normalizeNoticeKey(state.noticeKey);
 			sharedKey = norm.length === 17 ? norm : state.noticeKey;
 		}
-		if (!state.building && isPublishedUiState(state.badge, state.stateTitle) && (state.urlText || state.match)) {
-			publicUrl = (state.urlText || state.match).replace(/\/?$/, '/');
-			if (!sharedKey) {
-				await sleep(800);
-				sharedKey = await readSharedKeyFromNotice(page);
+
+		const candidate = expectHost ? state.customMatch : state.resultUrl || state.shareMatch;
+		const hostOk = expectHost
+			? candidate.toLowerCase().includes(expectHost)
+			: /share\.fsky\.top\/s\//.test(candidate);
+		const publishedOk = isPublishedUiState(state.badge, state.stateTitle);
+
+		if (!state.building && candidate && hostOk && publishedOk) {
+			publicUrl = candidate.replace(/\/?$/, '/');
+			if (!/^https?:\/\//i.test(publicUrl)) {
+				publicUrl = `https://${publicUrl.replace(/^\/+/, '')}`;
 			}
-			break;
-		}
-		if (!state.building && (state.urlText || state.match) && /share\.fsky\.top\/s\//.test(state.urlText || state.match)) {
-			publicUrl = (state.urlText || state.match).replace(/\/?$/, '/');
 			if (!sharedKey) {
 				await sleep(800);
 				sharedKey = await readSharedKeyFromNotice(page);
@@ -782,10 +926,15 @@ export async function publishGardenFolderViaUiWithAccess(
 			const badge = document.querySelector('.result-badge')?.textContent?.trim() || '';
 			const title = document.querySelector('.state-title')?.textContent?.trim() || '';
 			const building = !!document.querySelector('.spinner');
-			return { err, badge, title, building, body };
+			const urlText =
+				document.querySelector('.success-url-box .url, .state-result .url')?.textContent?.trim() ||
+				'';
+			return { err, badge, title, building, body, urlText };
 		});
 		throw new Error(
-			`Timed out waiting for Published URL in Obsidian UI (badge=${debug.badge} title=${debug.title} building=${debug.building} err=${debug.err}) body=${debug.body.replace(/\s+/g, ' ').slice(0, 400)}`,
+			`Timed out waiting for Published URL in Obsidian UI` +
+				(expectHost ? ` (expect host=${expectHost})` : '') +
+				` (badge=${debug.badge} title=${debug.title} building=${debug.building} url=${debug.urlText} err=${debug.err}) body=${debug.body.replace(/\s+/g, ' ').slice(0, 400)}`,
 		);
 	}
 	return { publicUrl, sharedKey };

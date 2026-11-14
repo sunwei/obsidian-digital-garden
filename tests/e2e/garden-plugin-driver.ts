@@ -312,26 +312,113 @@ export class GardenPluginDriver {
 		if (!set.success) throw new Error(`setAll: ${set.error}`);
 	}
 
+	/**
+	 * Mirror plugin syncCommerceOnPublish: stamp params.commerce + params.mdf.hosting
+	 * so the theme can render purchase slots (offers still load at runtime).
+	 */
+	private async stampCommerceParams(
+		projectName: string,
+		opts: { projectId: string; token: string; guest: boolean; hostingMode: 'share' | 'custom' },
+	): Promise<void> {
+		try {
+			const cfgRes = await this.projectConfig.list(this.workspaceDir, projectName);
+			const config = (cfgRes?.data ?? cfgRes ?? {}) as Record<string, unknown>;
+			const current =
+				config.params && typeof config.params === 'object'
+					? { ...(config.params as Record<string, unknown>) }
+					: {};
+			const mdf =
+				current.mdf && typeof current.mdf === 'object'
+					? { ...(current.mdf as Record<string, unknown>) }
+					: {};
+			mdf.hosting = opts.hostingMode;
+			current.mdf = mdf;
+
+			if (!opts.guest) {
+				try {
+					const res = await fetch(
+						`${this.opts.apiBaseUrl.replace(/\/$/, '')}/v1/projects/${encodeURIComponent(opts.projectId)}/commerce/site-params`,
+						{ headers: { authorization: `Bearer ${opts.token}`, accept: 'application/json' } },
+					);
+					if (res.ok) {
+						const shell = (await res.json()) as Record<string, unknown>;
+						const pages =
+							shell.pages && typeof shell.pages === 'object'
+								? (shell.pages as Record<string, unknown>)
+								: null;
+						if (
+							typeof shell.project === 'string' &&
+							typeof shell.endpoint === 'string' &&
+							pages &&
+							typeof pages.purchase === 'string' &&
+							typeof pages.pricing === 'string' &&
+							typeof pages.privacy === 'string'
+						) {
+							current.commerce = {
+								v: 1,
+								project: shell.project,
+								endpoint: shell.endpoint,
+								pages: {
+									purchase: pages.purchase,
+									pricing: pages.pricing,
+									privacy: pages.privacy,
+								},
+							};
+						}
+					}
+				} catch {
+					/* keep last shell */
+				}
+			}
+
+			const set = await this.projectConfig.set(this.workspaceDir, projectName, 'params', current);
+			if (!set.success) throw new Error(`set params: ${set.error}`);
+		} catch {
+			/* non-blocking, same as the plugin */
+		}
+	}
+
 	async buildAndPublish(
 		site: PluginSite,
 		auth: { token: string; guest: boolean },
-		opts: { force?: boolean; beforeBuild?: () => Promise<void> } = {},
+		opts: {
+			force?: boolean;
+			beforeBuild?: () => Promise<void>;
+			hostingMode?: 'share' | 'custom';
+			/** Override public base (custom domain). Defaults to share URL after bind. */
+			publicBaseUrl?: string;
+		} = {},
 	): Promise<PluginPublishResult> {
+		const hostingMode = opts.hostingMode ?? 'share';
 		const binding = await this.publish.ensureCloudflareBinding({
 			workspacePath: this.workspaceDir,
 			projectName: site.name,
 			authToken: auth.token,
-			hostingMode: 'share',
+			hostingMode,
 			apiBaseUrl: this.opts.apiBaseUrl,
-			publicBaseUrl: this.opts.publicBaseUrl,
+			publicBaseUrl: opts.publicBaseUrl ?? this.opts.publicBaseUrl,
 			sourcePath: site.vaultRelPath,
 			kind: site.kind,
 			title: site.name,
 		});
 		if (!binding.success) throw new Error(`ensureCloudflareBinding: ${binding.error} ${binding.code ?? ''}`);
-		const baseURL = `${this.opts.publicBaseUrl.replace(/\/$/, '')}/s/${binding.siteId}/`;
+		const shareBaseURL = `${this.opts.publicBaseUrl.replace(/\/$/, '')}/s/${binding.siteId}/`;
+		const baseURL = opts.publicBaseUrl
+			? opts.publicBaseUrl.endsWith('/')
+				? opts.publicBaseUrl
+				: `${opts.publicBaseUrl}/`
+			: shareBaseURL;
 		const set = await this.projectConfig.set(this.workspaceDir, site.name, 'baseURL', baseURL);
 		if (!set.success) throw new Error(`set baseURL: ${set.error}`);
+
+		if (binding.cloudflareProjectId) {
+			await this.stampCommerceParams(site.name, {
+				projectId: binding.cloudflareProjectId,
+				token: auth.token,
+				guest: auth.guest,
+				hostingMode,
+			});
+		}
 
 		// Mirror ProjectServiceManager / test-kit PluginDriver: pass access so SSG
 		// encrypts protected pages and writes access-manifest.json (I3).
@@ -382,8 +469,8 @@ export class GardenPluginDriver {
 			authToken: auth.token,
 			guest: auth.guest,
 			apiBaseUrl: this.opts.apiBaseUrl,
-			publicBaseUrl: this.opts.publicBaseUrl,
-			hostingMode: 'share',
+			publicBaseUrl: opts.publicBaseUrl ?? this.opts.publicBaseUrl,
+			hostingMode,
 			force: opts.force === true,
 			sourcePath: site.vaultRelPath,
 			kind: site.kind,
@@ -405,6 +492,11 @@ export class GardenPluginDriver {
 			clientHeader: this.http.lastClientHeader || this.clientHeader,
 			...(sharedKeys?.length ? { sharedKeys } : {}),
 		};
+	}
+
+	/** Absolute Foundry project path (for stub pages / meta patches). */
+	projectPath(name: string): string {
+		return path.join(this.workspaceDir, 'projects', name);
 	}
 
 	dispose(): void {

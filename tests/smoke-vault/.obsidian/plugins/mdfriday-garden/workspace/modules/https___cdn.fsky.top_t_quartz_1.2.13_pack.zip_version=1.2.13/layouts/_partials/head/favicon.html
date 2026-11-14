@@ -1,0 +1,2 @@
+{{- $icon := .Site.Params.favicon | default "favicon.svg" -}}
+<link rel="icon" href="{{ trim (partial "resolve-asset" $icon) "\n\r\t " }}">

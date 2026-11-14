@@ -21,6 +21,7 @@ const CF_ROOT = path.resolve(WORKSPACE, 'cloudflare');
 export interface StagingCreator {
 	userId: string;
 	email: string;
+	plan: string;
 	/** User JWT — Dashboard session + creator Access API */
 	token: string;
 	/** MDF_ key — GardenPluginDriver publish */
@@ -135,8 +136,17 @@ export function stagingCreatorPrereqs(): { ok: boolean; missing: string[] } {
 	return { ok: missing.length === 0, missing };
 }
 
+export type StagingCreatorOpts = {
+	/** D1 + JWT plan. Use `personal` for commerce E2E (arch/commerce/12). Default `free`. */
+	plan?: 'free' | 'personal' | 'pro';
+};
+
 /** Create a disposable staging creator (user JWT + MDF_ key). */
-export async function createStagingCreator(label: string, runId: string): Promise<StagingCreator> {
+export async function createStagingCreator(
+	label: string,
+	runId: string,
+	opts: StagingCreatorOpts = {},
+): Promise<StagingCreator> {
 	const pre = stagingCreatorPrereqs();
 	if (!pre.ok) {
 		throw new Error(
@@ -149,6 +159,7 @@ export async function createStagingCreator(label: string, runId: string): Promis
 	const jwtSecret = vars.JWT_SECRET;
 	const apiBase = (vars.API_BASE_URL || `https://${vars.API_HOST || 'api.fsky.top'}`).replace(/\/$/, '');
 	const siteBaseUrl = `https://${vars.WWW_HOST || 'fsky.top'}`;
+	const plan = opts.plan ?? 'free';
 
 	const userId = `usr_e2e_garden_${label}_${runId}`.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 64);
 	const email = `e2e-garden-${label}-${runId}@mdfriday.test`;
@@ -157,10 +168,10 @@ export async function createStagingCreator(label: string, runId: string): Promis
 	d1Execute(
 		accountId,
 		`INSERT OR REPLACE INTO users (id, email, display_name, plan, storage_bytes, status, created_at, updated_at)
-     VALUES (${sqlStr(userId)}, ${sqlStr(email)}, ${sqlStr(`Garden E2E ${label}`)}, 'free', 0, 'active', ${t}, ${t})`,
+     VALUES (${sqlStr(userId)}, ${sqlStr(email)}, ${sqlStr(`Garden E2E ${label}`)}, ${sqlStr(plan)}, 0, 'active', ${t}, ${t})`,
 	);
 
-	const token = signJwt({ sub: userId, plan: 'free' }, jwtSecret);
+	const token = signJwt({ sub: userId, plan }, jwtSecret);
 
 	const keyRes = await fetch(`${apiBase}/v1/keys`, {
 		method: 'POST',
@@ -185,6 +196,7 @@ export async function createStagingCreator(label: string, runId: string): Promis
 	return {
 		userId,
 		email,
+		plan,
 		token,
 		mdfKey: keyBody.key,
 		apiBase,

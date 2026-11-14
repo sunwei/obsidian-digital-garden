@@ -1,0 +1,28 @@
+{{- /* Quartz list / section shell */ -}}
+<div class="page">
+    <div id="quartz-body">
+        <aside class="sidebar left">
+            {{- partial "quartz/sidebar-left.html" . -}}
+        </aside>
+        <div class="center">
+            <div class="page-header">
+                <div class="popover-hint">
+                    {{- partial "quartz/breadcrumbs.html" . -}}
+                </div>
+            </div>
+            <article class="popover-hint">
+                {{- if .Content -}}
+                <div class="article-content">
+                    {{ .Content }}
+                </div>
+                {{- end -}}
+                {{- partial "components/page-list.html" . -}}
+                {{- partial "subscribe.html" (dict "Page" . "variant" "compact" "placement" (cond (eq .Kind "section") "list" "term")) -}}
+            </article>
+        </div>
+        <aside class="sidebar right">
+            {{- partial "quartz/sidebar-right.html" . -}}
+        </aside>
+        {{- partial "quartz/footer-content.html" . -}}
+    </div>
+</div>

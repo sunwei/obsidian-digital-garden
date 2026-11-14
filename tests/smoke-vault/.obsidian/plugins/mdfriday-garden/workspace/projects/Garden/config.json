@@ -1,5 +1,5 @@
 {
-  "baseURL": "/s/NzbYkb/",
+  "baseURL": "/",
   "title": "Garden",
   "contentDir": "content",
   "publishDir": "public",
@@ -11,7 +11,7 @@
   "module": {
     "imports": [
       {
-        "path": "https://cdn.fsky.top/t/quartz/1.2.8/pack.zip?version=1.2.8"
+        "path": "https://cdn.fsky.top/t/quartz/1.2.13/pack.zip?version=1.2.13"
       }
     ]
   },
@@ -40,11 +40,24 @@
     "mdfriday": {
       "family": "quartz",
       "variant": "quartz",
-      "version": "1.2.6"
+      "version": "1.2.13"
     },
     "navLinks": [],
-    "lastPublishUrl": "https://share.fsky.top/s/NzbYkb/",
-    "password": ""
+    "lastPublishUrl": "https://e2e-ui05-2emwfrpkvjani69y.jiashu.ink/",
+    "password": "",
+    "mdf": {
+      "hosting": "custom"
+    },
+    "commerce": {
+      "v": 1,
+      "project": "p_94272935aebde626e54f04d129e2a472",
+      "endpoint": "https://api.fsky.top",
+      "pages": {
+        "purchase": "/purchase.html",
+        "pricing": "/pricing.html",
+        "privacy": "/privacy.html"
+      }
+    }
   },
   "publish": {
     "method": "cloudflare"
@@ -55,5 +68,5 @@
       "weight": 1
     }
   },
-  "canonicalHost": "https://share.fsky.top"
+  "canonicalHost": "https://e2e-ui05-2emwfrpkvjani69y.jiashu.ink"
 }
