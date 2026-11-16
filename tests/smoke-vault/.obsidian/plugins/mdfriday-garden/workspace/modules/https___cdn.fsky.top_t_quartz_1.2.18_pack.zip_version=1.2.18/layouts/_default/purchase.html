@@ -1,0 +1,7 @@
+{{/* Purchase delivery: Gate framework (tokens from family CSS). Not article chrome. */}}
+{{ define "header" }}{{ end }}
+{{ define "footer" }}{{ end }}
+{{ define "main" }}
+{{- $shell := partial "commerce-purchase-gate.html" . -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

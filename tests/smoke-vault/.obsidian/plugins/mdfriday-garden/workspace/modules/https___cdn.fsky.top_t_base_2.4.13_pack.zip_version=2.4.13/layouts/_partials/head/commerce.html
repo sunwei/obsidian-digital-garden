@@ -1,0 +1,12 @@
+{{- /* Commerce CSS when ready; purchase completion page is noindex + no-referrer (query string must stay). */ -}}
+{{- $c := mdfCommerce -}}
+{{- $name := "" -}}
+{{- with .File -}}{{- $name = .BaseFileName -}}{{- end -}}
+{{- if eq $name "purchase" -}}
+<link rel="stylesheet" href="{{ partial "base-asset" "caps/gate/style.css" }}">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+{{- end -}}
+{{- if $c.ready -}}
+<link rel="stylesheet" href="{{ partial "base-asset" "caps/commerce/style.css" }}">
+{{- end -}}

@@ -1,0 +1,185 @@
+# Base 2.4 — subscribe capability strings (params.subscribe.<key> overrides these)
+- id: subscribe.title
+  translation: "Subscribe to updates"
+- id: subscribe.description
+  translation: "Get new posts by email."
+- id: subscribe.button
+  translation: "Subscribe"
+- id: subscribe.placeholder
+  translation: "you@example.com"
+- id: subscribe.success
+  translation: "Thanks! You're subscribed."
+- id: subscribe.error
+  translation: "Something went wrong. Please try again."
+- id: subscribe.invalid
+  translation: "Please enter a valid email address."
+- id: subscribe.rate_limited
+  translation: "Too many attempts. Please try again later."
+- id: subscribe.preview
+  translation: "Preview only: the form works, but nothing was saved."
+- id: subscribe.powered
+  translation: "Powered by MDFriday"
+- id: subscribe.notice
+  translation: "By subscribing you agree to receive emails from this site. You can ask to be removed at any time."
+
+# Bases views. {name} {type} {count} {total} are filled by the engine.
+- id: bases.noData
+  translation: "No data found."
+- id: bases.noViews
+  translation: "No views"
+- id: bases.viewNotFound
+  translation: "View \"{name}\" not found"
+- id: bases.unknownView
+  translation: "Unknown view type: {type}"
+- id: bases.parseFile
+  translation: "This base file could not be parsed."
+- id: bases.parseBlock
+  translation: "This base block could not be parsed."
+- id: bases.uncategorized
+  translation: "Uncategorized"
+- id: bases.allEntries
+  translation: "All entries"
+- id: bases.showingCount
+  translation: "Showing {count} of {total} entries"
+- id: bases.mapPlaceholder
+  translation: "Map view is not available in static builds."
+- id: bases.noImage
+  translation: "No image available"
+
+# Access unlock card (lock page)
+- id: access.eyebrow
+  translation: "Protected content · Access key required"
+- id: access.title
+  translation: "Enter access key to continue"
+- id: access.body
+  translation: "This page is encrypted by the publisher. Enter an access key to decrypt and view."
+- id: access.label
+  translation: "Access key"
+- id: access.unlock
+  translation: "Unlock"
+- id: access.another
+  translation: "Use another key"
+- id: access.signout
+  translation: "Sign out"
+- id: access.helper
+  translation: "Contact the publisher if you don’t have an access key."
+
+# Commerce
+- id: commerce.buy
+  translation: "Buy"
+- id: commerce.view_content
+  translation: "View content"
+- id: commerce.test_mode
+  translation: "Test mode"
+- id: commerce.billing.one_time
+  translation: "One-time"
+- id: commerce.billing.month
+  translation: "Monthly"
+- id: commerce.billing.year
+  translation: "Yearly"
+- id: commerce.already
+  translation: "Already purchased? Enter your key above."
+- id: commerce.contact_missing
+  translation: "Can't find your key? Contact {email}"
+- id: commerce.footer.privacy
+  translation: "Data & Privacy"
+- id: commerce.confirm.title
+  translation: "Confirm your purchase"
+- id: commerce.confirm.email
+  translation: "Email"
+- id: commerce.confirm.email_invalid
+  translation: "Please enter a valid email address."
+- id: commerce.confirm.notice
+  translation: "After payment, your key is shown only on the completion page — please save it. Your email lets the publisher verify your purchase. Keys are issued and managed by this site’s publisher; MDFriday processes the order on their behalf; payment is handled by Creem."
+- id: commerce.confirm.pay
+  translation: "Continue to payment"
+- id: commerce.confirm.back
+  translation: "Back"
+- id: commerce.confirm.unavailable
+  translation: "This item is not available for purchase right now."
+- id: commerce.confirm.network
+  translation: "Something went wrong. Please try again."
+- id: commerce.pricing.title
+  translation: "Pricing"
+- id: commerce.pricing.lead
+  translation: "Choose a plan. Pay once or subscribe — you get an access key."
+- id: commerce.pricing.empty
+  translation: "No plans are available yet."
+- id: commerce.purchase.title
+  translation: "Purchase"
+- id: commerce.purchase.eyebrow
+  translation: "Purchase complete · Access key"
+- id: commerce.purchase.headline
+  translation: "Save your access key"
+- id: commerce.purchase.lead
+  translation: "Payment is complete. Your access key appears below — save it before leaving this page."
+- id: commerce.purchase.save_now
+  translation: "This key is only shown on this page. Save it now."
+- id: commerce.purchase.history
+  translation: "You can reopen this page from your browser history for 7 days."
+- id: commerce.purchase.contact
+  translation: "Keys are issued and managed by this site’s publisher. If you lose the key, contact {email} with your Creem receipt."
+- id: commerce.purchase.subscription
+  translation: "This is a subscription: your key stays the same after renewal and is extended automatically. To renew or cancel, use the management link in the receipt Creem emailed you."
+- id: commerce.purchase.copy
+  translation: "Copy"
+- id: commerce.purchase.copied
+  translation: "Copied"
+- id: commerce.purchase.download
+  translation: "Download .txt"
+- id: commerce.purchase.enter
+  translation: "Open content"
+- id: commerce.purchase.processing
+  translation: "Payment received. Confirming your order…"
+- id: commerce.purchase.processing_timeout
+  translation: "Payment received and still being confirmed. Refresh this page in a moment."
+- id: commerce.purchase.expired
+  translation: "This claim link has expired. If you did not save your key, contact {email} with your Creem receipt."
+- id: commerce.purchase.invalid
+  translation: "This link is not valid. Contact the publisher if you have a receipt."
+- id: commerce.purchase.missing
+  translation: "This page is missing a claim token. Open it from the payment completion redirect."
+- id: commerce.privacy.title
+  translation: "Data & Privacy"
+- id: commerce.privacy.section_title
+  translation: "Purchases and access keys"
+- id: commerce.privacy.lead
+  translation: "This site is run by the publisher of {siteName}. For purchases, access keys, and your personal data, contact: {contactEmail}."
+- id: commerce.privacy.incomplete
+  translation: "This page will be complete once the publisher starts selling on this site."
+- id: commerce.privacy.who_title
+  translation: "Who is responsible for your data"
+- id: commerce.privacy.who_author
+  translation: "The publisher of this site manages your data: they issue and manage your access keys, and handle requests about your purchase, keys, and personal data."
+- id: commerce.privacy.who_mdfriday
+  translation: "MDFriday (mdfriday.com) provides hosting and selling tools for the publisher, and stores and processes this data on their behalf. It does not look at the data or use it for any purpose beyond what the publisher authorizes."
+- id: commerce.privacy.who_creem
+  translation: "Creem is the Merchant of Record and handles payment, tax, invoices, and refunds. Card details are processed only by Creem."
+- id: commerce.privacy.collect_title
+  translation: "Information collected at purchase"
+- id: commerce.privacy.collect_body
+  translation: "The email and name you enter at checkout, plus order details (item, amount, currency, time, and subscription status)."
+- id: commerce.privacy.collect_use
+  translation: "Used to issue an access key, let the publisher verify your purchase, and handle renewals, refunds, and after-sales requests. This does not add you to any mailing list."
+- id: commerce.privacy.key_title
+  translation: "Access keys"
+- id: commerce.privacy.key_show
+  translation: "The key is your credential for paid content. It is issued and managed by the publisher of this site. The key is shown on the payment completion page — please save it yourself."
+- id: commerce.privacy.key_store
+  translation: "After you enter the key on this site, it may be stored in the current browser so pages unlock automatically. Sign out on the unlock card or clear your browser data to remove it."
+- id: commerce.privacy.key_lost
+  translation: "If you lose the key, contact {contactEmail} using the email from your purchase. The publisher will verify and reissue it. MDFriday does not offer key recovery."
+- id: commerce.privacy.subscribe_title
+  translation: "Subscriptions"
+- id: commerce.privacy.subscribe_body
+  translation: "If you subscribe on this site, your email, the page you submitted from, referrer domain, country/region, and time are given to the publisher so they can send you updates. No cookie is set, and no IP address is stored."
+- id: commerce.privacy.retain_title
+  translation: "How long data is kept"
+- id: commerce.privacy.retain_body
+  translation: "Orders are kept for as long as this site exists, and deleted 30 days after the site is deleted. Payment records are kept by Creem under its own policy."
+- id: commerce.privacy.rights_title
+  translation: "Your rights"
+- id: commerce.privacy.rights_body
+  translation: "You can ask the publisher to view or correct your data, or to revoke your key. Contact {contactEmail}."
+- id: commerce.privacy.updated
+  translation: "Updated {updatedAt}"

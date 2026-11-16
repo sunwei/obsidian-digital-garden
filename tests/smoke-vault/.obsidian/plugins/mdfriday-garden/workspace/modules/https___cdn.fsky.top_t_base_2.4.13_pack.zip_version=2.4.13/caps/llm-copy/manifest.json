@@ -1,0 +1,113 @@
+{
+  "$schema": "https://mdfriday.com/schemas/capability-manifest/v1",
+  "name": "llm-copy",
+  "version": "1.0.0",
+  "type": "conditional",
+  "description": "Copy page Markdown (RawContent / Foundry .Plain) for LLMs, with optional View-as-markdown modal. Activated by params.llmCopy.enable = true. Data is build-time embedded — no fetch(.md).",
+
+  "entry": "partial:llm-copy.html (toolbar + data + modal) | scripts-body-end/extra.html (css+js when enabled)",
+
+  "config": {
+    "scope": "site",
+    "params": [
+      {
+        "key": "llmCopy.enable",
+        "in": "site-params",
+        "type": "boolean",
+        "required": false,
+        "description": "Enable page-level Copy for LLM toolbar on content pages.",
+        "example": "true",
+        "effect": "Loads llm-copy.css/js; sub-theme places partial \"llm-copy.html\" in article header."
+      },
+      {
+        "key": "llmCopy.variant",
+        "in": "site-params",
+        "type": "string",
+        "required": false,
+        "description": "UI variant: \"split\" (copy + caret menu) or \"button\" (copy only).",
+        "example": "split",
+        "effect": "Controls whether the caret dropdown is rendered."
+      },
+      {
+        "key": "llmCopy.viewMarkdown",
+        "in": "site-params",
+        "type": "boolean",
+        "required": false,
+        "description": "Show View as markdown in the menu (split variant).",
+        "example": "true",
+        "effect": "Adds menu item that opens the markdown modal."
+      },
+      {
+        "key": "llmCopy.external",
+        "in": "site-params",
+        "type": "boolean",
+        "required": false,
+        "description": "Show Open in ChatGPT / Claude menu items.",
+        "example": "false",
+        "effect": "When true, menu opens external AI apps with a prompt containing page URL."
+      }
+    ]
+  },
+
+  "assets": {
+    "css": {
+      "file": "static/caps/llm-copy/llm-copy.css",
+      "child_override": true,
+      "note": "Override --mdf-llm-* CSS variables in sub-theme CSS to match brand"
+    },
+    "js": [
+      {
+        "file": "static/caps/llm-copy/llm-copy.js",
+        "locked": true,
+        "size": "~4KB",
+        "note": "Reads #mdf-page-markdown JSON; binds #mdf-llm-copy actions. No external deps."
+      }
+    ],
+    "size_impact": "~6KB + page RawContent JSON"
+  },
+
+  "locked": {
+    "html_ids": ["mdf-llm-copy", "mdf-page-markdown", "mdf-llm-markdown-modal"],
+    "html_data_attrs": [
+      "data-mdf-llm-action",
+      "data-variant",
+      "data-view-markdown",
+      "data-external"
+    ],
+    "html_classes": ["mdf-llm-copy", "mdf-llm-markdown-modal"],
+    "js_files": ["static/caps/llm-copy/llm-copy.js"],
+    "reason": "llm-copy.js binds by these IDs/attrs. Renaming breaks the capability."
+  },
+
+  "child_override": {
+    "css_variables": [
+      "--mdf-llm-btn-bg",
+      "--mdf-llm-btn-border",
+      "--mdf-llm-btn-color",
+      "--mdf-llm-btn-hover-bg",
+      "--mdf-llm-menu-bg",
+      "--mdf-llm-menu-border",
+      "--mdf-llm-modal-bg",
+      "--mdf-llm-modal-overlay",
+      "--mdf-llm-radius",
+      "--mdf-llm-shadow"
+    ],
+    "partials": [
+      {
+        "file": "layouts/_partials/llm-copy.html",
+        "level": "safe",
+        "note": "Safe to restyle markup classes; keep locked IDs and data-mdf-llm-action attrs"
+      },
+      {
+        "file": "layouts/_partials/scripts-body-end/extra.html",
+        "level": "safe",
+        "note": "Base auto-injects css+js when params.llmCopy.enable; keep that branch if overriding"
+      }
+    ]
+  },
+
+  "activation_pattern": {
+    "in": "config.toml / theme.manifest capabilities",
+    "template": "[params.llmCopy]\nenable = true\nvariant = \"split\"\nviewMarkdown = true\nexternal = false\n\n# In article header:\n{{ partial \"llm-copy.html\" . }}"
+  }
+}

@@ -1,0 +1,9 @@
+{{ define "slot-head-extra" }}
+{{- /* robots / referrer also set in head/commerce.html for all families */ -}}
+{{- partial "commerce-scripts.html" . -}}
+{{ end }}
+{{ define "header" }}{{/* Gate page — no site chrome */}}{{ end }}
+{{ define "footer" }}{{/* Gate page — no site chrome */}}{{ end }}
+{{ define "main" }}
+{{- partial "commerce-purchase-gate.html" . -}}
+{{ end }}

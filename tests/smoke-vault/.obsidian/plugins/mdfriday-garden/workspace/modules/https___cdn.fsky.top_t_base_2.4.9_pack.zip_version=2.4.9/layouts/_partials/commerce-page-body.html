@@ -1,0 +1,59 @@
+{{- /* Injected into family/base article bodies so /purchase/, /pricing/, /privacy/ keep the family chrome. */ -}}
+{{- $name := "" -}}
+{{- with .File -}}{{- $name = .BaseFileName -}}{{- end -}}
+{{- $c := mdfCommerce -}}
+{{- $attrs := mdfCommerceAttrs $name -}}
+{{- $isPurchase := eq $name "purchase" -}}
+{{- $isPricing := eq $name "pricing" -}}
+{{- $isPrivacy := eq $name "privacy" -}}
+{{- if and $isPurchase $attrs -}}
+<div
+  id="mdf-purchase-root"
+  class="mdf-purchase mdf-commerce"
+  data-endpoint="{{ $attrs.endpoint }}"
+  data-project="{{ $attrs.project }}"
+  data-privacy="{{ partial "commerce-page-href.html" $attrs.privacy }}"
+  data-msg-ready-save="{{ i18n "commerce.purchase.save_now" }}"
+  data-msg-ready-history="{{ i18n "commerce.purchase.history" }}"
+  data-msg-ready-contact="{{ i18n "commerce.purchase.contact" }}"
+  data-msg-ready-subscription="{{ i18n "commerce.purchase.subscription" }}"
+  data-msg-copy="{{ i18n "commerce.purchase.copy" }}"
+  data-msg-copied="{{ i18n "commerce.purchase.copied" }}"
+  data-msg-download="{{ i18n "commerce.purchase.download" }}"
+  data-msg-enter="{{ i18n "commerce.purchase.enter" }}"
+  data-msg-processing="{{ i18n "commerce.purchase.processing" }}"
+  data-msg-processing-timeout="{{ i18n "commerce.purchase.processing_timeout" }}"
+  data-msg-expired="{{ i18n "commerce.purchase.expired" }}"
+  data-msg-invalid="{{ i18n "commerce.purchase.invalid" }}"
+  data-msg-missing="{{ i18n "commerce.purchase.missing" }}"
+></div>
+{{- else if and $isPricing $attrs -}}
+<div
+  id="mdf-pricing-root"
+  class="mdf-commerce"
+  data-endpoint="{{ $attrs.endpoint }}"
+  data-project="{{ $attrs.project }}"
+  data-privacy="{{ partial "commerce-page-href.html" $attrs.privacy }}"
+  data-msg-buy="{{ i18n "commerce.buy" }}"
+  data-msg-view="{{ i18n "commerce.view_content" }}"
+  data-msg-test="{{ i18n "commerce.test_mode" }}"
+  data-msg-one-time="{{ i18n "commerce.billing.one_time" }}"
+  data-msg-month="{{ i18n "commerce.billing.month" }}"
+  data-msg-year="{{ i18n "commerce.billing.year" }}"
+  data-msg-confirm-title="{{ i18n "commerce.confirm.title" }}"
+  data-msg-email="{{ i18n "commerce.confirm.email" }}"
+  data-msg-email-invalid="{{ i18n "commerce.confirm.email_invalid" }}"
+  data-msg-notice="{{ i18n "commerce.confirm.notice" }}"
+  data-msg-privacy="{{ i18n "commerce.footer.privacy" }}"
+  data-msg-pay="{{ i18n "commerce.confirm.pay" }}"
+  data-msg-back="{{ i18n "commerce.confirm.back" }}"
+  data-msg-unavailable="{{ i18n "commerce.confirm.unavailable" }}"
+  data-msg-network="{{ i18n "commerce.confirm.network" }}"
+></div>
+{{- else if and $isPrivacy $c.enabled -}}
+  {{- $stub := eq .Params.mdf_commerce_stub true -}}
+  {{- $facts := ne .Params.mdf_privacy_facts false -}}
+  {{- if $facts -}}
+    {{- partial "commerce-privacy-facts.html" (dict "Page" . "full" $stub) -}}
+  {{- end -}}
+{{- end -}}

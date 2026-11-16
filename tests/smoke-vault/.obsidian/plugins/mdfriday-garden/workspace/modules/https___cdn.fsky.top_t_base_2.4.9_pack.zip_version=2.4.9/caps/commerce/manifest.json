@@ -1,0 +1,45 @@
+{
+  "$schema": "https://mdfriday.com/schemas/capability-manifest/v1",
+  "name": "commerce",
+  "version": "1.1.0",
+  "type": "default",
+  "description": "Garden commerce cap: lock-page purchase zone, /purchase/, /pricing/, and /privacy/. Product data is fetched at runtime from GET /v1/public/commerce/offers. Connection comes from commerce.enable + services.mdfriday via mdfCommerce* template funcs.",
+  "entry": "layouts/_default/purchase.html, pricing.html, privacy.html | partial:access-card.html purchase slot | partial:commerce-privacy-link.html",
+  "config": {
+    "scope": "site",
+    "owner": "plugin",
+    "params": [
+      { "key": "commerce.enable", "in": "config", "type": "boolean", "required": false, "description": "When true, plugin ensures pricing/purchase/privacy ordinary pages.", "example": "true" },
+      { "key": "services.mdfriday.project", "in": "config", "type": "string", "required": false, "description": "projects.id (p_<hex>); empty before first publish — purchase zone stays hidden.", "example": "p_…" },
+      { "key": "services.mdfriday.endpoint", "in": "config", "type": "string", "required": false, "description": "API origin, e.g. https://api.mdfriday.com" }
+    ],
+    "example_config": "\"commerce\": { \"enable\": true }, \"services\": { \"mdfriday\": { \"project\": \"p_…\", \"endpoint\": \"https://api.mdfriday.com\" } }"
+  },
+  "assets": {
+    "css": { "file": "static/caps/commerce/style.css", "child_override": true, "note": "Set --mdf-commerce-* variables; do not fork the file." },
+    "js": [ { "file": "static/caps/commerce/commerce.js", "locked": true, "note": "Lock-page offers, checkout confirm, /purchase/ four states, /pricing/, /privacy/ runtime fill." } ],
+    "size_impact": "~18KB uncompressed; scripts request offers only when mdfCommerce.ready"
+  },
+  "locked": {
+    "html_ids": ["mdf-commerce-offers", "mdf-commerce-contact", "mdf-purchase-root", "mdf-pricing-root", "mdf-privacy-facts"],
+    "html_data_attrs": ["data-endpoint", "data-project", "data-resource", "data-msg-"],
+    "js_files": ["static/caps/commerce/commerce.js"],
+    "reason": "commerce.js and the public commerce API depend on these ids. Themes may style them; never rename."
+  },
+  "child_override": {
+    "css_variables": [
+      "--mdf-commerce-bg", "--mdf-commerce-fg", "--mdf-commerce-muted", "--mdf-commerce-border",
+      "--mdf-commerce-radius", "--mdf-commerce-padding", "--mdf-commerce-gap",
+      "--mdf-commerce-accent", "--mdf-commerce-accent-fg", "--mdf-commerce-focus",
+      "--mdf-commerce-error", "--mdf-commerce-success", "--mdf-commerce-font-mono"
+    ],
+    "partials": [
+      { "file": "layouts/_partials/access-card.html", "level": "caution", "note": "Must keep locked access and commerce ids." },
+      { "file": "layouts/_partials/commerce-privacy-link.html", "level": "safe", "note": "Place in the family footer; do not rename the href source." }
+    ]
+  },
+  "activation_pattern": {
+    "in": "theme.manifest capabilities",
+    "template": "\"capabilities\": { \"commerce\": true }  // garden families ship this cap; connection is plugin-owned via commerce.enable + services.mdfriday"
+  }
+}

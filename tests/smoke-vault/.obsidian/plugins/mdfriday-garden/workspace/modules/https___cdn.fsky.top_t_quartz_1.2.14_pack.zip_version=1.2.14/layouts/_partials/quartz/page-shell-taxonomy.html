@@ -1,0 +1,31 @@
+{{- /* Quartz taxonomy shell */ -}}
+<div class="page">
+    <div id="quartz-body">
+        <aside class="sidebar left">
+            {{- partial "quartz/sidebar-left.html" . -}}
+        </aside>
+        <div class="center">
+            <div class="page-header">
+                <div class="popover-hint">
+                    {{- partial "quartz/breadcrumbs.html" . -}}
+                </div>
+            </div>
+            <article class="popover-hint">
+                <header class="article-header">
+                    <h1>{{ partial "quartz/taxonomy-title.html" . }}</h1>
+                    {{- if .Content -}}
+                    <div class="article-content">
+                        {{ .Content }}
+                    </div>
+                    {{- end -}}
+                </header>
+                {{- partial "components/page-list.html" . -}}
+                {{- partial "subscribe.html" (dict "Page" . "variant" "compact" "placement" "term") -}}
+            </article>
+        </div>
+        <aside class="sidebar right">
+            {{- partial "quartz/sidebar-right.html" . -}}
+        </aside>
+        {{- partial "quartz/footer-content.html" . -}}
+    </div>
+</div>

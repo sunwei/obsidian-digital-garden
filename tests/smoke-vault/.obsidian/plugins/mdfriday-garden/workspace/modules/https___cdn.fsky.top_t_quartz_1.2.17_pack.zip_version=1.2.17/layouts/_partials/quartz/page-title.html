@@ -1,0 +1,8 @@
+{{- $title := .Site.Title -}}
+<h1 class="page-title">
+    <a href="{{ .Site.Home.RelPermalink }}" aria-label="{{ $title }} home">
+        {{- $mark := .Site.Params.logo | default "favicon.svg" -}}
+        <img class="page-title-logo" src="{{ trim (partial "resolve-asset" $mark) "\n\r\t " }}" alt="" width="28" height="28" aria-hidden="true" />
+        <span class="page-title-name">{{ $title }}</span>
+    </a>
+</h1>

@@ -1,0 +1,11 @@
+{{- /* Working href for a commerce page. Garden/Foundry emits leaf pages as name.html, not name/index.html. relLangURL keeps the share prefix (/s/{siteId}/). */ -}}
+{{- $raw := . -}}
+{{- if not $raw -}}{{- $raw = "/privacy.html" -}}{{- end -}}
+{{- if or (eq $raw "/purchase/") (eq $raw "/purchase") (eq $raw "purchase") (eq $raw "purchase/") -}}
+  {{- $raw = "/purchase.html" -}}
+{{- else if or (eq $raw "/pricing/") (eq $raw "/pricing") (eq $raw "pricing") (eq $raw "pricing/") -}}
+  {{- $raw = "/pricing.html" -}}
+{{- else if or (eq $raw "/privacy/") (eq $raw "/privacy") (eq $raw "privacy") (eq $raw "privacy/") -}}
+  {{- $raw = "/privacy.html" -}}
+{{- end -}}
+{{- $raw | relLangURL -}}

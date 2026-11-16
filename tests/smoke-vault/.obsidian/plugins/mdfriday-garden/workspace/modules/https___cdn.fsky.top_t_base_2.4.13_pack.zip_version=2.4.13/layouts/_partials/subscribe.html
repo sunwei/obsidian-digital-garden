@@ -1,0 +1,84 @@
+{{- /*
+  layouts/_partials/subscribe.html — Subscribe form (Base 2.4 capability, see caps/subscribe/manifest.json)
+
+  {{ partial "subscribe.html" (dict "Page" . "variant" "full" "placement" "article" "class" "") }}
+    file      = .File.Dir + .File.OriginalBaseName without leading "/" (e.g. "posts/hello", "index");
+                only read on page/home kinds (generated list/term pages have no source file)
+    variant   full (title + description + form) | compact (one row)
+    placement article | home | list | term | sidebar | footer (stored as signup source)
+    class     optional extra class on the section (theme hook)
+    id        optional id suffix when the same placement appears twice on a page
+
+  Renders only when Site.Params.subscribe.enabled is true (written by the plugin). Never on 404.
+  Locked: data-mdf-subscribe, .mdf-subscribe* classes, field names (subscribe.js + API depend on them).
+  Strings: params.subscribe.<key> → i18n "subscribe.<key>" → built-in en/zh default.
+*/ -}}
+{{- $page := .Page -}}
+{{- $cfg := $page.Site.Params.subscribe -}}
+{{- $on := false -}}
+{{- if $cfg -}}{{- if $cfg.enabled -}}{{- $on = true -}}{{- end -}}{{- end -}}
+{{- if and $on (ne $page.Kind "404") -}}
+{{- $variant := .variant | default "full" -}}
+{{- if not (in (slice "full" "compact") $variant) -}}{{- $variant = "full" -}}{{- end -}}
+{{- $placement := .placement | default "article" -}}
+{{- $uid := printf "mdf-sub-%s%s" $placement (cond (isset . "id") (printf "-%v" .id) "") -}}
+{{- $lang := lower ($page.Site.Language.Lang | default "en") -}}
+{{- $isZh := hasPrefix $lang "zh" -}}
+{{- $defEn := dict "title" "Subscribe to updates" "description" "Get new posts by email." "button" "Subscribe" "label" "Email address" "placeholder" "you@example.com" "success" "Thanks! You're subscribed." "error" "Something went wrong. Please try again." "invalid" "Please enter a valid email address." "rate_limited" "Too many attempts. Please try again later." "preview" "Preview only: the form works, but nothing was saved." "powered" "Powered by MDFriday" "notice" "By subscribing you agree to receive emails from this site. You can ask to be removed at any time." -}}
+{{- $defZh := dict "title" "订阅更新" "description" "通过邮件获取新文章。" "button" "订阅" "label" "邮箱地址" "placeholder" "you@example.com" "success" "感谢订阅！" "error" "出了点问题，请稍后重试。" "invalid" "请输入有效的邮箱地址。" "rate_limited" "尝试次数过多，请稍后再试。" "preview" "仅预览：表单可用，但不会保存任何数据。" "powered" "Powered by MDFriday" "notice" "订阅即表示你同意接收本站发送的邮件，可随时要求退订。" -}}
+{{- $def := cond $isZh $defZh $defEn -}}
+{{- $s := dict -}}
+{{- range $k, $d := $def -}}
+  {{- $v := "" -}}
+  {{- if and (ne $k "powered") (ne $k "label") -}}
+    {{- with index $cfg $k -}}{{- $v = printf "%v" . -}}{{- end -}}
+  {{- end -}}
+  {{- if not $v -}}
+    {{- $t := i18n (printf "subscribe.%s" $k) -}}
+    {{- if and $t (not (hasPrefix (printf "%v" $t) "[i18n]")) -}}{{- $v = printf "%v" $t -}}{{- end -}}
+  {{- end -}}
+  {{- if not $v -}}{{- $v = $d -}}{{- end -}}
+  {{- $s = merge $s (dict $k $v) -}}
+{{- end -}}
+{{- $endpoint := $cfg.endpoint | default "https://api.mdfriday.com/v1/public/subscribe" -}}
+{{- $project := $cfg.project | default "" -}}
+{{- /* Generate temporary project ID for preview mode (local-{timestamp_ms}) if not set */ -}}
+{{- if and $on (not $project) -}}
+  {{- $project = printf "local-%d" (mul (now.Unix) 1000) -}}
+{{- end -}}
+{{- /* foundry returns an absolute URL from RelPermalink when baseURL is absolute: keep the path only */ -}}
+{{- $path := replaceRE "^[a-zA-Z][a-zA-Z0-9+.-]*://[^/]+" "" ($page.RelPermalink | default "/") -}}
+{{- $file := "" -}}
+{{- if or $page.IsPage $page.IsHome -}}
+  {{- with $page.File -}}{{- $file = strings.TrimPrefix "/" (printf "%s%s" (.Dir | default "") (.OriginalBaseName | default "")) -}}{{- end -}}
+{{- end -}}
+<link rel="stylesheet" href="{{ partial "base-asset" "caps/subscribe/subscribe.css" }}">
+<section class="mdf-subscribe mdf-subscribe--{{ $variant }} mdf-subscribe--{{ $placement | html }}{{ with .class }} {{ . | html }}{{ end }}" data-mdf-subscribe data-state="idle" aria-labelledby="{{ $uid }}-title"
+  data-msg-success="{{ index $s "success" | html }}" data-msg-error="{{ index $s "error" | html }}" data-msg-invalid="{{ index $s "invalid" | html }}" data-msg-rate-limited="{{ index $s "rate_limited" | html }}" data-msg-preview="{{ index $s "preview" | html }}">
+  <div class="mdf-subscribe__text">
+    <h2 class="mdf-subscribe__title" id="{{ $uid }}-title">{{ index $s "title" | html }}</h2>
+    {{- if eq $variant "full" }}
+    <p class="mdf-subscribe__desc">{{ index $s "description" | html }}</p>
+    {{- end }}
+  </div>
+  <form class="mdf-subscribe__form" method="post" action="{{ $endpoint | html }}" novalidate>
+    <label class="mdf-visually-hidden" for="{{ $uid }}">{{ index $s "label" | html }}</label>
+    <input class="mdf-subscribe__input" id="{{ $uid }}" type="email" name="email" autocomplete="email" required maxlength="254" placeholder="{{ index $s "placeholder" | html }}">
+    <button class="mdf-subscribe__button" type="submit">{{ index $s "button" | html }}</button>
+    <input class="mdf-subscribe__hp" type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <input type="hidden" name="project" value="{{ $project | html }}">
+    <input type="hidden" name="url" value="{{ $page.Permalink | html }}">
+    <input type="hidden" name="path" value="{{ $path | html }}">
+    <input type="hidden" name="title" value="{{ $page.Title | html }}">
+    <input type="hidden" name="file" value="{{ $file | html }}">
+    <input type="hidden" name="kind" value="{{ $page.Kind | html }}">
+    <input type="hidden" name="lang" value="{{ $lang | html }}">
+    <input type="hidden" name="placement" value="{{ $placement | html }}">
+    <input type="hidden" name="return" value="{{ $page.Permalink | html }}">
+    <input type="hidden" name="t" value="">
+  </form>
+  <p class="mdf-subscribe__status" role="status" aria-live="polite"></p>
+  <p class="mdf-subscribe__notice">{{ index $s "notice" | html }}</p>
+  <p class="mdf-subscribe__powered"><a href="https://mdfriday.com/?ref=subscribe" target="_blank" rel="noopener">{{ index $s "powered" | html }}</a></p>
+</section>
+{{- end -}}

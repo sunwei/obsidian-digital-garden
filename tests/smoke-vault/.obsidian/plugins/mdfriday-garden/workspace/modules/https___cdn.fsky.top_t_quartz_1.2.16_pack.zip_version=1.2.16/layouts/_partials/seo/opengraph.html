@@ -1,0 +1,18 @@
+{{- /* seo/opengraph.html — quartz override of base seo/opengraph.html.
+     Only change vs base: og:title of taxonomy lists reads "Tags" / "Categories" instead of the
+     engine's singular "tag" / "category" (quartz/taxonomy-title.html). Keep the rest in sync with base. */ -}}
+{{- $ogTitle := .Title | default .Site.Title -}}
+{{- if .Title }}{{ $ogTitle = partial "quartz/taxonomy-title.html" . }}{{ end -}}
+{{- with $ogTitle }}
+<meta property="og:title" content="{{ . }}" />
+{{- end }}
+{{- with .Description | default .Site.Params.description }}
+<meta property="og:description" content="{{ . }}">
+{{- end }}
+{{- with .Params.image | default .Site.Params.logo }}
+<meta property="og:image" content="{{ . | relURL }}" />
+{{- end }}
+<meta property="og:url" content="{{ .Permalink }}" />
+<meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}" />
+<meta property="og:site_name" content="{{ .Site.Title }}" />
+

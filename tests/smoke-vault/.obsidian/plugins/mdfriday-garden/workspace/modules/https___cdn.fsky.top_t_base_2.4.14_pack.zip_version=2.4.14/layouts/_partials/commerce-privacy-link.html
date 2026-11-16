@@ -1,0 +1,5 @@
+{{- /* Footer Data & Privacy link when commerce is enabled. */ -}}
+{{- $c := mdfCommerce -}}
+{{- if $c.enabled -}}
+<a class="mdf-commerce-footer-link" href="{{ partial "commerce-page-href.html" (mdfCommercePage "privacy") }}">{{ i18n "commerce.footer.privacy" | default "Data & Privacy" }}</a>
+{{- end -}}

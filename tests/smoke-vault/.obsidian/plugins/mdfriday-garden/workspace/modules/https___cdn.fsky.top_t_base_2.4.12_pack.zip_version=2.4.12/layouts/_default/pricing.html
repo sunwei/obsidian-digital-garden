@@ -1,0 +1,41 @@
+{{ define "slot-head-extra" }}
+{{- partial "commerce-scripts.html" . -}}
+{{ end }}
+{{ define "main" }}
+{{- $attrs := mdfCommerceAttrs "pricing" -}}
+{{- $stub := eq .Params.mdf_commerce_stub true -}}
+<article class="single base-single mdf-commerce-page mdf-pricing-page">
+  <div class="single-content">
+    {{- partial "commerce-pricing-hero.html" . -}}
+    {{- if not $stub -}}
+    <div class="mdf-pricing-author">
+      {{- partial "encrypt-content.html" . -}}
+    </div>
+    {{- end -}}
+    {{- with $attrs -}}
+    <div
+      id="mdf-pricing-root"
+      class="mdf-commerce mdf-pricing-root"
+      data-endpoint="{{ .endpoint }}"
+      data-project="{{ .project }}"
+      data-privacy="{{ partial "commerce-page-href.html" .privacy }}"
+      data-msg-buy="{{ i18n "commerce.buy" }}"
+      data-msg-empty="{{ i18n "commerce.pricing.empty" }}"
+      data-msg-test="{{ i18n "commerce.test_mode" }}"
+      data-msg-one-time="{{ i18n "commerce.billing.one_time" }}"
+      data-msg-month="{{ i18n "commerce.billing.month" }}"
+      data-msg-year="{{ i18n "commerce.billing.year" }}"
+      data-msg-confirm-title="{{ i18n "commerce.confirm.title" }}"
+      data-msg-email="{{ i18n "commerce.confirm.email" }}"
+      data-msg-email-invalid="{{ i18n "commerce.confirm.email_invalid" }}"
+      data-msg-notice="{{ i18n "commerce.confirm.notice" }}"
+      data-msg-privacy="{{ i18n "commerce.footer.privacy" }}"
+      data-msg-pay="{{ i18n "commerce.confirm.pay" }}"
+      data-msg-back="{{ i18n "commerce.confirm.back" }}"
+      data-msg-unavailable="{{ i18n "commerce.confirm.unavailable" }}"
+      data-msg-network="{{ i18n "commerce.confirm.network" }}"
+    ></div>
+    {{- end -}}
+  </div>
+</article>
+{{ end }}

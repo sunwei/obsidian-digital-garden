@@ -1,0 +1,5 @@
+{{- /* [CAP:commerce] runtime — loaded when mdfCommerce.ready (commerce.enable + services.mdfriday). */ -}}
+{{- $c := mdfCommerce -}}
+{{- if $c.ready -}}
+<script defer src="{{ partial "base-asset" "caps/commerce/commerce.js" }}"></script>
+{{- end -}}

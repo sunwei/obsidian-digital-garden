@@ -1,0 +1,7 @@
+{{/* Commerce purchase page: same chrome as single.html; body hook is commerce-page-body.html. */}}
+{{ define "header" }}{{/* intentionally empty — Quartz 3-column layout rendered in define "main" */}}{{ end }}
+{{ define "footer" }}{{/* intentionally empty — Quartz footer is inside #quartz-body */}}{{ end }}
+{{ define "main" }}
+{{- $shell := partial "quartz/page-shell-single.html" . -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

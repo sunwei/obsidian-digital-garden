@@ -1,0 +1,51 @@
+{{- /*
+  layouts/_partials/scripts-body-end/search-data.html
+  Site search / explorer / graph data (Base).
+
+  Book-style: build assets/search-index.json once per language via
+  resources.ExecuteAsTemplate → Minify → Fingerprint, then fetch it
+  on the client. Pages only embed a short bootstrap (not the full index).
+
+  Output contract (after fetch):
+    window.__MDF_SEARCH__ = { baseURLPath, pages[], content? }
+    Legacy aliases: __FOUNDRY_PAGES__, __FOUNDRY_CONTENT_INDEX__, __FOUNDRY_BASE_URL_PATH__
+    window.__MDF_SEARCH_READY__ — Promise that resolves to the payload
+    window.__MDF_whenSearchReady__(cb, errCb) — helper for capability scripts
+*/ -}}
+{{- $searchEnabled := false -}}
+{{- with .Site.Params.search -}}
+  {{- if .enable -}}{{- $searchEnabled = true -}}{{- end -}}
+{{- end -}}
+{{- $needsData := or $searchEnabled .Site.Params.explorer .Site.Params.graph -}}
+{{- if $needsData -}}
+{{- $lang := "en" -}}
+{{- with .Language -}}
+  {{- with .Lang -}}{{- $lang = . -}}{{- end -}}
+{{- end -}}
+{{- $indexName := printf "%s.search-index.json" $lang -}}
+{{- $index := resources.Get "search-index.json" | resources.ExecuteAsTemplate $indexName . | resources.Minify | resources.Fingerprint -}}
+<script>
+(function () {
+  if (window.__MDF_SEARCH_READY__) return;
+  var url = {{ $index.RelPermalink | jsonify }};
+  var ready = fetch(url, { credentials: "same-origin" })
+    .then(function (res) {
+      if (!res.ok) throw new Error("search-index HTTP " + res.status);
+      return res.json();
+    })
+    .then(function (data) {
+      window.__MDF_SEARCH__ = data;
+      window.__FOUNDRY_PAGES__ = data.pages || [];
+      window.__FOUNDRY_BASE_URL_PATH__ = data.baseURLPath || "";
+      if (data.content) window.__FOUNDRY_CONTENT_INDEX__ = data.content;
+      return data;
+    });
+  window.__MDF_SEARCH_READY__ = ready;
+  window.__MDF_whenSearchReady__ = function (cb, errCb) {
+    ready.then(cb, errCb || function (err) {
+      console.error("[MDF] search index failed", err);
+    });
+  };
+})();
+</script>
+{{- end -}}

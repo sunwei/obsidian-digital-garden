@@ -1,0 +1,37 @@
+{{ define "slot-head-extra" }}
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+{{- partial "commerce-scripts.html" . -}}
+{{ end }}
+{{ define "main" }}
+{{- $attrs := mdfCommerceAttrs "purchase" -}}
+<article class="single base-single mdf-commerce-page">
+  <header class="single-header">
+    <h1 class="single-title">{{ .Title | default (i18n "commerce.purchase.title") }}</h1>
+  </header>
+  <div class="single-content">
+    {{- with $attrs -}}
+    <div
+      id="mdf-purchase-root"
+      class="mdf-purchase mdf-commerce"
+      data-endpoint="{{ .endpoint }}"
+      data-project="{{ .project }}"
+      data-privacy="{{ partial "commerce-page-href.html" .privacy }}"
+      data-msg-ready-save="{{ i18n "commerce.purchase.save_now" }}"
+      data-msg-ready-history="{{ i18n "commerce.purchase.history" }}"
+      data-msg-ready-contact="{{ i18n "commerce.purchase.contact" }}"
+      data-msg-ready-subscription="{{ i18n "commerce.purchase.subscription" }}"
+      data-msg-copy="{{ i18n "commerce.purchase.copy" }}"
+      data-msg-copied="{{ i18n "commerce.purchase.copied" }}"
+      data-msg-download="{{ i18n "commerce.purchase.download" }}"
+      data-msg-enter="{{ i18n "commerce.purchase.enter" }}"
+      data-msg-processing="{{ i18n "commerce.purchase.processing" }}"
+      data-msg-processing-timeout="{{ i18n "commerce.purchase.processing_timeout" }}"
+      data-msg-expired="{{ i18n "commerce.purchase.expired" }}"
+      data-msg-invalid="{{ i18n "commerce.purchase.invalid" }}"
+      data-msg-missing="{{ i18n "commerce.purchase.missing" }}"
+    ></div>
+    {{- end -}}
+  </div>
+</article>
+{{ end }}

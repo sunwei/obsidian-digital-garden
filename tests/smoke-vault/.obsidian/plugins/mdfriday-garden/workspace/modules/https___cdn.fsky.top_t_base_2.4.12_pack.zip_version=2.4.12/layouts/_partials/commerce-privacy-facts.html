@@ -1,0 +1,51 @@
+{{- /* Platform "Purchases and access keys" facts. Variables filled at runtime by commerce.js. */ -}}
+{{- $full := .full | default false -}}
+{{- $page := .Page | default . -}}
+{{- $subscribe := false -}}
+{{- with $page.Site.Params.subscribe -}}{{- if .enabled -}}{{- $subscribe = true -}}{{- end -}}{{- end -}}
+{{- $attrs := mdfCommerceAttrs "privacy" -}}
+<section id="mdf-privacy-facts" class="mdf-privacy-facts mdf-commerce"
+         data-full="{{ if $full }}true{{ else }}false{{ end }}"
+         {{- with $attrs }}
+         data-endpoint="{{ .endpoint }}"
+         data-project="{{ .project }}"
+         {{- end }}>
+  {{- if $full -}}
+  <p class="mdf-privacy-lead">{{ i18n "commerce.privacy.lead" | default "This site is run by the publisher of {siteName}. For purchases, access keys, and your personal data, contact: {contactEmail}." }}</p>
+  {{- else -}}
+  <h2>{{ i18n "commerce.privacy.section_title" | default "Purchases and access keys" }}</h2>
+  {{- end -}}
+  <p class="mdf-privacy-incomplete" hidden>{{ i18n "commerce.privacy.incomplete" | default "This page will be complete once the publisher starts selling on this site." }}</p>
+  <div class="mdf-privacy-commerce" hidden>
+    <h3>{{ i18n "commerce.privacy.who_title" | default "Who is responsible for your data" }}</h3>
+    <ul>
+      <li>{{ i18n "commerce.privacy.who_author" | default "The publisher of this site manages your data: they issue and manage your access keys, and handle requests about your purchase, keys, and personal data." }}</li>
+      <li>{{ i18n "commerce.privacy.who_mdfriday" | default "MDFriday (mdfriday.com) provides hosting and selling tools for the publisher, and stores and processes this data on their behalf. It does not look at the data or use it for any purpose beyond what the publisher authorizes." }}</li>
+      <li>{{ i18n "commerce.privacy.who_creem" | default "Creem is the Merchant of Record and handles payment, tax, invoices, and refunds. Card details are processed only by Creem." }}</li>
+    </ul>
+    <h3>{{ i18n "commerce.privacy.collect_title" | default "Information collected at purchase" }}</h3>
+    <ul>
+      <li>{{ i18n "commerce.privacy.collect_body" | default "The email and name you enter at checkout, plus order details (item, amount, currency, time, and subscription status)." }}</li>
+      <li>{{ i18n "commerce.privacy.collect_use" | default "Used to issue an access key, let the publisher verify your purchase, and handle renewals, refunds, and after-sales requests. This does not add you to any mailing list." }}</li>
+    </ul>
+    <h3>{{ i18n "commerce.privacy.key_title" | default "Access keys" }}</h3>
+    <ul>
+      <li>{{ i18n "commerce.privacy.key_show" | default "The key is your credential for paid content. It is issued and managed by the publisher of this site. The key is shown on the payment completion page — please save it yourself." }}</li>
+      <li>{{ i18n "commerce.privacy.key_store" | default "After you enter the key on this site, it may be stored in the current browser so pages unlock automatically. Sign out on the unlock card or clear your browser data to remove it." }}</li>
+      <li>{{ i18n "commerce.privacy.key_lost" | default "If you lose the key, contact {contactEmail} using the email from your purchase. The publisher will verify and reissue it. MDFriday does not offer key recovery." }}</li>
+    </ul>
+  </div>
+  {{- if $subscribe -}}
+  <div class="mdf-privacy-subscribe">
+    <h3>{{ i18n "commerce.privacy.subscribe_title" | default "Subscriptions" }}</h3>
+    <p>{{ i18n "commerce.privacy.subscribe_body" | default "If you subscribe on this site, your email, the page you submitted from, referrer domain, country/region, and time are given to the publisher so they can send you updates. No cookie is set, and no IP address is stored." }}</p>
+  </div>
+  {{- end -}}
+  <h3>{{ i18n "commerce.privacy.retain_title" | default "How long data is kept" }}</h3>
+  <p>{{ i18n "commerce.privacy.retain_body" | default "Orders are kept for as long as this site exists, and deleted 30 days after the site is deleted. Payment records are kept by Creem under its own policy." }}</p>
+  <div class="mdf-privacy-commerce" hidden>
+    <h3>{{ i18n "commerce.privacy.rights_title" | default "Your rights" }}</h3>
+    <p>{{ i18n "commerce.privacy.rights_body" | default "You can ask the publisher to view or correct your data, or to revoke your key. Contact {contactEmail}." }}</p>
+  </div>
+  <p class="mdf-privacy-updated">{{ i18n "commerce.privacy.updated" | default "Updated {updatedAt}" }}</p>
+</section>

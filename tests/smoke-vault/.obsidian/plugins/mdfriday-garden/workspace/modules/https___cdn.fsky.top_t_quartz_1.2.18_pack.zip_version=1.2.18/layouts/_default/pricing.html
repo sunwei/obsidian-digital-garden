@@ -1,0 +1,7 @@
+{{/* Dedicated commerce pricing page: marketing shell, not article chrome. */}}
+{{ define "header" }}{{/* intentionally empty — Quartz layout rendered in define "main" */}}{{ end }}
+{{ define "footer" }}{{/* intentionally empty — Quartz footer is inside #quartz-body */}}{{ end }}
+{{ define "main" }}
+{{- $shell := partial "quartz/page-shell-pricing.html" . -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

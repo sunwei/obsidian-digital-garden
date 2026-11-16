@@ -1,0 +1,5 @@
+{{- /* Shared pricing page hero (title + lead). Family shells call this above offers. */ -}}
+<header class="mdf-pricing-hero">
+  <h1 class="mdf-pricing-hero__title">{{ .Title | default (i18n "commerce.pricing.title") }}</h1>
+  <p class="mdf-pricing-hero__lead">{{ i18n "commerce.pricing.lead" | default "Choose a plan. Pay once or subscribe — you get an access key." }}</p>
+</header>

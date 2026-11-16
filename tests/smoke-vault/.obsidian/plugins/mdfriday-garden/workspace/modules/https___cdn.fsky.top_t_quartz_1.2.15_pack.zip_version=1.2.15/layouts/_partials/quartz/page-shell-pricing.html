@@ -1,0 +1,26 @@
+{{- /* Quartz pricing shell: site chrome + nav, no article meta / graph. */ -}}
+{{- $stub := eq .Params.mdf_commerce_stub true -}}
+<div class="page mdf-pricing-layout">
+    <div id="quartz-body">
+        <aside class="sidebar left">
+            {{- partial "quartz/sidebar-left.html" . -}}
+        </aside>
+        <div class="center">
+            <div class="page-header">
+                <div class="popover-hint">
+                    {{- partial "quartz/breadcrumbs.html" . -}}
+                </div>
+            </div>
+            <div class="mdf-pricing-page">
+                {{- partial "commerce-pricing-hero.html" . -}}
+                {{- if not $stub -}}
+                <div class="mdf-pricing-author">
+                    {{- .WikilinkContent -}}
+                </div>
+                {{- end -}}
+                {{- partial "commerce-page-body.html" . -}}
+            </div>
+        </div>
+        {{- partial "quartz/footer-content.html" . -}}
+    </div>
+</div>

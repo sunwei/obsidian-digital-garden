@@ -1,0 +1,21 @@
+{{ define "slot-head-extra" }}
+{{- partial "commerce-scripts.html" . -}}
+{{ end }}
+{{ define "main" }}
+{{- $c := mdfCommerce -}}
+<article class="single base-single mdf-commerce-page">
+  <header class="single-header">
+    <h1 class="single-title">{{ .Title | default (i18n "commerce.privacy.title") }}</h1>
+  </header>
+  <div class="single-content">
+    {{- partial "encrypt-content.html" . -}}
+    {{- if $c.enabled -}}
+    {{- $stub := eq .Params.mdf_commerce_stub true -}}
+    {{- $facts := ne .Params.mdf_privacy_facts false -}}
+    {{- if $facts -}}
+      {{- partial "commerce-privacy-facts.html" (dict "Page" . "full" $stub) -}}
+    {{- end -}}
+    {{- end -}}
+  </div>
+</article>
+{{ end }}
