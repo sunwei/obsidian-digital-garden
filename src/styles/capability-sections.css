@@ -86,3 +86,88 @@
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
 }
+
+/* Settings ▸ Domains / Projects, Add domain modal (arch 05 §2–3) */
+.mdfriday-flair {
+  margin-left: 8px;
+}
+
+/* Nested lists under a SettingDefinitionItem (Projects / Domains / DNS credentials). */
+.setting-item.mdfriday-setting-with-list {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.setting-item.mdfriday-setting-with-list > .mdfriday-domains-list,
+.setting-item.mdfriday-setting-with-list > .mdfriday-dns-credentials-list,
+.setting-item.mdfriday-setting-with-list > .mdfriday-projects-list {
+  flex: 1 1 100%;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.setting-item.mdfriday-setting-with-list .mdfriday-domains-list > .setting-item,
+.setting-item.mdfriday-setting-with-list .mdfriday-dns-credentials-list > .setting-item,
+.setting-item.mdfriday-setting-with-list .mdfriday-projects-list > .setting-item {
+  border-top: 1px solid var(--background-modifier-border);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.mdfriday-settings-list-empty {
+  margin: 4px 0 0;
+}
+
+.mdfriday-dns-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-ui-smaller);
+}
+
+.mdfriday-dns-table th,
+.mdfriday-dns-table td {
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+  word-break: break-all;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.mdfriday-dns-table th {
+  color: var(--text-muted);
+  font-weight: var(--font-medium);
+}
+
+.mdfriday-dns-copy {
+  margin-left: 4px;
+  padding: 0 4px;
+  height: auto;
+  background: none;
+  box-shadow: none;
+  color: var(--text-accent);
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+}
+
+.mdfriday-dns-phases {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.mdfriday-dns-phase.is-pending {
+  color: var(--text-faint);
+}
+
+.mdfriday-dns-phase.is-active {
+  color: var(--text-normal);
+  font-weight: var(--font-semibold);
+}
+
+.mdfriday-dns-phase.is-done {
+  color: var(--text-muted);
+}
+
+.mdfriday-dns-progress progress {
+  width: 100%;
+}

@@ -4,8 +4,10 @@ import {I18nService} from "./i18n";
 import {FridaySettingTab, OBSIDIAN_PROTOCOL_ACTION, OBSIDIAN_PROTOCOL_PLUGIN} from "./setting";
 // Foundry PC 专用服务类型
 import type {
+	CloudflareSession,
 	ObsidianAuthService,
 	ObsidianBuildService,
+	ObsidianCustomDomainService,
 	ObsidianDomainService,
 	ObsidianFolderStructureInfo,
 	ObsidianGlobalConfigService,
@@ -13,10 +15,13 @@ import type {
 	ObsidianProjectInfo,
 	ObsidianProjectService,
 	ObsidianPublishService,
+	ObsidianRemoteProjectService,
 	ObsidianServeService,
 } from '@mdfriday/core';
 // Mobile unsupported (isDesktopOnly) — no mobile Foundry import.
 import {createObsidianHttpClient, createObsidianIdentityHttpClient} from './http';
+import {ObsidianDnsTransport} from './dns/obsidian-dns-transport';
+import {createDnsCredentialBackends, type DnsCredentialIndexEntry} from './dns/dns-credential-backends';
 import {LicenseStateManager} from './services/licenseState';
 import {ProjectServiceManager} from './services/project';
 import {
@@ -124,6 +129,13 @@ interface FridaySettings {
 	 * Never stores password plaintext — submitted only at publish time.
 	 */
 	pathConfigs: Record<string, import('./types/publish-config').PathPublishConfig>;
+	/**
+	 * Saved DNS credentials (automatic domain setup). Index = summaries only; secrets = key → JSON
+	 * `{ fields }`. Both live in data.json (plain text, may sync with the vault); they are never
+	 * sent to MDFriday. Credentials are only written when the user ticks "Remember".
+	 */
+	dnsCredentialIndex: DnsCredentialIndexEntry[];
+	dnsCredentialSecrets: Record<string, string>;
 	/** Migrated to mdfKey — still read for one-shot data.json migration */
 	cloudflareGuestToken?: string | null;
 	/** Migrated away — JWT not stored in plugin */
@@ -159,6 +171,8 @@ const DEFAULT_SETTINGS: FridaySettings = {
 	mdfAccountEmail: null,
 	hasPublishedOnce: false,
 	pathConfigs: {},
+	dnsCredentialIndex: [],
+	dnsCredentialSecrets: {},
 	cloudflareEnv: DEFAULT_CLOUDFLARE_ENV,
 	cloudflareResolvedEnv: null,
 	cloudflareApiBaseUrl: '',
@@ -194,6 +208,12 @@ export default class FridayPlugin extends Plugin {
 	foundryAuthService?: ObsidianAuthService | null
 	foundryLicenseService?: ObsidianLicenseService | null
 	foundryDomainService?: ObsidianDomainService | null
+	/** Account-level custom domains (I4). Shares `cloudflareSession` for the MDF Key. */
+	foundryCustomDomainService?: ObsidianCustomDomainService | null
+	/** Account-level remote projects (I4). */
+	foundryRemoteProjectService?: ObsidianRemoteProjectService | null
+	/** Key holder for custom-domain / remote-project services (publish keeps its own via setKey). */
+	cloudflareSession?: CloudflareSession | null
 	projectServiceManager?: ProjectServiceManager | null
 	// License state manager (unified license state from Foundry)
 	licenseState?: LicenseStateManager | null
@@ -266,7 +286,7 @@ export default class FridayPlugin extends Plugin {
 					this.settings.mdfKeyEnv = DEFAULT_CLOUDFLARE_ENV;
 					this.settings.mdfKeyKind = 'user';
 					await this.saveSettings();
-					this.foundryPublishService?.setKey?.(delivered, 'user');
+					this.setCloudflareKey(delivered, 'user');
 					this.refreshSettingsUi();
 				}
 				const mgr = this.projectServiceManager;
@@ -467,6 +487,10 @@ export default class FridayPlugin extends Plugin {
 				createObsidianAuthService,
 				createObsidianLicenseService,
 				createObsidianDomainService,
+				createObsidianCustomDomainService,
+				createObsidianRemoteProjectService,
+				CloudflareSession,
+				MdfridayControlPlaneClient,
 				LogLevel,
 				setGlobalLogLevel,
 			} = await import('@mdfriday/core');
@@ -521,6 +545,49 @@ export default class FridayPlugin extends Plugin {
 		this.foundryPublishService = createObsidianPublishService(httpClient, {
 			apiBaseUrl: this.settings.cloudflareApiBaseUrl,
 			publicBaseUrl: this.settings.cloudflarePublicBaseUrl,
+		});
+
+		// Account-level custom domains + remote projects share one Key holder.
+		// Publish owns its own session (setKey), so every auth path goes through setCloudflareKey.
+		const sessionControlPlane = new MdfridayControlPlaneClient(
+			this.settings.cloudflareApiBaseUrl,
+			httpClient,
+		);
+		this.cloudflareSession = new CloudflareSession(sessionControlPlane);
+		this.syncCloudflareSession();
+		const dnsBackends = createDnsCredentialBackends(this);
+		this.foundryCustomDomainService = createObsidianCustomDomainService(httpClient, {
+			apiBaseUrl: this.settings.cloudflareApiBaseUrl,
+			session: this.cloudflareSession,
+			dnsTransport: new ObsidianDnsTransport(),
+			secretBackend: dnsBackends.secretBackend,
+			indexBackend: dnsBackends.indexBackend,
+			projectConfigStore: {
+				loadConfig: async (projectName) => {
+					const result = await this.foundryProjectConfigService?.list(
+						this.absWorkspacePath,
+						projectName,
+					);
+					return (result?.success && result.data?.config ? result.data.config : {}) as Record<
+						string,
+						unknown
+					>;
+				},
+				saveConfig: async (projectName, patch) => {
+					for (const [key, value] of Object.entries(patch)) {
+						await this.foundryProjectConfigService?.set(
+							this.absWorkspacePath,
+							projectName,
+							key,
+							value,
+						);
+					}
+				},
+			},
+		});
+		this.foundryRemoteProjectService = createObsidianRemoteProjectService(httpClient, {
+			apiBaseUrl: this.settings.cloudflareApiBaseUrl,
+			session: this.cloudflareSession,
 		});
 
 		// Resolve env (auto → local|staging) and wire live ControlPlane URL
@@ -715,9 +782,15 @@ export default class FridayPlugin extends Plugin {
 
 	/**
 	 * Ensure a local Foundry project exists for the current sidebar selection (preview/publish).
+	 * Does not trust a stale currentProjectName alone — verifies the project is loadable
+	 * (registry heal on load recovers orphans; if still missing, recreates from selection).
 	 */
 	async ensureProjectForSelection(): Promise<boolean> {
-		if (this.currentProjectName) return true;
+		if (this.currentProjectName) {
+			const existing = await this.getFoundryProject(this.currentProjectName);
+			if (existing) return true;
+			this.currentProjectName = null;
+		}
 		const contents = this.site.getCurrentContents();
 		const first = contents[0];
 		if (!first) return false;
@@ -1703,6 +1776,11 @@ export default class FridayPlugin extends Plugin {
 		if (!this.settings.pathConfigs) {
 			this.settings.pathConfigs = {};
 		}
+		// Own copies: never share the DEFAULT_SETTINGS containers.
+		this.settings.dnsCredentialIndex = Array.isArray(this.settings.dnsCredentialIndex)
+			? [...this.settings.dnsCredentialIndex]
+			: [];
+		this.settings.dnsCredentialSecrets = { ...(this.settings.dnsCredentialSecrets ?? {}) };
 		// Migrate legacy guest token → mdfKey (one-shot)
 		if (!this.settings.mdfKey && this.settings.cloudflareGuestToken) {
 			this.settings.mdfKey = this.settings.cloudflareGuestToken;
@@ -1752,7 +1830,44 @@ export default class FridayPlugin extends Plugin {
 		this.settings.mdfQuotaFeatures = null;
 		this.settings.mdfAccountEmail = null;
 		this.foundryPublishService?.setKey?.('', 'guest');
+		this.cloudflareSession?.clear();
 		this.refreshSettingsUi();
+	}
+
+	/** Set the MDF Key on publish and on the shared custom-domain session together. */
+	setCloudflareKey(key: string, kind: 'guest' | 'user'): void {
+		this.foundryPublishService?.setKey?.(key, kind);
+		this.cloudflareSession?.setKey(key, kind);
+	}
+
+	/** Seed the custom-domain session from the persisted Key (startup, or before domain UI calls). */
+	syncCloudflareSession(): void {
+		const session = this.cloudflareSession;
+		if (!session) return;
+		const key = this.settings.mdfKey;
+		if (!key) {
+			if (session.getKey()) session.clear();
+			return;
+		}
+		const kind = this.settings.mdfKeyKind === 'user' ? 'user' : 'guest';
+		if (session.getKey() !== key || session.getKind() !== kind) {
+			session.setKey(key, kind);
+		}
+	}
+
+	/** Open this plugin's settings tab (private `app.setting` API — no public equivalent). */
+	openSettingsTab(): void {
+		const setting = (this.app as unknown as {
+			setting?: { open: () => void; openTabById: (id: string) => void };
+		}).setting;
+		if (!setting) return;
+		setting.open();
+		setting.openTabById(this.manifest.id);
+		window.setTimeout(() => {
+			document
+				.querySelector('.mdfriday-domains-group')
+				?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}, 150);
 	}
 
 	/** GET /v1/account with this Key against the given API — false if unknown / revoked. */
@@ -1798,6 +1913,12 @@ export default class FridayPlugin extends Plugin {
 			apiBaseUrl: endpoints.apiBaseUrl,
 			publicBaseUrl: endpoints.publicBaseUrl,
 		});
+		this.foundryCustomDomainService?.applyCloudflareEndpoints({
+			apiBaseUrl: endpoints.apiBaseUrl,
+			publicBaseUrl: endpoints.publicBaseUrl,
+		});
+		// ObsidianRemoteProjectService has no endpoint hot-swap (its control plane is fixed at
+		// construction). The env is compile-time constant, so the URL never changes after init.
 
 		if (existingKey) {
 			if (keyEnv && keyEnv !== resolved) {
@@ -1895,9 +2016,19 @@ export default class FridayPlugin extends Plugin {
 		try {
 			const config = this.foundryGlobalConfigService;
 			const workspace = this.absWorkspacePath;
+			const setMany = (
+				config as { setMany?: (path: string, entries: Record<string, unknown>) => Promise<unknown> }
+			).setMany;
 
-			await config.set(workspace, 'site.downloadServer', this.settings.downloadServer);
-			await config.set(workspace, 'publish.method', 'cloudflare');
+			if (typeof setMany === 'function') {
+				await setMany.call(config, workspace, {
+					'site.downloadServer': this.settings.downloadServer,
+					'publish.method': 'cloudflare',
+				});
+			} else {
+				await config.set(workspace, 'site.downloadServer', this.settings.downloadServer);
+				await config.set(workspace, 'publish.method', 'cloudflare');
+			}
 		} catch (error) {
 			console.error('[Friday] Error saving settings to Global Config:', error);
 		}

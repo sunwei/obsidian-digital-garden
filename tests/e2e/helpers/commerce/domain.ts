@@ -337,6 +337,25 @@ export async function bindE2eHostname(
 	};
 }
 
+/**
+ * Resolve CF custom hostname id for cleanup after Automatic setup (account-level list).
+ */
+export async function lookupDomainCfHostnameId(
+	api: CommerceApi,
+	token: string,
+	domainId: string,
+): Promise<string | null> {
+	try {
+		const listed = await api<{
+			domains?: Array<{ id: string; cfCustomHostnameId?: string; cf_custom_hostname_id?: string }>;
+		}>('GET', '/v1/domains', { token });
+		const row = listed.body.domains?.find((d) => d.id === domainId);
+		return row?.cfCustomHostnameId || row?.cf_custom_hostname_id || null;
+	} catch {
+		return null;
+	}
+}
+
 /** Best-effort: delete CF custom hostname, API domain, and Aliyun records for this bind. */
 export async function cleanupBoundDomain(
 	api: CommerceApi,
@@ -347,17 +366,24 @@ export async function cleanupBoundDomain(
 ): Promise<void> {
 	if (!bound || !cfg || opts.keepData) return;
 
-	try {
-		await deleteCustomHostname(
-			{ apiToken: cfg.cfToken, zoneId: cfg.saasZoneId, saasZoneId: cfg.saasZoneId },
-			bound.cfCustomHostnameId,
-		);
-	} catch (e) {
-		console.warn('cleanup CF custom hostname', e instanceof Error ? e.message.slice(0, 120) : e);
+	let cfId = bound.cfCustomHostnameId;
+	if (!cfId) {
+		cfId = (await lookupDomainCfHostnameId(api, token, bound.domainId)) || '';
+	}
+	if (cfId) {
+		try {
+			await deleteCustomHostname(
+				{ apiToken: cfg.cfToken, zoneId: cfg.saasZoneId, saasZoneId: cfg.saasZoneId },
+				cfId,
+			);
+		} catch (e) {
+			console.warn('cleanup CF custom hostname', e instanceof Error ? e.message.slice(0, 120) : e);
+		}
 	}
 
 	try {
-		await api('DELETE', `/v1/domains/${bound.domainId}`, { token, ok: [200, 204] });
+		// True delete (cert + CF custom hostname + row). Plain DELETE is detach-only.
+		await api('DELETE', `/v1/domains/${bound.domainId}?purge=1`, { token, ok: [200, 204] });
 	} catch (e) {
 		console.warn('cleanup API domain', e instanceof Error ? e.message.slice(0, 120) : e);
 	}

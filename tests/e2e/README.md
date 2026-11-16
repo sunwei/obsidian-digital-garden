@@ -14,7 +14,7 @@ Owned by **obsidian-digital-garden**. Does **not** modify `obsidian-publish`.
 | `06-commerce-author-reader-journey` | Staging + Creem test (**opt-in**) | **G6** authoritative happy path: Personal → scoped publish → Dashboard Sales → republish → reader purchase → Key unlocks docs. Spec: `arch/commerce/12-e2e-author-reader-journey.md` |
 | `ui/02-ui-guest-garden-folder` | **Headed Obsidian UI** (macOS) | Launch real Obsidian → click `Garden` → Publish panel → public URL 200 |
 | `ui/04-ui-commerce-journey` | **Headed Obsidian** + Chromium (**opt-in**) | Share: Publish → Sales → Creem → unlock |
-| `ui/05-ui-commerce-domain-journey` | **Headed Obsidian** + Chromium + DNS (**opt-in**) | Domain: Publish → bind → Publish again → Sales → unlock on hostname |
+| `ui/05-ui-commerce-domain-journey` | **Headed Obsidian** + Chromium + DNS (**opt-in**) | Domain: Publish → Automatic Aliyun → DomainPicker → Publish → Sales → unlock on hostname |
 
 Headless tests use the same path as the plugin (`@mdfriday/core` + Garden `theme-config`), not Obsidian UI.
 
@@ -136,7 +136,7 @@ Chromium is **headed by default**; `E2E_HEADLESS=1` hides it. Obsidian is always
 | Suite | Path |
 | --- | --- |
 | `ui/04` | Obsidian Publish → Sales → Creem → unlock on **share** |
-| `ui/05` | Obsidian Publish → bind domain → Publish again (custom) → Sales → unlock on **custom domain** |
+| `ui/05` | Obsidian Publish → **Automatic Aliyun** domain (plugin service) → DomainPicker select → Publish (custom) → Sales → unlock on **custom domain** |
 
 ```bash
 # Share (ui/04)

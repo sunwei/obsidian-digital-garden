@@ -112,23 +112,25 @@
 		loading = true;
 		statusMsg = '';
 		try {
-			const foundry = plugin.foundryPublishService;
-			const bind = await foundry.getCloudflareBinding({
-				workspacePath: plugin.absWorkspacePath,
+			const { remoteProjectContext } = await import('../services/remote-project-context');
+			const identity = await remoteProjectContext.resolve(plugin, {
 				projectName,
+				rematch: true,
+				verify: false,
 			});
-			if (!bind.success || !bind.cloudflareProjectId) {
+			if (!identity?.projectId) {
 				remoteProjectId = null;
 				releases = [];
 				publicUrl = '';
 				return;
 			}
-			remoteProjectId = bind.cloudflareProjectId;
+			remoteProjectId = identity.projectId;
 			const token = await resolveAuth();
 			if (!token) {
 				statusMsg = 'No MDF Key';
 				return;
 			}
+			const foundry = plugin.foundryPublishService;
 			const res = await foundry.listReleases(token, remoteProjectId);
 			if (!res.success) {
 				statusMsg = res.error || 'Failed to load history';
@@ -138,9 +140,9 @@
 			liveReleaseId = res.liveReleaseId ?? null;
 			publicUrl = resolvePublicUrl({
 				apiPublicUrl: res.publicUrl,
-				siteId: res.siteId || bind.siteId,
-				bindingPublicBaseUrl: bind.publicBaseUrl,
-				hostingMode: res.hostingMode || (bind.hostingMode === 'custom' ? 'custom' : 'share'),
+				siteId: res.siteId || identity.siteId,
+				bindingPublicBaseUrl: identity.publicBaseUrl,
+				hostingMode: res.hostingMode || (identity.hostingMode === 'custom' ? 'custom' : 'share'),
 			});
 		} finally {
 			loading = false;
@@ -293,7 +295,8 @@
 				<p class="field-hint">{t('ui.loading', 'Loading…')}</p>
 			{:else if !remoteProjectId}
 				<p class="field-hint">
-					{t('ui.history_empty_hint', 'Publish this site once to see release history.')}
+					{statusMsg ||
+						t('ui.history_empty_hint', 'Publish this site once to see release history.')}
 				</p>
 			{:else}
 				{#if !canRollback}

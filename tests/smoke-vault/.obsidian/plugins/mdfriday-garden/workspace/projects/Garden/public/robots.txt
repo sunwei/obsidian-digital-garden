@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://e2e-ui05-2emwfrpkvjani69y.jiashu.ink/sitemap.xml
+Sitemap: https://test111.jiashu.ink/sitemap.xml
 

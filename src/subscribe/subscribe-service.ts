@@ -91,16 +91,18 @@ export function dashboardAudienceUrl(plugin: FridayPlugin, projectId: string): s
 	return `${resolveSiteBaseUrl(plugin.settings).replace(/\/$/, '')}/dashboard/audience/?id=${encodeURIComponent(projectId)}`;
 }
 
-/** Remote project id bound to a local Foundry project (null before the first publish). */
-export async function boundProjectId(plugin: FridayPlugin, projectName: string): Promise<string | null> {
-	const foundry = plugin.foundryPublishService;
-	if (!foundry || !projectName) return null;
-	try {
-		const bind = await foundry.getCloudflareBinding({ workspacePath: plugin.absWorkspacePath, projectName });
-		return bind.success && bind.cloudflareProjectId ? bind.cloudflareProjectId : null;
-	} catch {
-		return null;
-	}
+/** Remote project id via unified RemoteProjectContext (binding → rematch). */
+export async function boundProjectId(
+	plugin: FridayPlugin,
+	projectName: string,
+	opts?: { vaultPath?: string | null; force?: boolean },
+): Promise<string | null> {
+	const { resolveRemoteProjectId } = await import('../services/remote-project-context');
+	return resolveRemoteProjectId(plugin, projectName, {
+		vaultPath: opts?.vaultPath,
+		force: opts?.force,
+		rematch: true,
+	});
 }
 
 /** Count + server flag for the status line. Guests / unbound → null. */

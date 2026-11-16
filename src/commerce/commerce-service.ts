@@ -1,19 +1,24 @@
 /**
- * Commerce capability — Obsidian side: site-params at publish, stub pages in the
- * plugin workspace (never overwriting vault notes), read-only sales status.
+ * Commerce capability — Obsidian side: write commerce.enable + services.mdfriday
+ * at publish, stub pages in the plugin workspace (never overwriting vault notes),
+ * read-only sales status. Does not write params.commerce.
  */
 import { Notice, requestUrl } from 'obsidian';
 import type FridayPlugin from '../main';
 import { withMdfridayClientHeader } from '../mdfriday-client';
 import { resolveApiBaseUrl, resolveSiteBaseUrl } from '../cloudflare-env';
 import {
-	applyCommerceParams,
+	applyCommerceConfig,
 	applyHostingParams,
-	isCommerceShell,
+	isCommerceEnabled,
+	isCommerceSiteParams,
+	isZhLocale,
+	mdfridayService,
 	salesStatusFromOverview,
-	type CommerceShell,
+	type MDFridayService,
 	type SalesStatusLine,
 } from './commerce-core';
+import { resolveRemoteProjectId } from '../services/remote-project-context';
 
 function tr(plugin: FridayPlugin, key: string, params?: Record<string, string | number>): string {
 	return plugin.i18n?.t?.(key, params) ?? key;
@@ -60,16 +65,23 @@ export function dashboardSalesUrl(plugin: FridayPlugin, projectId: string): stri
 	return `${resolveSiteBaseUrl(plugin.settings).replace(/\/$/, '')}/dashboard/sales/?id=${encodeURIComponent(projectId)}`;
 }
 
+/**
+ * Sales overview for the local project (resolves Cloudflare binding like Subscribe).
+ * Returns null when guest / unbound / error. `projectId` is attached for Dashboard links.
+ */
 export async function getSalesStatus(
 	plugin: FridayPlugin,
-	projectId: string,
-): Promise<SalesStatusLine | null> {
+	projectName: string,
+): Promise<(SalesStatusLine & { projectId: string }) | null> {
+	const projectId = await resolveRemoteProjectId(plugin, projectName, { rematch: true });
+	if (!projectId) return null;
 	const auth = await userToken(plugin);
 	if (!auth || auth.kind === 'guest') return null;
 	try {
 		const r = await apiJson(plugin, auth.token, 'GET', `/v1/projects/${encodeURIComponent(projectId)}/commerce`);
 		if (r.status !== 200 || !r.json) return null;
-		return salesStatusFromOverview(r.json);
+		const line = salesStatusFromOverview(r.json);
+		return line ? { ...line, projectId } : null;
 	} catch {
 		return null;
 	}
@@ -79,29 +91,20 @@ async function fetchSiteParams(
 	plugin: FridayPlugin,
 	token: string,
 	projectId: string,
-): Promise<CommerceShell | null> {
+): Promise<MDFridayService | null> {
 	const r = await apiJson(
 		plugin,
 		token,
 		'GET',
 		`/v1/projects/${encodeURIComponent(projectId)}/commerce/site-params`,
 	);
-	if (r.status !== 200 || !isCommerceShell(r.json)) return null;
-	return {
-		v: 1,
-		project: r.json.project,
-		endpoint: r.json.endpoint,
-		pages: {
-			purchase: r.json.pages.purchase || '/purchase.html',
-			pricing: r.json.pages.pricing || '/pricing.html',
-			privacy: r.json.pages.privacy || '/privacy.html',
-		},
-	};
+	if (r.status !== 200 || !isCommerceSiteParams(r.json)) return null;
+	return mdfridayService(r.json.project, r.json.endpoint);
 }
 
 /**
- * Publish step: write params.commerce and params.mdf.hosting.
- * Failures keep the last successful shell and are a non-blocking Notice.
+ * Publish step: write commerce.enable + services.mdfriday + params.mdf.hosting.
+ * Strips params.commerce. Failures keep the last successful connection (non-blocking Notice).
  */
 export async function syncCommerceOnPublish(
 	plugin: FridayPlugin,
@@ -120,13 +123,15 @@ export async function syncCommerceOnPublish(
 			string,
 			unknown
 		>;
-		let next = applyHostingParams(params, ctx.hostingMode);
+		const hostedParams = applyHostingParams(params, ctx.hostingMode);
+
 		if (ctx.auth.kind === 'guest') {
-			// Guests still get hosting + last shell; site-params needs a user token.
-			await ctx.saveConfig(ctx.projectName, 'params', next);
+			// Guests still get hosting; strip legacy params.commerce; keep prior commerce/services.
+			await ctx.saveConfig(ctx.projectName, 'params', hostedParams);
 			return;
 		}
-		let shell: CommerceShell | null = null;
+
+		let shell: MDFridayService | null = null;
 		let failed = false;
 		try {
 			shell = await fetchSiteParams(plugin, ctx.auth.token, ctx.projectId);
@@ -135,9 +140,21 @@ export async function syncCommerceOnPublish(
 			console.warn('[commerce] site-params failed', e);
 			failed = true;
 		}
-		next = applyCommerceParams(next, failed ? null : shell, failed);
-		await ctx.saveConfig(ctx.projectName, 'params', next);
-		if (failed) new Notice(tr(plugin, 'ui.commerce_sync_failed'));
+
+		const lang =
+			typeof plugin.i18n?.getCurrentLanguage === 'function'
+				? plugin.i18n.getCurrentLanguage()
+				: '';
+		const pricingNavTitle = isZhLocale(lang) ? '价格' : 'Pricing';
+		const enable = isCommerceEnabled(config);
+		const next = applyCommerceConfig({ ...config, params: hostedParams }, shell, failed, {
+			pricingNavTitle,
+			enable,
+		});
+		await ctx.saveConfig(ctx.projectName, 'params', next.params);
+		await ctx.saveConfig(ctx.projectName, 'commerce', next.commerce);
+		await ctx.saveConfig(ctx.projectName, 'services', next.services);
+		if (enable && failed) new Notice(tr(plugin, 'ui.commerce_sync_failed'));
 	} catch (e) {
 		console.warn('[commerce] publish sync failed', e);
 	}

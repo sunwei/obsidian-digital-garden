@@ -11,7 +11,7 @@
   "module": {
     "imports": [
       {
-        "path": "https://cdn.fsky.top/t/quartz/1.2.13/pack.zip?version=1.2.13"
+        "path": "https://cdn.fsky.top/t/quartz/1.2.19/pack.zip?version=1.2.19"
       }
     ]
   },
@@ -19,7 +19,6 @@
     "useInternalRenderer": true
   },
   "params": {
-    "branding": true,
     "search": {
       "enable": true,
       "variant": "inline",
@@ -37,26 +36,32 @@
     "readerMode": true,
     "logo": "",
     "favicon": "",
+    "branding": true,
+    "password": "",
+    "navLinks": [
+      {
+        "title": "Pricing",
+        "url": "/pricing.html"
+      }
+    ],
+    "lastPublishUrl": "https://test111.jiashu.ink/",
+    "subscribe": {
+      "enabled": true,
+      "title": "",
+      "description": "",
+      "project": "p_74430dff7131743d16b0be9634bcf88c",
+      "endpoint": "https://api.fsky.top/v1/public/subscribe",
+      "v": 1,
+      "synced": true,
+      "syncedproject": "p_74430dff7131743d16b0be9634bcf88c"
+    },
     "mdfriday": {
       "family": "quartz",
       "variant": "quartz",
-      "version": "1.2.13"
+      "version": "1.2.19"
     },
-    "navLinks": [],
-    "lastPublishUrl": "https://e2e-ui05-2emwfrpkvjani69y.jiashu.ink/",
-    "password": "",
     "mdf": {
       "hosting": "custom"
-    },
-    "commerce": {
-      "v": 1,
-      "project": "p_94272935aebde626e54f04d129e2a472",
-      "endpoint": "https://api.fsky.top",
-      "pages": {
-        "purchase": "/purchase.html",
-        "pricing": "/pricing.html",
-        "privacy": "/privacy.html"
-      }
     }
   },
   "publish": {
@@ -68,5 +73,21 @@
       "weight": 1
     }
   },
-  "canonicalHost": "https://e2e-ui05-2emwfrpkvjani69y.jiashu.ink"
+  "domainSelection": {
+    "domainIds": [
+      "dom_c5768ddd0ff0d749f19cc0a102ed66cc"
+    ],
+    "primaryDomainId": "dom_c5768ddd0ff0d749f19cc0a102ed66cc",
+    "allowMoveFrom": []
+  },
+  "canonicalHost": "https://test111.jiashu.ink",
+  "commerce": {
+    "enable": true
+  },
+  "services": {
+    "mdfriday": {
+      "project": "p_74430dff7131743d16b0be9634bcf88c",
+      "endpoint": "https://api.fsky.top"
+    }
+  }
 }

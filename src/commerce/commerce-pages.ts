@@ -146,7 +146,12 @@ function refreshOverlay(contentDir: string, target: string, projectPath: string,
 export async function ensureCommerceStubPages(input: {
 	projectPath: string;
 	locale?: string;
+	/** When false, skip ensure (commerce.enable off). Default true for callers that already gated. */
+	enabled?: boolean;
 }): Promise<{ write: CommercePageSlug[]; skip: CommercePageSlug[]; kind: string }> {
+	if (input.enabled === false) {
+		return { write: [], skip: [...COMMERCE_PAGE_SLUGS], kind: 'disabled' };
+	}
 	const contentDir = path.join(input.projectPath, 'content');
 	let contentIsSymlink = false;
 	let contentTarget: string | null = null;

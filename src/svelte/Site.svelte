@@ -16,6 +16,8 @@
 	import type { ProjectState, ProgressUpdate, PublishProgressUpdate } from "../types/events";
 	import { buildThemeConfigPatch } from "../theme/theme-config";
 	import { mergeSubscribeUi, readSubscribeParams } from "../subscribe/subscribe-core";
+	import { readAccessEnabled } from "../access/access-service";
+	import { isCommerceEnabled } from "../commerce/commerce-core";
 	import { brandPathForUi, userBrandPath } from "../branding/brand-path";
 	import { pickVaultImage } from "../branding/pick-vault-image";
 	import { resolvePublicBaseUrl, resolveSiteBaseUrl } from "../cloudflare-env";
@@ -40,6 +42,14 @@
 	} from "../utils/export-site";
 	import { classifyBuildError, reportBuildEvent } from "../services/build-analytics";
 	import {
+		canUseCustomDomains,
+		canUseCommerce,
+		pendingMoves,
+		type DomainSelectionInfo,
+		type PendingMove,
+	} from "../settings/domains/domain-view";
+	import { confirmPublishWithDomains } from "../settings/domains/publish-domains-summary-modal";
+	import {
 		applyProjectSettingsToConfig,
 		extractProjectSettings,
 		fetchProjectSettings,
@@ -48,6 +58,7 @@
 		upsertProjectSettingsAfterPublish,
 		type GardenProjectSettings,
 	} from "../services/project-settings-sync";
+	import { remoteProjectContext } from "../services/remote-project-context";
 
 	// Receive props
 	export let app: App;
@@ -153,6 +164,16 @@
 	let subscribeEnabled = false;
 	let subscribeTitle = '';
 	let subscribeDescription = '';
+	/** Access keys capability — params.access.enabled (stats in panel; keys in Dashboard). */
+	let accessEnabled = false;
+	/** Last published / hydrated access intent — differs from accessEnabled ⇒ pending publish. */
+	let accessSyncedEnabled = false;
+	/** Selling capability — top-level commerce.enable (user toggle; connection stamped at publish). */
+	let salesEnabled = false;
+	/** Last published / hydrated commerce.enable. */
+	let salesSyncedEnabled = false;
+	/** Last published / hydrated subscribe.enabled. */
+	let subscribeSyncedEnabled = false;
 	
 	// UI state
 	let autoPublishEnabled = false;
@@ -280,6 +301,7 @@
 		'params.logo',
 		'params.favicon',
 		'params.subscribe',
+		'params.access',
 	]);
 
 	async function saveFoundryConfig(key: string, value: any) {
@@ -464,12 +486,16 @@
 		siteFavicon = brandPathForUi(state.config.params?.favicon);
 		siteNavLinks = normalizeNavLinks(state.config.params?.navLinks);
 		{
-			const sub = readSubscribeParams(
-				(state.config.params as Record<string, unknown> | undefined)?.subscribe,
-			);
+			const params = state.config.params as Record<string, unknown> | undefined;
+			const sub = readSubscribeParams(params?.subscribe);
 			subscribeEnabled = !!sub?.enabled;
+			subscribeSyncedEnabled = subscribeEnabled;
 			subscribeTitle = sub?.title ?? '';
 			subscribeDescription = sub?.description ?? '';
+			accessEnabled = readAccessEnabled(params);
+			accessSyncedEnabled = accessEnabled;
+			salesEnabled = isCommerceEnabled(state.config as Record<string, unknown>);
+			salesSyncedEnabled = salesEnabled;
 		}
 		
 		// Load auto-publish setting
@@ -510,10 +536,32 @@
 		historyRefreshKey += 1;
 		targetListRevision += 1;
 
+		// Unified remote identity (binding → rematch). Capability cards share this cache.
+		void refreshRemoteProjectContext(state.name);
+
 		if (plugin.handleSiteEvent) {
 			await plugin.handleSiteEvent('initialized', {
 				projectName: state.name
 			});
+		}
+	}
+
+	/** Resolve remote project id via RemoteProjectContext (binding + rematch write-back). */
+	async function refreshRemoteProjectContext(name: string) {
+		if (!name) {
+			boundCloudflareProjectId = null;
+			return;
+		}
+		try {
+			const identity = await remoteProjectContext.resolve(plugin, {
+				projectName: name,
+				vaultPath: activeVaultPath,
+				rematch: true,
+				force: true,
+			});
+			boundCloudflareProjectId = identity?.projectId ?? null;
+		} catch {
+			boundCloudflareProjectId = null;
 		}
 	}
 
@@ -553,8 +601,15 @@
 		siteFavicon = '';
 		siteNavLinks = [];
 		subscribeEnabled = false;
+		subscribeSyncedEnabled = false;
 		subscribeTitle = '';
 		subscribeDescription = '';
+		accessEnabled = false;
+		accessSyncedEnabled = false;
+		salesEnabled = false;
+		salesSyncedEnabled = false;
+		boundCloudflareProjectId = null;
+		remoteProjectContext.invalidate();
 		autoPublishEnabled = false;
 		googleAnalyticsId = '';
 		disqusShortname = '';
@@ -816,9 +871,23 @@
 		if (result.baseURL) {
 			sitePath = result.baseURL;
 		}
-		if (typeof result?.cloudflareProjectId === 'string') {
+		const publishedName = plugin.currentProjectName || projectName;
+		if (typeof result?.cloudflareProjectId === 'string' && result.cloudflareProjectId) {
 			boundCloudflareProjectId = result.cloudflareProjectId;
+			if (publishedName) {
+				remoteProjectContext.rememberFromPublish(publishedName, {
+					projectId: result.cloudflareProjectId,
+					...(typeof result.siteId === 'string' ? { siteId: result.siteId } : {}),
+					...(result.hostingMode === 'custom' || result.hostingMode === 'share'
+						? { hostingMode: result.hostingMode }
+						: {}),
+					...(typeof result.url === 'string' ? { publicBaseUrl: result.url } : {}),
+				});
+			}
 		}
+		accessSyncedEnabled = accessEnabled;
+		salesSyncedEnabled = salesEnabled;
+		subscribeSyncedEnabled = subscribeEnabled;
 		if (publishUrl) {
 			persistLastPublishUrl(publishUrl);
 			plugin.settings.hasPublishedOnce = true;
@@ -833,6 +902,15 @@
 				new Notice(t('messages.site_published_successfully'), 5000);
 			}
 		}
+		for (const move of pendingMoveNotices) {
+			if (move.wasPrimary) {
+				new Notice(
+					t('ui.domains_published_moved', { host: move.hostname, title: move.fromTitle }),
+					10000,
+				);
+			}
+		}
+		pendingMoveNotices = [];
 		targetListRevision += 1;
 		if (!skipPathHydrate) {
 			schedulePersistPathConfig();
@@ -882,8 +960,13 @@
 		const mgr = plugin.projectServiceManager;
 		if (!mgr) return;
 		await mgr.refreshCloudflareAccount();
+		remoteProjectContext.invalidate(
+			plugin.currentProjectName || projectName || undefined,
+		);
 		quotaRevision += 1;
 		accountEpoch += 1;
+		const name = plugin.currentProjectName || projectName;
+		if (name) void refreshRemoteProjectContext(name);
 	}
 
 	/** Deep link / claim success — leave softgate and show updated plan. */
@@ -896,8 +979,18 @@
 		stopClaimPoll();
 		publishError = '';
 		publishErrorAction = null;
+		remoteProjectContext.invalidate(
+			plugin.currentProjectName || projectName || undefined,
+		);
 		quotaRevision += 1;
 		accountEpoch += 1;
+		const name = plugin.currentProjectName || projectName;
+		if (name) void refreshRemoteProjectContext(name);
+	}
+
+	/** Advanced panel opened — refresh account features so commerce/domain gates match server. */
+	export function onAdvancedOpened() {
+		void refreshQuotaSnapshot();
 	}
 
 	function stopClaimPoll() {
@@ -960,6 +1053,7 @@
 	 * Publish error callback
 	 */
 	export function onPublishError(error: string, code?: string) {
+		pendingMoveNotices = [];
 		publishProgress = 0;
 		isPublishing = false;
 		isBuilding = false;
@@ -1079,6 +1173,15 @@
 
 		window.addEventListener('focus', onFocusMaybeRefreshClaim);
 
+		unsubRemoteContext = remoteProjectContext.subscribe(() => {
+			const peeked = remoteProjectContext.peek(plugin.currentProjectName || projectName);
+			const nextId = peeked?.projectId ?? null;
+			if (nextId !== boundCloudflareProjectId) {
+				boundCloudflareProjectId = nextId;
+				historyRefreshKey += 1;
+			}
+		});
+
 		// Workspace navigation may follow. Focusing this panel must not replace an explicit target.
 		const currentPathOnMount = selectionVaultPath(currentContents);
 		if (currentPathOnMount && plugin.selectionOrigin == null) {
@@ -1170,44 +1273,33 @@
 		authPrepareStep = 'idle';
 	}
 
-	function onDomainActive(hostname: string) {
-		publishUrl = `https://${hostname.replace(/\/$/, '')}/`;
-		publishSuccess = true;
-		outputTab = 'online';
-		sitePath = '/';
-		void persistLastPublishUrl(publishUrl);
-		void saveFoundryConfig('baseURL', '/');
+	/** Custom-domain selection is publish intent only: it never changes the live URL until publish. */
+	let domainsPending = false;
+	/** Domains confirmed to move away from other projects on this publish (for the success Notice). */
+	let pendingMoveNotices: PendingMove[] = [];
+
+	function onDomainSelectionChanged(info: DomainSelectionInfo) {
+		domainsPending = info.pending;
 	}
 
-	function onDomainCleared() {
-		void (async () => {
-			try {
-				const foundry = plugin.foundryPublishService;
-				const name = plugin.currentProjectName || projectName;
-				if (!foundry || !name) return;
-				const bind = await foundry.getCloudflareBinding({
-					workspacePath: plugin.absWorkspacePath,
-					projectName: name,
-				});
-				const siteId = bind.success ? bind.siteId : undefined;
-				const root = (
-					(bind.success && bind.publicBaseUrl) ||
-					plugin.settings.cloudflarePublicBaseUrl ||
-					''
-				).replace(/\/$/, '');
-				if (siteId && root) {
-					publishUrl = `${root}/s/${siteId}/`;
-					sitePath = `/s/${siteId}/`;
-					void persistLastPublishUrl(publishUrl);
-					void saveFoundryConfig('baseURL', sitePath);
-					return;
-				}
-			} catch (e) {
-				console.warn('[Site] onDomainCleared binding read failed', e);
-			}
-			publishUrl = '';
-			void persistLastPublishUrl('');
-		})();
+	/** Summary modal when the selection takes domains from other projects (arch 05 §4.2). */
+	async function confirmDomainMovesBeforePublish(): Promise<boolean> {
+		pendingMoveNotices = [];
+		const service = plugin.foundryCustomDomainService;
+		const name = plugin.currentProjectName || projectName;
+		if (!service || !name || !canUseCustomDomains(plugin)) return true;
+		plugin.syncCloudflareSession();
+		const selection = await service.getSelection(name, boundCloudflareProjectId);
+		if (!selection.success || !selection.data || selection.data.allowMoveFrom.length === 0) {
+			return true;
+		}
+		const listed = await service.list();
+		if (!listed.success || !listed.data) return true;
+		const moves = pendingMoves(selection.data, listed.data, boundCloudflareProjectId);
+		if (moves.length === 0) return true;
+		const ok = await confirmPublishWithDomains(plugin, selection.data, listed.data, moves);
+		if (ok) pendingMoveNotices = moves;
+		return ok;
 	}
 
 	async function loadThemeList() {
@@ -1326,6 +1418,32 @@
 		scheduleBrandSave();
 	}
 
+	async function persistAccessFields() {
+		if (!plugin.currentProjectName || plugin.isProjectInitializing) return;
+		const enabled = !isGuestAccount && accessEnabled;
+		await saveFoundryConfig('params.access', enabled ? { enabled: true } : { enabled: false });
+	}
+
+	function handleAccessChange(fields: { enabled: boolean }) {
+		accessEnabled = fields.enabled;
+		void persistAccessFields();
+	}
+
+	async function persistSalesFields() {
+		if (!plugin.currentProjectName || plugin.isProjectInitializing) return;
+		const allow = !isGuestAccount && canUseCommerce(plugin);
+		await saveFoundryConfig('commerce', { enable: allow && salesEnabled });
+	}
+
+	function handleSalesChange(fields: { enabled: boolean }) {
+		if (!canUseCommerce(plugin)) {
+			salesEnabled = false;
+			return;
+		}
+		salesEnabled = fields.enabled;
+		void persistSalesFields();
+	}
+
 	function normalizeNavLinks(raw: unknown): Array<{ title: string; url: string }> {
 		if (!Array.isArray(raw)) return [];
 		const out: Array<{ title: string; url: string }> = [];
@@ -1441,6 +1559,8 @@
 		autoPublishEnabled = true;
 	}
 
+	let unsubRemoteContext: (() => void) | null = null;
+
 	onDestroy(() => {
 		// Clean up language config save timeout
 		if (languageConfigSaveTimeout) {
@@ -1452,6 +1572,8 @@
 			pathConfigSaveTimeout = null;
 		}
 		stopClaimPoll();
+		unsubRemoteContext?.();
+		unsubRemoteContext = null;
 		window.removeEventListener('focus', onFocusMaybeRefreshClaim);
 
 		// Clean up server
@@ -2378,6 +2500,7 @@
 		}
 
 		showAuthTip = false;
+		if (!(await confirmDomainMovesBeforePublish())) return;
 		await runPublish();
 	}
 
@@ -2447,49 +2570,20 @@
 				return;
 			}
 
-			let projectId: string | undefined;
-			let hasLocalBinding = false;
-
-			if (name) {
-				const bind = await foundry.getCloudflareBinding({
-					workspacePath: plugin.absWorkspacePath,
-					projectName: name,
-				});
-				if (bind.success && bind.cloudflareProjectId) {
-					projectId = bind.cloudflareProjectId;
-					hasLocalBinding = true;
-				}
-			}
-
-			// Fallback: resolve remote project by (workspaceId, sourcePath).
-			if (!projectId && mgr) {
-				const vaultPath =
-					activeVaultPath ||
-					selectionVaultPath(site.getCurrentContents()) ||
-					null;
-				const listed = await mgr.listRemoteCloudflareProjects();
-				const workspaceId = plugin.getWorkspaceId();
-				if (listed.success && listed.projects?.length && vaultPath) {
-					const match = listed.projects.find((p) => {
-						if (!pathsEqual(p.sourcePath, vaultPath) || !p.id) return false;
-						if (
-							p.status === 'deleted' ||
-							p.status === 'draft' ||
-							p.status === 'unpublished'
-						) {
-							return false;
-						}
-						const rowWs =
-							typeof p.workspaceId === 'string' && p.workspaceId.trim()
-								? p.workspaceId.trim()
-								: null;
-						return !rowWs || rowWs === workspaceId;
-					});
-					if (match?.id) {
-						projectId = match.id;
-					}
-				}
-			}
+			const vaultPath =
+				activeVaultPath ||
+				selectionVaultPath(site.getCurrentContents()) ||
+				null;
+			const identity = name
+				? await remoteProjectContext.resolve(plugin, {
+						projectName: name,
+						vaultPath,
+						rematch: true,
+						force: true,
+					})
+				: null;
+			const projectId = identity?.projectId;
+			const hasLocalBinding = identity?.source === 'binding' || identity?.source === 'rematch' || identity?.source === 'cache' || identity?.source === 'publish';
 
 			if (!projectId) {
 				new Notice(
@@ -2505,23 +2599,28 @@
 				return;
 			}
 
-			// Best-effort: drop custom domain binding so local project returns to share mode.
+			// Best-effort: detach this site's domains (they stay in the account, unattached) so the
+			// local project returns to share mode. The local DomainSelection is kept as publish intent.
 			if (name && hasLocalBinding) {
 				try {
-					const domains = await foundry.listDomains(token, projectId);
-					const list = (domains.domains || []).filter((d) => {
-						const st = (d.status || '').toLowerCase();
-						return st !== 'removed' && st !== 'unbound';
-					});
-					for (const domain of list) {
-						if (domain.id) await foundry.removeDomain(token, domain.id);
-					}
-					if (list.length) {
-						await foundry.markBindingShare({
-							workspacePath: plugin.absWorkspacePath,
-							projectName: name,
-							publicBaseUrl: plugin.settings.cloudflarePublicBaseUrl,
-						});
+					const customDomains = plugin.foundryCustomDomainService;
+					if (customDomains && canUseCustomDomains(plugin)) {
+						plugin.syncCloudflareSession();
+						const bound = await customDomains.forProject(projectId);
+						const entries = bound.success && bound.data ? bound.data.domains : [];
+						for (const entry of entries) {
+							const detached = await customDomains.detach(entry.id);
+							if (!detached.success) {
+								console.warn('[Site] revokeShare detach failed:', entry.hostname, detached.error);
+							}
+						}
+						if (entries.length) {
+							await foundry.markBindingShare({
+								workspacePath: plugin.absWorkspacePath,
+								projectName: name,
+								publicBaseUrl: plugin.settings.cloudflarePublicBaseUrl,
+							});
+						}
 					}
 				} catch (error) {
 					console.warn('[Site] revokeShare domain cleanup failed:', error);
@@ -2532,7 +2631,9 @@
 			publishUrl = '';
 			publishRevoked = true;
 			lastCompletedAction = null;
+			boundCloudflareProjectId = null;
 			if (name) {
+				remoteProjectContext.invalidate(name);
 				await saveFoundryConfig('params.lastPublishUrl', '');
 				// LIVE objects are gone — next publish must upload a full tree.
 				await mgr?.clearCloudflarePublishManifest(name);
@@ -2557,16 +2658,19 @@
 		if (!foundry || !name) return;
 
 		try {
-			const bind = await foundry.getCloudflareBinding({
-				workspacePath: plugin.absWorkspacePath,
+			const identity = await remoteProjectContext.resolve(plugin, {
 				projectName: name,
+				vaultPath: activeVaultPath,
+				rematch: true,
+				force: true,
 			});
-			if (!bind.success || !bind.cloudflareProjectId) return;
+			if (!identity?.projectId) return;
+			boundCloudflareProjectId = identity.projectId;
 			const mgr = plugin.projectServiceManager;
 			const auth = mgr ? await mgr.resolveAuthToken() : null;
 			const token = auth?.token;
 			if (!token) return;
-			const listed = await foundry.listReleases(token, bind.cloudflareProjectId);
+			const listed = await foundry.listReleases(token, identity.projectId);
 			const url = listed.success ? listed.publicUrl : '';
 			if (url) {
 				publishUrl = buildPublishUrl(url);
@@ -2613,6 +2717,15 @@
 	{subscribeTitle}
 	{subscribeDescription}
 	onSubscribeChange={handleSubscribeChange}
+	{accessEnabled}
+	accessSyncedEnabled={accessSyncedEnabled}
+	onAccessChange={handleAccessChange}
+	{salesEnabled}
+	salesSyncedEnabled={salesSyncedEnabled}
+	onSalesChange={handleSalesChange}
+	salesPlanAllows={canUseCommerce(plugin)}
+	subscribeSyncedEnabled={subscribeSyncedEnabled}
+	onAdvancedOpened={onAdvancedOpened}
 	{showAuthTip}
 	{authPrepareStep}
 	{isPublishing}
@@ -2660,8 +2773,8 @@
 	onCopyPreview={copyPreviewUrl}
 	onContinueAuth={continueGuestKeySetup}
 	onOpenAccount={openAccountFromGrowth}
-	onDomainActive={onDomainActive}
-	onDomainCleared={onDomainCleared}
+	onDomainSelectionChanged={onDomainSelectionChanged}
+	{domainsPending}
 	onDismissResult={dismissPanelResult}
 	onDismissAuthTip={dismissAuthTip}
 	onSelectTarget={selectPublishedTarget}

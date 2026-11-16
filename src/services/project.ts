@@ -2,7 +2,10 @@ import type FridayPlugin from '../main';
 import {Notice, requestUrl, TFile} from 'obsidian';
 import {withMdfridayClientHeader} from '../mdfriday-client';
 import type {TFolder} from 'obsidian';
-import type {ObsidianProjectCreateOptions} from '@mdfriday/core';
+import type {ObsidianHostingPlan, ObsidianProjectCreateOptions} from '@mdfriday/core';
+
+/** `hosting` body for `openRelease` / publishCloudflare. */
+export type ReleaseHostingParams = ObsidianHostingPlan['hosting'];
 import type {ProgressUpdate, PublishProgressUpdate} from '../types/events';
 import {joinPath} from '../utils/common';
 import type {CatalogEntry} from '../theme/types';
@@ -27,7 +30,6 @@ import { brandPathsFromParams } from '../branding/brand-path';
 import { syncSubscribeOnPublish } from '../subscribe/subscribe-service';
 import { ensureCommerceStubPages, syncCommerceOnPublish } from '../commerce/commerce-service';
 import { stageBrandAssets } from '../branding/stage-brand-assets';
-import { primaryDomain } from './domain-order';
 import { classifyBuildError, reportBuildEvent } from './build-analytics';
 
 /** Share mode path prefix. Host stays on canonicalHost. arch/03 §3 */
@@ -444,6 +446,7 @@ export class ProjectServiceManager {
 	async ensureMdfKey(opts?: { interactive?: boolean }): Promise<string | null> {
 		const foundry = this.plugin.foundryPublishService;
 		if (this.plugin.settings.mdfKey) {
+			this.plugin.syncCloudflareSession();
 			foundry?.applyCloudflareEndpoints({
 				apiBaseUrl: this.plugin.settings.cloudflareApiBaseUrl,
 				publicBaseUrl: this.plugin.settings.cloudflarePublicBaseUrl,
@@ -496,7 +499,7 @@ export class ProjectServiceManager {
 		this.plugin.settings.mdfQuotaStorageBytes =
 			this.plugin.settings.mdfQuotaStorageBytes ?? 100 * 1024 * 1024;
 		await this.plugin.saveSettings();
-		foundry.setKey(key, 'guest');
+		this.plugin.setCloudflareKey(key, 'guest');
 		this.plugin.refreshSettingsUi();
 		void this.refreshCloudflareAccount();
 		return key;
@@ -601,10 +604,7 @@ export class ProjectServiceManager {
 				? account.quota.features
 				: null;
 
-			const foundry = this.plugin.foundryPublishService;
-			if (foundry) {
-				foundry.setKey(key, account.kind === 'user' ? 'user' : 'guest');
-			}
+			this.plugin.setCloudflareKey(key, account.kind === 'user' ? 'user' : 'guest');
 			await this.plugin.saveSettings();
 			return { success: true, kind: account.kind, plan: account.plan };
 		} catch (e) {
@@ -669,6 +669,8 @@ export class ProjectServiceManager {
 				baseURL: string;
 				hostingMode: 'share' | 'custom';
 				publicUrl: string;
+				/** `openRelease` hosting body from the domain selection (omitted for guests / no service). */
+				hosting?: ReleaseHostingParams;
 		  }
 		| { error: string; code?: string }
 	> {
@@ -734,30 +736,56 @@ export class ProjectServiceManager {
 		let canonicalHost = computeCanonicalHost(publicBaseUrl);
 		let publicUrl = canonicalHost && baseURL ? `${canonicalHost}${baseURL}index.html` : '';
 
-		// Prefer live domain state over local binding (activation may have flipped remote only).
-		// Guests cannot have custom domains: skip the call (it would only 401 on older servers).
-		if (binding.cloudflareProjectId && auth.kind !== 'guest') {
-			const domains = await foundry.listDomains(auth.token, binding.cloudflareProjectId);
-			const active = primaryDomain(domains.domains);
-			if (active?.hostname) {
-				hostingMode = 'custom';
-				baseURL = computeCustomBaseUrl(active.hostname);
-				publicUrl = computeCustomPublicUrl(active.hostname);
-				canonicalHost = computeCanonicalHost(publicUrl);
-				if (binding.hostingMode !== 'custom') {
+		// Custom domains: the local DomainSelection (publish intent) decides share vs custom.
+		// Empty selection = share. Guests cannot own domains, so they always stay on share.
+		let hosting: ReleaseHostingParams | undefined;
+		const customDomains = this.plugin.foundryCustomDomainService;
+		if (customDomains && auth.kind !== 'guest' && binding.siteId) {
+			this.plugin.syncCloudflareSession();
+			await this.seedDomainSelectionFromServer(projectName, binding.cloudflareProjectId);
+			const resolved = await customDomains.resolveHostingPlan(projectName, {
+				siteId: binding.siteId,
+				publicBaseUrl,
+				...(computeCanonicalHost(publicBaseUrl)
+					? { shareOrigin: computeCanonicalHost(publicBaseUrl) }
+					: {}),
+			});
+			if (resolved.success && resolved.data) {
+				const plan = resolved.data;
+				hostingMode = plan.mode;
+				baseURL = plan.baseURL;
+				canonicalHost = plan.canonicalHost;
+				publicUrl =
+					plan.mode === 'custom'
+						? `${plan.canonicalHost.replace(/\/$/, '')}/`
+						: canonicalHost
+							? `${canonicalHost}${baseURL}index.html`
+							: '';
+				hosting = plan.hosting;
+				if (plan.mode === 'custom' && binding.hostingMode !== 'custom') {
 					await foundry.markBindingCustom({
 						workspacePath: this.plugin.absWorkspacePath,
 						projectName,
-						hostname: active.hostname,
+						hostname: plan.canonicalHost.replace(/^https?:\/\//, ''),
+					});
+				} else if (plan.mode === 'share' && binding.hostingMode === 'custom') {
+					await foundry.markBindingShare({
+						workspacePath: this.plugin.absWorkspacePath,
+						projectName,
+						publicBaseUrl,
 					});
 				}
-			} else if (hostingMode === 'custom' && binding.siteId) {
-				// Remote says custom but no active domain — fall back to share paths
-				hostingMode = 'share';
-				baseURL = computeShareBaseUrl(publicBaseUrl, binding.siteId);
-				canonicalHost = computeCanonicalHost(publicBaseUrl);
-				publicUrl = canonicalHost ? `${canonicalHost}${baseURL}index.html` : '';
+			} else if (resolved.code !== 'unauthenticated') {
+				return {
+					error: resolved.error || 'Could not resolve domain selection',
+					...(resolved.code ? { code: resolved.code } : {}),
+				};
 			}
+		}
+
+		if (!hosting && hostingMode === 'custom') {
+			// No selection-based plan (guest / service missing / unauthenticated): keep share paths.
+			hostingMode = 'share';
 		}
 
 		if (!baseURL) {
@@ -798,7 +826,34 @@ export class ProjectServiceManager {
 			baseURL,
 			hostingMode,
 			publicUrl,
+			...(hosting ? { hosting } : {}),
 		};
+	}
+
+	/**
+	 * First publish after upgrading: a project that already has server-side custom bindings but no
+	 * local `domainSelection` would otherwise fall back to share. Seed the selection from the server
+	 * once; afterwards the local selection is the only source of truth.
+	 */
+	private async seedDomainSelectionFromServer(
+		projectName: string,
+		remoteProjectId: string | undefined,
+	): Promise<void> {
+		const customDomains = this.plugin.foundryCustomDomainService;
+		if (!customDomains || !remoteProjectId) return;
+		try {
+			const config = await this.getConfig(projectName);
+			if (config.domainSelection !== undefined) return;
+			const selection = await customDomains.getSelection(projectName, remoteProjectId);
+			if (!selection.success || !selection.data || selection.data.isShare) return;
+			await this.saveConfig(projectName, 'domainSelection', {
+				domainIds: selection.data.domainIds,
+				primaryDomainId: selection.data.primaryDomainId,
+				allowMoveFrom: [],
+			});
+		} catch (error) {
+			console.warn('[ProjectServiceManager] seedDomainSelectionFromServer failed:', error);
+		}
 	}
 
 	async listRemoteCloudflareProjects(): Promise<{
@@ -1004,6 +1059,7 @@ export class ProjectServiceManager {
 		const publishResult = await this.publishOrRebuild(projectName, {
 			method: 'cloudflare',
 			hostingMode: ensured.hostingMode,
+			...(ensured.hosting ? { hosting: ensured.hosting } : {}),
 			releaseMode: skipBuild ? 'as-is' : 'themed',
 			onProgress: (progress) => onProgress?.(progress),
 			...this.publishIdentityFromSelection(),
@@ -1014,8 +1070,14 @@ export class ProjectServiceManager {
 		}
 
 		const rawUrl = publishResult.url || '';
+		// Custom hosting: prefer the selection-derived URL. Commit may still return the
+		// old share URL when the Worker reloads project.hosting_mode after bind.
 		const url =
-			!rawUrl || /\(custom-domain\)/i.test(rawUrl) ? ensured.publicUrl : rawUrl;
+			ensured.hostingMode === 'custom' && ensured.publicUrl
+				? ensured.publicUrl
+				: !rawUrl || /\(custom-domain\)/i.test(rawUrl)
+					? ensured.publicUrl
+					: rawUrl;
 
 		return {
 			...publishResult,
@@ -1064,7 +1126,12 @@ export class ProjectServiceManager {
 				const locale =
 					(typeof config.defaultContentLanguage === 'string' && config.defaultContentLanguage) ||
 					info.data.language;
-				await ensureCommerceStubPages({ projectPath: info.data.path, locale });
+				const commerce = config.commerce;
+				const enabled =
+					!!commerce &&
+					typeof commerce === 'object' &&
+					(commerce as Record<string, unknown>).enable === true;
+				await ensureCommerceStubPages({ projectPath: info.data.path, locale, enabled });
 			}
 		} catch (error) {
 			console.warn('[ProjectServiceManager] ensureCommerceStubPages failed:', error);
@@ -1130,6 +1197,7 @@ export class ProjectServiceManager {
 
 		// Cloudflare publish runs after local preview (not via Serve autoPublish)
 		const useCloudflare = !!publishConfig;
+		let ensuredPlan: { hostingMode: 'share' | 'custom'; hosting?: ReleaseHostingParams } | undefined;
 
 		if (useCloudflare) {
 			const ensured = await this.ensureShareBaseUrl(projectName);
@@ -1140,6 +1208,7 @@ export class ProjectServiceManager {
 					...(ensured.code ? { code: ensured.code } : {}),
 				};
 			}
+			ensuredPlan = { hostingMode: ensured.hostingMode, ...(ensured.hosting ? { hosting: ensured.hosting } : {}) };
 		}
 
 		await this.prepareProjectAssets(projectName);
@@ -1161,6 +1230,8 @@ export class ProjectServiceManager {
 					const publishResult = await this.publishOrRebuild(projectName, {
 						method: 'cloudflare',
 						config: publishConfig?.config,
+						hostingMode: ensuredPlan?.hostingMode,
+						...(ensuredPlan?.hosting ? { hosting: ensuredPlan.hosting } : {}),
 						releaseMode: 'themed',
 						...this.publishIdentityFromSelection(),
 						onProgress: (progress) => {
@@ -1286,6 +1357,8 @@ export class ProjectServiceManager {
 			method?: string;
 			config?: unknown;
 			hostingMode?: 'share' | 'custom';
+			/** Domain selection → `openRelease` hosting body (from ensureShareBaseUrl). */
+			hosting?: ReleaseHostingParams;
 			sourcePath?: string;
 			workspaceId?: string;
 			kind?: 'note' | 'folder';
@@ -1335,6 +1408,7 @@ export class ProjectServiceManager {
 					apiBaseUrl: this.plugin.settings.cloudflareApiBaseUrl,
 					publicBaseUrl: this.plugin.settings.cloudflarePublicBaseUrl,
 					hostingMode,
+					...(options.hosting ? { hosting: options.hosting } : {}),
 					// Unpublished or draft remote trees are empty, so the next publish uploads every file.
 					force: forceFull,
 					workspaceId: options.workspaceId || this.plugin.getWorkspaceId(),
@@ -1382,6 +1456,7 @@ export class ProjectServiceManager {
 			method?: string;
 			config?: unknown;
 			hostingMode?: 'share' | 'custom';
+			hosting?: ReleaseHostingParams;
 			sourcePath?: string;
 			workspaceId?: string;
 			kind?: 'note' | 'folder';

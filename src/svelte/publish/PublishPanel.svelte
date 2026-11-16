@@ -4,9 +4,11 @@
 	import type { CatalogEntry } from '../../theme/types';
 	import { TFolder } from 'obsidian';
 	import { vaultImageSrc } from '../../branding/pick-vault-image';
-	import DomainSection from '../DomainSection.svelte';
+	import DomainPicker from './DomainPicker.svelte';
+	import type { DomainSelectionInfo } from '../../settings/domains/domain-view';
 	import SubscribeSection from '../SubscribeSection.svelte';
 	import SalesSection from '../SalesSection.svelte';
+	import AccessSection from '../AccessSection.svelte';
 	import HistorySection from '../HistorySection.svelte';
 	import { filterThemesForSelection } from '../../utils/theme';
 	import { resolveSiteBaseUrl } from '../../cloudflare-env';
@@ -34,6 +36,18 @@
 	export let subscribeTitle = '';
 	export let subscribeDescription = '';
 	export let onSubscribeChange: (fields: { enabled: boolean; title: string; description: string }) => void = () => {};
+	export let accessEnabled = false;
+	/** Last published/hydrated access intent — for pending-publish dual-state. */
+	export let accessSyncedEnabled = false;
+	export let onAccessChange: (fields: { enabled: boolean }) => void = () => {};
+	export let salesEnabled = false;
+	export let salesSyncedEnabled = false;
+	export let onSalesChange: (fields: { enabled: boolean }) => void = () => {};
+	/** Server quota feature `commerce` (Personal+). */
+	export let salesPlanAllows = false;
+	export let subscribeSyncedEnabled = false;
+	/** Refresh account features when Advanced opens. */
+	export let onAdvancedOpened: () => void = () => {};
 
 	export let showAuthTip: boolean;
 	export let authPrepareStep: 'idle' | 'prepare' | 'waiting' = 'idle';
@@ -109,8 +123,10 @@
 	export let onCopyPreview: () => void;
 	export let onContinueAuth: () => void;
 	export let onOpenAccount: (opts?: { intent?: 'claim' | 'upgrade' }) => void | Promise<void>;
-	export let onDomainActive: (hostname: string) => void;
-	export let onDomainCleared: (() => void) | undefined = undefined;
+	/** DomainPicker selection changed — parent tracks "takes effect on publish". */
+	export let onDomainSelectionChanged: ((info: DomainSelectionInfo) => void) | undefined = undefined;
+	/** Domain selection differs from what is live: highlight Publish. */
+	export let domainsPending: boolean = false;
 	export let onDismissResult: () => void;
 	export let onDismissAuthTip: () => void = () => {};
 	export let onSelectTarget: ((sourcePath: string) => void | Promise<void>) | undefined = undefined;
@@ -386,7 +402,9 @@
 	}
 
 	function toggleAdvanced() {
-		advancedOpen = !advancedOpen;
+		const next = !advancedOpen;
+		advancedOpen = next;
+		if (next) onAdvancedOpened();
 	}
 
 	function onTitleInput(e: Event) {
@@ -401,17 +419,6 @@
 
 	function siteHomeUrl(): string {
 		return resolveSiteBaseUrl(plugin.settings);
-	}
-
-	/** Dashboard Access keys page (protection itself is page frontmatter). */
-	function dashboardAccessUrl(): string {
-		const site = resolveSiteBaseUrl(plugin.settings);
-		const q = remoteProjectId ? `?id=${encodeURIComponent(remoteProjectId)}` : '';
-		return `${site}/dashboard/access/${q}`;
-	}
-
-	function openAccessDashboard() {
-		window.open(dashboardAccessUrl(), '_blank', 'noopener');
 	}
 
 	function openDemo(e: MouseEvent, entry: CatalogEntry) {
@@ -1046,39 +1053,29 @@
 								</div>
 							</section>
 
-							<!-- 4. Access keys (Dashboard only; protection is page frontmatter) -->
-							<section class="adv-block" data-mdf-access-keys>
-								<header class="adv-block-head">
-									<span class="adv-block-icon" aria-hidden="true">
-										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12 20 3m0 0h-4M20 3v4"/></svg>
-									</span>
-									<div class="adv-block-text">
-										<div class="adv-block-title">{t('ui.access_title')}</div>
-										<div class="adv-block-desc">{t('ui.access_desc')}</div>
-									</div>
-								</header>
-								<div class="adv-block-body">
-									<p class="helper">{t('ui.access_page_hint')}</p>
-									<button
-										type="button"
-										class="nav-links-add"
-										data-mdf-access-dashboard
-										on:click={openAccessDashboard}
-										disabled={!remoteProjectId && isGuest}
-									>
-										{t('ui.access_manage_keys')}
-									</button>
-									<p class="helper">{t('ui.access_keys_hint')}</p>
-								</div>
-							</section>
+							<!-- 4. Access keys -->
+							<AccessSection
+								{plugin}
+								{t}
+								{projectName}
+								{isGuest}
+								enabled={accessEnabled}
+								syncedEnabled={accessSyncedEnabled}
+								refreshKey={historyRefreshKey + accountEpoch * 1000}
+								onChange={onAccessChange}
+							/>
 
-							<!-- 5. Selling (read-only) -->
+							<!-- 5. Selling -->
 							<SalesSection
 								{plugin}
 								{t}
-								{remoteProjectId}
+								{projectName}
 								{isGuest}
+								planAllows={salesPlanAllows}
+								enabled={salesEnabled}
+								syncedEnabled={salesSyncedEnabled}
 								refreshKey={historyRefreshKey + accountEpoch * 1000}
+								onChange={onSalesChange}
 							/>
 
 							<!-- 6. Subscribe -->
@@ -1089,6 +1086,7 @@
 								{isGuest}
 								themeEntry={subscribeThemeEntry}
 								enabled={subscribeEnabled}
+								syncedEnabled={subscribeSyncedEnabled}
 								title={subscribeTitle}
 								description={subscribeDescription}
 								sourcePath={activeVaultPath}
@@ -1115,12 +1113,12 @@
 								<div class="adv-block-body">
 									{#if isPersonal}
 										<div class="apple-domain-slot">
-											<DomainSection
+											<DomainPicker
 												{plugin}
 												{projectName}
-												onDomainActive={onDomainActive}
-												onDomainCleared={onDomainCleared}
-												layout="embedded"
+												{remoteProjectId}
+												refreshKey={historyRefreshKey + accountEpoch * 1000}
+												onSelectionChanged={onDomainSelectionChanged}
 											/>
 										</div>
 									{:else}
@@ -1302,6 +1300,6 @@
 
 	<div class="panel-actions" class:is-hidden={!showActions}>
 		<button type="button" class="btn btn-secondary" disabled={actionsDisabled} on:click={onPreview}>{t('ui.preview_action')}</button>
-		<button type="button" class="btn btn-primary" disabled={actionsDisabled} on:click={handlePublishClick}>{publishPrimaryLabel}</button>
+		<button type="button" class="btn btn-primary" class:is-domains-pending={domainsPending} disabled={actionsDisabled} on:click={handlePublishClick}>{publishPrimaryLabel}</button>
 	</div>
 </div>

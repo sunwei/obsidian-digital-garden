@@ -313,8 +313,8 @@ export class GardenPluginDriver {
 	}
 
 	/**
-	 * Mirror plugin syncCommerceOnPublish: stamp params.commerce + params.mdf.hosting
-	 * so the theme can render purchase slots (offers still load at runtime).
+	 * Mirror plugin syncCommerceOnPublish: stamp commerce.enable + services.mdfriday
+	 * + params.mdf.hosting (no params.commerce).
 	 */
 	private async stampCommerceParams(
 		projectName: string,
@@ -333,6 +333,12 @@ export class GardenPluginDriver {
 					: {};
 			mdf.hosting = opts.hostingMode;
 			current.mdf = mdf;
+			delete current.commerce;
+
+			const services =
+				config.services && typeof config.services === 'object'
+					? { ...(config.services as Record<string, unknown>) }
+					: {};
 
 			if (!opts.guest) {
 				try {
@@ -342,32 +348,29 @@ export class GardenPluginDriver {
 					);
 					if (res.ok) {
 						const shell = (await res.json()) as Record<string, unknown>;
-						const pages =
-							shell.pages && typeof shell.pages === 'object'
-								? (shell.pages as Record<string, unknown>)
-								: null;
-						if (
-							typeof shell.project === 'string' &&
-							typeof shell.endpoint === 'string' &&
-							pages &&
-							typeof pages.purchase === 'string' &&
-							typeof pages.pricing === 'string' &&
-							typeof pages.privacy === 'string'
-						) {
-							current.commerce = {
-								v: 1,
+						if (typeof shell.project === 'string' && typeof shell.endpoint === 'string') {
+							services.mdfriday = {
 								project: shell.project,
-								endpoint: shell.endpoint,
-								pages: {
-									purchase: pages.purchase,
-									pricing: pages.pricing,
-									privacy: pages.privacy,
-								},
+								endpoint: String(shell.endpoint).replace(/\/$/, ''),
 							};
+							const setCommerce = await this.projectConfig.set(
+								this.workspaceDir,
+								projectName,
+								'commerce',
+								{ enable: true },
+							);
+							if (!setCommerce.success) throw new Error(`set commerce: ${setCommerce.error}`);
+							const setServices = await this.projectConfig.set(
+								this.workspaceDir,
+								projectName,
+								'services',
+								services,
+							);
+							if (!setServices.success) throw new Error(`set services: ${setServices.error}`);
 						}
 					}
 				} catch {
-					/* keep last shell */
+					/* keep last connection */
 				}
 			}
 

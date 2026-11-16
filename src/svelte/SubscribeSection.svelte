@@ -22,6 +22,8 @@
 	/** Theme currently applied (null for faithful / unknown) — drives the capability hint. */
 	export let themeEntry: CatalogEntry | null = null;
 	export let enabled = false;
+	/** Last published/hydrated local intent (falls back to remote status when unset). */
+	export let syncedEnabled: boolean | null = null;
 	export let title = '';
 	export let description = '';
 	/** Vault path of the published note/folder (export fallback when the API has no sourcePath). */
@@ -36,12 +38,18 @@
 	let loadSeq = 0;
 
 	$: showThemeHint = !isGuest && enabled && !!themeEntry && !themeSupportsSubscribe(themeEntry);
-	$: pendingPublish = !isGuest && !!status && status.subscribeEnabled !== enabled;
-	$: void load(projectName, isGuest, refreshKey);
+	$: pendingPublish =
+		!isGuest &&
+		(syncedEnabled != null
+			? enabled !== syncedEnabled
+			: !!status && status.subscribeEnabled !== enabled);
+	/** When the local toggle is off, show 0 — stats only after the user activates. */
+	$: displayCount = !isGuest && enabled ? (status?.subscriberCount ?? 0) : 0;
+	$: void load(projectName, isGuest, enabled, refreshKey);
 
-	async function load(name: string, guest: boolean, _key: number) {
+	async function load(name: string, guest: boolean, on: boolean, _key: number) {
 		const seq = ++loadSeq;
-		if (guest || !name) {
+		if (guest || !name || !on) {
 			status = null;
 			return;
 		}
@@ -151,31 +159,35 @@
 			{#if showThemeHint}
 				<p class="helper lock">{t('ui.subscribe_theme_hint')}</p>
 			{/if}
-			{#if status}
-				<div class="mdf-sub-stats">
-					<div class="mdf-sub-stats-count">
-						<div class="mdf-sub-stats-num">{status.subscriberCount}</div>
-						<div class="mdf-sub-stats-label">{t('ui.adv_subscribe_total')}</div>
-					</div>
-					<div class="mdf-sub-stats-actions">
-						<button type="button" class="adv-secondary-btn" on:click={openDashboard}>
-							{t('ui.subscribe_view_dashboard')}
-						</button>
-						<button
-							type="button"
-							class="adv-secondary-btn"
-							disabled={exporting}
-							on:click={openExportMenu}
-						>
-							<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2.5v8M5 8l3 3 3-3"/><path d="M3 12.5h10"/></svg>
-							{t('ui.subscribe_export')}
-						</button>
-					</div>
+			<div class="mdf-sub-stats">
+				<div class="mdf-sub-stats-count">
+					<div class="mdf-sub-stats-num">{loading && enabled ? '…' : displayCount}</div>
+					<div class="mdf-sub-stats-label">{t('ui.adv_subscribe_total')}</div>
 				</div>
-				{#if pendingPublish}
-					<p class="helper mdf-sub-pending">{t('ui.subscribe_pending_publish')}</p>
-				{/if}
-			{:else if enabled && !loading}
+				<div class="mdf-sub-stats-actions">
+					<button
+						type="button"
+						class="adv-secondary-btn"
+						on:click={openDashboard}
+						disabled={!status}
+						title={!status ? t('ui.subscribe_count_unpublished') : undefined}
+					>
+						{t('ui.subscribe_view_dashboard')}
+					</button>
+					<button
+						type="button"
+						class="adv-secondary-btn"
+						disabled={exporting || !status}
+						on:click={openExportMenu}
+					>
+						<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2.5v8M5 8l3 3 3-3"/><path d="M3 12.5h10"/></svg>
+						{t('ui.subscribe_export')}
+					</button>
+				</div>
+			</div>
+			{#if pendingPublish}
+				<p class="helper mdf-sub-pending">{t('ui.subscribe_pending_publish')}</p>
+			{:else if enabled && !status && !loading}
 				<p class="helper">{t('ui.subscribe_count_unpublished')}</p>
 			{/if}
 		{/if}

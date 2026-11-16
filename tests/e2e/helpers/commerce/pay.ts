@@ -66,25 +66,27 @@ async function lookupPaidSuccessUrl(
 	checkoutRef: string | null,
 ): Promise<string | null> {
 	if (!checkoutRef) return null;
-	try {
-		const body = await creemTestRequest<Record<string, unknown>>(
-			creemApiKey,
-			'GET',
-			`/v1/checkouts?checkout_id=${encodeURIComponent(checkoutRef)}`,
-		);
-		const rec = (
-			body.object && typeof body.object === 'object'
-				? body.object
-				: Array.isArray(body.data)
-					? body.data[0]
-					: body
-		) as Record<string, unknown> | undefined;
-		if (!rec || typeof rec !== 'object') return null;
-		const status = String(rec.status ?? '');
-		const successUrl = String(rec.success_url ?? rec.successUrl ?? '');
-		if (status === 'completed' && isClaimSuccessUrl(successUrl)) return successUrl;
-	} catch {
-		return null;
+	const paths = [
+		`/v1/checkouts?checkout_id=${encodeURIComponent(checkoutRef)}`,
+		`/v1/checkouts/${encodeURIComponent(checkoutRef)}`,
+	];
+	for (const path of paths) {
+		try {
+			const body = await creemTestRequest<Record<string, unknown>>(creemApiKey, 'GET', path);
+			const rec = (
+				body.object && typeof body.object === 'object'
+					? body.object
+					: Array.isArray(body.data)
+						? body.data[0]
+						: body
+			) as Record<string, unknown> | undefined;
+			if (!rec || typeof rec !== 'object') continue;
+			const status = String(rec.status ?? '');
+			const successUrl = String(rec.success_url ?? rec.successUrl ?? '');
+			if (status === 'completed' && isClaimSuccessUrl(successUrl)) return successUrl;
+		} catch {
+			/* try next shape */
+		}
 	}
 	return null;
 }
@@ -138,6 +140,13 @@ export async function payOnCreemCheckout(
 		await page.getByRole('button', { name: /Pay \$|Subscribe/i }).waitFor({ state: 'visible', timeout: 20_000 });
 	}
 
+	// Prefer the Card rail over Google Pay / Alipay so the card-form iframe mounts.
+	const cardRail = page.getByRole('button', { name: /^Card$/i }).or(page.getByText(/^Card$/i)).first();
+	if (await cardRail.isVisible().catch(() => false)) {
+		await cardRail.click().catch(() => undefined);
+		await sleep(400);
+	}
+
 	const cardIframe = page.locator('iframe[title="card-form"]');
 	try {
 		await cardIframe.waitFor({ state: 'visible', timeout: 45_000 });
@@ -171,24 +180,44 @@ export async function payOnCreemCheckout(
 	await cvv.click();
 	await cvv.fill('');
 	await cvv.pressSequentially('123', { delay: 40 });
-	await sleep(500);
+	await sleep(800);
 
 	const payBtn = page.locator('button[type="submit"]').filter({ hasText: /Pay|Subscribe/i });
 	await payBtn.waitFor({ state: 'visible', timeout: 15_000 });
+	await page.waitForFunction(() => {
+		const btn = [...document.querySelectorAll('button[type="submit"]')].find((el) =>
+			/Pay|Subscribe/i.test(el.textContent || ''),
+		);
+		return !!btn && !(btn as HTMLButtonElement).disabled;
+	}, { timeout: 20_000 }).catch(() => undefined);
 	await payBtn.click();
 
-	try {
-		await page.waitForURL((u) => isClaimSuccessUrl(u.toString()), { timeout: 90_000 });
-		return { ok: true, successUrl: page.url(), via: 'redirect' };
-	} catch {
-		const text = await visibleText(page);
-		const blocked = detectBlocker(page.url(), text);
-		const pulled = await lookupPaidSuccessUrl(opts.creemApiKey, checkoutRef);
+	const ref = checkoutRefFromUrl(page.url()) || checkoutRef;
+	const payStarted = Date.now();
+	const deadline = payStarted + 120_000;
+	let reclicked = false;
+	while (Date.now() < deadline) {
+		if (isClaimSuccessUrl(page.url())) {
+			return { ok: true, successUrl: page.url(), via: 'redirect' };
+		}
+		const pulled = await lookupPaidSuccessUrl(opts.creemApiKey, ref);
 		if (pulled) return { ok: true, successUrl: pulled, via: 'creem_getCheckout' };
-		return {
-			ok: false,
-			blocked: blocked ?? `Timed out after Pay at ${redactUrl(page.url())}: ${redactPageText(text)}`,
-			url: page.url(),
-		};
+		// Creem sometimes swallows the first Pay click while the card iframe settles.
+		if (!reclicked && Date.now() - payStarted > 15_000) {
+			const stillCheckout = /creem|checkout/i.test(page.url());
+			if (stillCheckout && (await payBtn.isVisible().catch(() => false))) {
+				await payBtn.click().catch(() => undefined);
+				reclicked = true;
+			}
+		}
+		await sleep(2_000);
 	}
+
+	const text = await visibleText(page);
+	const blocked = detectBlocker(page.url(), text);
+	return {
+		ok: false,
+		blocked: blocked ?? `Timed out after Pay at ${redactUrl(page.url())}: ${redactPageText(text)}`,
+		url: page.url(),
+	};
 }

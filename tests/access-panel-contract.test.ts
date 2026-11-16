@@ -1,7 +1,7 @@
 /**
  * Access contract (no Obsidian runtime):
- * sidebar has no Access settings editor; Dashboard manage-keys link remains;
- * protection is page frontmatter only; no legacy password fields.
+ * Advanced panel has Access keys capability (toggle + stats → Dashboard);
+ * protection is page frontmatter only; no legacy password / teaser editors in the sidebar.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,27 +16,32 @@ function read(rel: string): string {
 }
 
 describe('Access panel contract', () => {
-	it('AccessSection.svelte is removed (no sidebar access editor)', () => {
-		assert.equal(
-			existsSync(join(root, 'src/svelte/AccessSection.svelte')),
-			false,
-			'AccessSection.svelte must be deleted',
-		);
+	it('AccessSection.svelte is the Advanced capability card (toggle + stats)', () => {
+		assert.equal(existsSync(join(root, 'src/svelte/AccessSection.svelte')), true);
+		const section = read('src/svelte/AccessSection.svelte');
+		assert.match(section, /getAccessKeyStatus/);
+		assert.match(section, /dashboardAccessUrl|access_view_dashboard/);
+		assert.match(section, /pendingPublish|access_pending_publish/);
+		assert.doesNotMatch(section, /mdf-access-prot/);
+		assert.doesNotMatch(section, /fm\.access/);
+		assert.doesNotMatch(section, /sitePassword/);
 	});
 
-	it('PublishPanel keeps Dashboard manage-keys link and does not write access frontmatter', () => {
+	it('PublishPanel wires AccessSection and does not write access frontmatter', () => {
 		const panel = read('src/svelte/publish/PublishPanel.svelte');
-		assert.doesNotMatch(panel, /AccessSection/);
+		assert.match(panel, /AccessSection/);
 		assert.doesNotMatch(panel, /mdf-access-prot/);
 		assert.doesNotMatch(panel, /mdf-access-teaser/);
 		assert.doesNotMatch(panel, /fm\.access/);
 		assert.doesNotMatch(panel, /access_scope/);
 		assert.doesNotMatch(panel, /Access password/);
 		assert.doesNotMatch(panel, /sitePassword/);
-		assert.match(panel, /dashboard\/access\//);
-		assert.match(panel, /data-mdf-access-dashboard|access_manage_keys/);
-		assert.match(panel, /data-mdf-access-keys/);
-		assert.match(panel, /resolveSiteBaseUrl/);
+	});
+
+	it('access-service resolves remote id via RemoteProjectContext', () => {
+		const svc = read('src/access/access-service.ts');
+		assert.match(svc, /resolveRemoteProjectId/);
+		assert.match(svc, /dashboard\/access\//);
 	});
 
 	it('legacy encrypt.ts is removed from AS preview path', () => {
@@ -45,11 +50,12 @@ describe('Access panel contract', () => {
 		assert.equal(existsSync(join(root, 'src/obsidian-local-preview/encrypt.ts')), false);
 	});
 
-	it('i18n keeps manage-keys copy and drops sidebar editor strings', () => {
+	it('i18n keeps manage-keys / pending-publish copy and drops sidebar editor strings', () => {
 		const en = read('src/i18n/locales/en.ts');
 		assert.match(en, /access_title:/);
 		assert.match(en, /access_manage_keys:/);
 		assert.match(en, /access_page_hint:/);
+		assert.match(en, /access_pending_publish:/);
 		assert.doesNotMatch(en, /access_protected:/);
 		assert.doesNotMatch(en, /access_scope_inherit:/);
 		assert.doesNotMatch(en, /access_teaser_placeholder:/);

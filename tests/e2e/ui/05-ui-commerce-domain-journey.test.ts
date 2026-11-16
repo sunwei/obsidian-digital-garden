@@ -1,10 +1,10 @@
 /**
  * Headed full commerce journey on a **custom domain** (opt-in).
  *
- * Real author path:
+ * Author path (I5 Automatic):
  *   1. Obsidian Publish (share) → project exists
- *   2. Bind e2e hostname (same Control Plane APIs as DomainSection; Aliyun DNS automated)
- *   3. Obsidian Publish again → plugin detects active domain → custom hosting URL
+ *   2. Automatic Aliyun domain via plugin service (same as Settings → Add domain → Automatic)
+ *   3. DomainPicker select → Publish again → custom hosting URL (commit bind; no empty window)
  *   4. Chromium: Dashboard Sales (Creem + offer)
  *   5. Chromium: reader buys on https://{hostname}/ → Key → unlock
  *
@@ -29,10 +29,10 @@ import {
 	loadCreemTestApiKey,
 } from '../helpers/commerce/creem.ts';
 import {
-	bindE2eHostname,
 	cleanupBoundDomain,
 	domainPrereqs,
 	loadDomainE2eConfig,
+	lookupDomainCfHostnameId,
 	type BoundDomain,
 	type DomainE2eConfig,
 } from '../helpers/commerce/domain.ts';
@@ -52,6 +52,11 @@ import {
 	stagingCreatorPrereqs,
 	type StagingCreator,
 } from '../staging-creator.ts';
+import {
+	addDomainAutomaticViaPlugin,
+	assertDomainPickerShowsHost,
+	selectDomainInPickerViaPlugin,
+} from './domain-plugin-harness.ts';
 import { playwrightLaunchOptions } from './playwright-launch.ts';
 import {
 	closeSalesDashboard,
@@ -139,7 +144,7 @@ ${opts.docsCanary}
 }
 
 describe(
-	'UI E2E Garden: Obsidian → custom domain → Sales → reader (full)',
+	'UI E2E Garden: Obsidian → Automatic domain → Sales → reader (full)',
 	{ skip, timeout: 1_200_000 },
 	() => {
 		if (skip) {
@@ -278,21 +283,43 @@ describe(
 			await sleep(1500);
 		});
 
-		it('2. Bind custom domain (Control Plane + Aliyun DNS + SSL)', async () => {
-			assert.ok(projectId && domainCfg);
-			// Same APIs DomainSection uses after the author enters a hostname;
-			// DNS / SSL wait is automated so the headed run stays watchable.
-			bound = await bindE2eHostname(api, creator.token, projectId, domainCfg);
-			assert.equal(bound.hostname, domainCfg.hostname);
+		it('2. [Obsidian] Add domain Automatic (Aliyun) via plugin service', async () => {
+			assert.ok(session && domainCfg);
+			// Same path as Settings → Add domain → Automatic (DNS + verify + cert inside core).
+			const added = await addDomainAutomaticViaPlugin(session.page, {
+				hostname: domainCfg.hostname,
+				accessKeyId: domainCfg.aliyun.accessKeyId,
+				accessKeySecret: domainCfg.aliyun.accessKeySecret,
+				confirmConflicts: true,
+			});
+			assert.equal(added.hostname, domainCfg.hostname);
+			assert.ok(added.usable);
+			const cfId = (await lookupDomainCfHostnameId(api, creator.token, added.domainId)) || '';
+			bound = {
+				hostname: added.hostname,
+				publicBaseUrl: `https://${added.hostname}/`,
+				domainId: added.domainId,
+				cfCustomHostnameId: cfId,
+				aliyunRecordIds: [],
+				certCa: null,
+				certWaitSeconds: Math.round(added.elapsedMs / 1000),
+			};
 			console.log(
-				`  domain active hostname=${bound.hostname} certWait=${bound.certWaitSeconds}s ca=${bound.certCa}`,
+				`  domain ready hostname=${bound.hostname} certWait=${bound.certWaitSeconds}s domainId=${bound.domainId}`,
 			);
 			await sleep(1500);
 		});
 
-		it('3. [Obsidian] Publish again → custom hosting URL', async () => {
-			assert.ok(session && bound);
-			// Plugin lists active domains and switches hostingMode to custom on publish.
+		it('3. [Obsidian] DomainPicker select → Publish → custom URL', async () => {
+			assert.ok(session && bound && projectId);
+			await openGardenPublishPanel(session.page);
+			await selectDomainInPickerViaPlugin(session.page, {
+				projectName: 'Garden',
+				domainId: bound.domainId,
+				remoteProjectId: projectId,
+			});
+			await assertDomainPickerShowsHost(session.page, bound.hostname);
+
 			const published = await publishGardenFolderViaUiWithAccess(session.page, {
 				expectHostname: bound.hostname,
 				timeoutMs: 300_000,
@@ -303,8 +330,8 @@ describe(
 				`expected custom URL with ${bound.hostname}, got ${publicUrl}`,
 			);
 			const homeUrl = publicUrl.endsWith('/') ? publicUrl : `${publicUrl}/`;
-			// Cert/route can lag a few seconds after publish completes in the panel.
-			const deadline = Date.now() + 120_000;
+			// Commit bind should make the homepage available immediately; allow a short CDN lag.
+			const deadline = Date.now() + 60_000;
 			let homeHtml = '';
 			let lastStatus = 0;
 			while (Date.now() < deadline) {
@@ -314,7 +341,7 @@ describe(
 					homeHtml = await home.text();
 					if (homeHtml.includes(homeCanary)) break;
 				}
-				await sleep(4_000);
+				await sleep(2_000);
 			}
 			assert.equal(lastStatus, 200, `custom home ${homeUrl} → ${lastStatus}`);
 			assert.match(homeHtml, new RegExp(homeCanary));

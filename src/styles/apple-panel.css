@@ -1552,7 +1552,7 @@
 
 .workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-secondary-btn:disabled {
   opacity: 0.55;
-  cursor: wait;
+  cursor: not-allowed;
 }
 
 .workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .adv-block .brand-path {
@@ -2344,4 +2344,9 @@
 .workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .expiry-line .expiry-claim {
 	margin-left: 8px;
 	font-size: 12px;
+}
+
+/* Custom domain selection differs from what is live: nudge Publish (arch 05 §4). */
+.workspace-leaf-content[data-type="MDFriday_Garden"] .mdf-apple-panel .btn-primary.is-domains-pending {
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.28);
 }

@@ -1,22 +1,40 @@
 {
-  "id": "garden-mwfrprvy",
+  "id": "garden-mwiwppbx",
   "name": "Garden",
   "type": "site",
-  "createdAt": 1794622189684,
-  "updatedAt": 1794622378325,
+  "createdAt": 1794811982979,
+  "updatedAt": 1794820709263,
   "workspaceId": "workspace-1794010692366-bfb665aeb",
   "buildHistory": [
     {
-      "timestamp": 1794622373608,
+      "timestamp": 1794820699828,
       "type": "build",
       "success": true,
-      "duration": 317
+      "duration": 2083
     },
     {
-      "timestamp": 1794622195335,
+      "timestamp": 1794819443306,
       "type": "build",
       "success": true,
-      "duration": 382
+      "duration": 2457
+    },
+    {
+      "timestamp": 1794818531498,
+      "type": "build",
+      "success": true,
+      "duration": 5156
+    },
+    {
+      "timestamp": 1794818516685,
+      "type": "build",
+      "success": true,
+      "duration": 379
+    },
+    {
+      "timestamp": 1794812057807,
+      "type": "build",
+      "success": true,
+      "duration": 2443
     }
   ],
   "contentLinks": [
@@ -26,19 +44,11 @@
       "weight": 0
     }
   ],
-  "baseURLStructure": {
-    "baseURL": "/s/ZxftP4/",
-    "createdAt": 1794622195720,
-    "pathParts": [
-      "s",
-      "ZxftP4"
-    ]
-  },
   "cloudflare": {
-    "cloudflareProjectId": "p_94272935aebde626e54f04d129e2a472",
+    "cloudflareProjectId": "p_74430dff7131743d16b0be9634bcf88c",
     "hostingMode": "custom",
-    "boundAt": 1794622194683,
-    "siteId": "ZxftP4",
-    "publicBaseUrl": "https://share.fsky.top"
+    "boundAt": 1794812056769,
+    "siteId": "PwksIQ",
+    "publicBaseUrl": "https://test111.jiashu.ink/"
   }
 }
