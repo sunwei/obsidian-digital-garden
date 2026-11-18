@@ -8,6 +8,7 @@ Owned by **obsidian-digital-garden**. Does **not** modify `obsidian-publish`.
 |------|------|---------|
 | `00-packaging` | Local | `mdfriday-garden` manifest, smoke-vault plugin install, `@mdfriday/core` not `file:` |
 | `01-guest-garden-folder` | Staging network (headless) | Guest mint → folder bind/build/publish → `share.fsky.top` 200 → `expiresAt` ≈ **7d** → client `obsidian-garden/<ver>` |
+| `07-guest-garden-brew` | Staging network (headless) | Same path with catalog **`brew`**: publish → wiki chrome (explorer/search/Beer) → no caps-css template errors |
 | `03-access-headless` | Staging network (headless) | **G2 access MVP**: guest protect folder → publish ciphertext → no plaintext canary → public `session`/`keys` + AES-GCM unlock; wrong key fails. Spec: `arch/encryption-system/garden-access-e2e.md` |
 | `04-access-multiscope-dashboard` | Staging network + Dashboard UI | **G4**: public homepage + independent `docs`/`members` scopes → Dashboard multi-grant key unlocks both; single-scope key cannot cross; revoke re-locks |
 | `05-commerce-publish` | Staging network | Commerce stub pages on publish; purchase zone hidden without offers |
@@ -23,6 +24,16 @@ Headless tests use the same path as the plugin (`@mdfriday/core` + Garden `theme
 ```bash
 cd /Users/sunwei/github/sunwei/workspace/obsidian-digital-garden
 npm run test:e2e:staging
+
+# Brew theme only (Beer-source wiki publish path):
+npm run test:e2e:brew:staging
+```
+
+Theme-side brew↔quartz functional parity (staging demos):
+
+```bash
+cd /Users/sunwei/github/sunwei/workspace/theme
+pnpm verify:brew
 ```
 
 Linux CI runs packaging only (`E2E_SKIP=1` for the network suite) via `.github/workflows/ci.yml`. The UI suite is **not** part of that job.

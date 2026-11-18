@@ -46,6 +46,10 @@ export interface MdfridayThemeParams {
 	family: string;
 	variant: string;
 	version: string;
+	/** BeerCSS pin for brew family (CDN `/v/beercss/<ver>/`). */
+	beerVersion?: string;
+	/** Default Material seed for brew / brew-mintlify. */
+	beerSeed?: string;
 	/** Paths present in project static/ (plugin scan before build). */
 	userStatic?: Record<string, true>;
 }

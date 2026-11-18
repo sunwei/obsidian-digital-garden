@@ -46,6 +46,11 @@ export function entryToMdfridayParams(
 		variant: entry.variant,
 		version: entry.version,
 	};
+	// Brew Beer-source stack reads these; keep defaults when catalog omits them.
+	if (entry.family === 'brew') {
+		params.beerVersion = '5.0.5';
+		params.beerSeed = entry.variant === 'brew-mintlify' ? '#0d9373' : '#3366cc';
+	}
 	if (userStatic && Object.keys(userStatic).length > 0) {
 		params.userStatic = userStatic;
 	}
