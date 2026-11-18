@@ -1,13 +1,13 @@
 /**
- * Garden critical path with **brew** theme (Beer-source wiki).
+ * Garden critical path with **quartz** theme (Beer-source wiki 2.x).
  *
  * Covered:
- * - Guest mint → folder bind/build/publish with catalog slug `brew`
+ * - Guest mint → folder bind/build/publish with catalog slug `quartz`
  * - Public URL 200 + content marker
  * - Published HTML has wiki chrome (explorer/search/sidebars) and no caps-css template errors
- * - Beer CSS linked (brew stack)
+ * - Beer CSS linked
  *
- * Skip: E2E_SKIP=1 or E2E_SKIP_BREW=1
+ * Skip: E2E_SKIP=1 or E2E_SKIP_BREW=1 or E2E_SKIP_QUARTZ=1
  */
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
@@ -18,15 +18,18 @@ import {
 	type PluginPublishResult,
 } from './garden-plugin-driver.ts';
 
-const skip = process.env.E2E_SKIP === '1' || process.env.E2E_SKIP_BREW === '1';
+const skip =
+	process.env.E2E_SKIP === '1' ||
+	process.env.E2E_SKIP_BREW === '1' ||
+	process.env.E2E_SKIP_QUARTZ === '1';
 
-describe('E2E Garden: guest folder → brew theme (staging)', { skip, timeout: 360_000 }, () => {
+describe('E2E Garden: guest folder → quartz theme (staging)', { skip, timeout: 360_000 }, () => {
 	const env = loadGardenE2eEnv();
 	let driver: GardenPluginDriver;
 	let guestKey = '';
 	let projectId = '';
 	let published: PluginPublishResult | undefined;
-	const marker = `Brew garden ${env.runId}`;
+	const marker = `Quartz garden ${env.runId}`;
 
 	before(async () => {
 		driver = new GardenPluginDriver({
@@ -63,26 +66,24 @@ describe('E2E Garden: guest folder → brew theme (staging)', { skip, timeout: 3
 		assert.ok(guestKey.startsWith('MDF_'));
 	});
 
-	it('2. publish folder with brew theme', async () => {
+	it('2. publish folder with quartz theme', async () => {
 		const catalog = await fetchThemeCatalog(env.apiBase);
-		const brew =
-			catalog.find((e) => e.slug === 'brew') ||
-			catalog.find((e) => e.slug === 'brew-mintlify');
-		assert.ok(brew?.packUrl, 'brew theme must be entitled on staging catalog');
+		const quartz = catalog.find((e) => e.slug === 'quartz');
+		assert.ok(quartz?.packUrl, 'quartz theme must be entitled on staging catalog');
 
 		driver.writeVault({
-			'Garden/index.md': `---\ntitle: Brew garden home\n---\n# ${marker}\n\nWiki home for brew E2E.\n`,
+			'Garden/index.md': `---\ntitle: Quartz garden home\n---\n# ${marker}\n\nWiki home for quartz E2E.\n`,
 			'Garden/about.md': `---\ntitle: About\n---\n# About\n\nSecond page.\n\n\`\`\`js\nconsole.log("clipboard")\n\`\`\`\n`,
 			'Garden/docs.md': `---\ntitle: Docs\n---\n# Docs\n\n## Section\n\nBody for TOC.\n`,
 		});
-		const site = await driver.createFolderProject('garden-brew', 'Garden', brew!);
+		const site = await driver.createFolderProject('garden-quartz', 'Garden', quartz!);
 		published = await driver.buildAndPublish(site, { token: guestKey, guest: true }, { force: true });
 		projectId = published.projectId;
 
 		assert.ok(published.siteId);
 		assert.match(published.baseURL, /^https:\/\/share\.fsky\.top\/s\/[^/]+\/$/);
 		console.log(
-			`  brew=${brew!.slug}@${brew!.version ?? '?'} url=${published.url} build=${published.buildMs}ms`,
+			`  quartz=${quartz!.slug}@${quartz!.version ?? '?'} url=${published.url} build=${published.buildMs}ms`,
 		);
 	});
 

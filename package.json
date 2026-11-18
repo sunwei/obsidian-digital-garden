@@ -39,8 +39,10 @@
 		"test:e2e:ui:commerce:staging": "npm run build:smoke && E2E_COMMERCE=1 MDF_E2E_ENV=staging npm run test:e2e:ui:commerce",
 		"test:e2e:ui:commerce:domain": "node --experimental-strip-types --test --test-timeout=1200000 tests/e2e/ui/05-ui-commerce-domain-journey.test.ts",
 		"test:e2e:ui:commerce:domain:staging": "npm run build:smoke && E2E_COMMERCE=1 E2E_COMMERCE_DOMAIN=1 MDF_E2E_ENV=staging npm run test:e2e:ui:commerce:domain",
-		"test:e2e:brew": "node --experimental-strip-types --test --test-timeout=360000 tests/e2e/07-guest-garden-brew.test.ts",
-		"test:e2e:brew:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:brew"
+		"test:e2e:quartz": "node --experimental-strip-types --test --test-timeout=360000 tests/e2e/07-guest-garden-brew.test.ts",
+		"test:e2e:quartz:staging": "npm run build:smoke && MDF_E2E_ENV=staging npm run test:e2e:quartz",
+		"test:e2e:brew": "npm run test:e2e:quartz",
+		"test:e2e:brew:staging": "npm run test:e2e:quartz:staging"
 	},
 	"keywords": [
 		"mdfriday",

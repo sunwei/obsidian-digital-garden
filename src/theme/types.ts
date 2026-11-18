@@ -46,10 +46,12 @@ export interface MdfridayThemeParams {
 	family: string;
 	variant: string;
 	version: string;
-	/** BeerCSS pin for brew family (CDN `/v/beercss/<ver>/`). */
+	/** BeerCSS pin for quartz 2.x (CDN `/v/beercss/<ver>/`). */
 	beerVersion?: string;
-	/** Default Material seed for brew / brew-mintlify. */
+	/** Default Material seed; more colors via ThemePreset catalog (not layout variants). */
 	beerSeed?: string;
+	/** Cap CSS root; quartz 2.x uses caps-v2. */
+	capsCssRoot?: string;
 	/** Paths present in project static/ (plugin scan before build). */
 	userStatic?: Record<string, true>;
 }
