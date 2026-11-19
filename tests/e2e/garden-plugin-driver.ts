@@ -182,6 +182,27 @@ export async function fetchThemeCatalog(apiBase: string, authToken?: string): Pr
 	return body.entries;
 }
 
+/**
+ * Pick a folder/wiki theme for Garden E2E.
+ * Prefer `E2E_THEME=<slug>` (e.g. atlas); otherwise fall back to quartz, then any entitled folder/wiki pack.
+ */
+export function pickE2eTheme(catalog: CatalogEntry[], preferredSlug = 'quartz'): CatalogEntry {
+	const want = (process.env.E2E_THEME || preferredSlug).trim().toLowerCase();
+	const bySlug = catalog.find((e) => e.slug === want && e.packUrl);
+	if (bySlug) return bySlug;
+	const quartz = catalog.find((e) => e.slug === 'quartz' && e.packUrl);
+	if (quartz) return quartz;
+	const folderish = catalog.find(
+		(e) =>
+			e.packUrl &&
+			(e.kinds || []).some((k) => k === 'folder' || k === 'wiki' || k === 'notebook'),
+	);
+	if (folderish) return folderish;
+	throw new Error(
+		`No entitled theme for E2E (wanted ${want}; catalog slugs: ${catalog.map((e) => e.slug).join(',')})`,
+	);
+}
+
 export class GardenPluginDriver {
 	readonly baseDir: string;
 	readonly vaultDir: string;

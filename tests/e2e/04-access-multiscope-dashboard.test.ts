@@ -17,6 +17,7 @@ import { loadGardenE2eEnv } from './env.ts';
 import {
 	GardenPluginDriver,
 	fetchThemeCatalog,
+	pickE2eTheme,
 	type PluginPublishResult,
 } from './garden-plugin-driver.ts';
 import {
@@ -116,10 +117,9 @@ describe(
 
 		it('1. publish folder: public home + docs/members independent scopes', async () => {
 			const catalog = await fetchThemeCatalog(env.apiBase, creator.mdfKey);
-			const quartz =
-				catalog.find((e) => e.slug === 'quartz') ||
-				catalog.find((e) => (e.kinds || []).includes('folder') && e.packUrl);
-			assert.ok(quartz?.packUrl, 'quartz entitled for staging creator');
+			const theme = pickE2eTheme(catalog);
+			assert.ok(theme.packUrl, `theme ${theme.slug} entitled for staging creator`);
+			console.log(`  theme=${theme.slug}@${theme.version}`);
 
 			driver.writeVault({
 				'Garden/index.md': `---
@@ -153,7 +153,7 @@ ${membersCanary}
 `,
 			});
 
-			const site = await driver.createFolderProject('garden-multiscope', 'Garden', quartz!);
+			const site = await driver.createFolderProject('garden-multiscope', 'Garden', theme);
 			published = await driver.buildAndPublish(
 				site,
 				{ token: creator.mdfKey, guest: false },
@@ -171,7 +171,7 @@ ${membersCanary}
 			docsUrl = `${published.baseURL}docs.html`;
 			membersUrl = `${published.baseURL}members.html`;
 			console.log(
-				`  project=${projectId} home=${homeUrl} docs=${docsUrl} members=${membersUrl} theme=${quartz!.slug}@${quartz!.version}`,
+				`  project=${projectId} home=${homeUrl} docs=${docsUrl} members=${membersUrl} theme=${theme.slug}@${theme.version}`,
 			);
 		});
 

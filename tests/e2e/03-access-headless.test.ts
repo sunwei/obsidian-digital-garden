@@ -14,6 +14,7 @@ import { loadGardenE2eEnv } from './env.ts';
 import {
 	GardenPluginDriver,
 	fetchThemeCatalog,
+	pickE2eTheme,
 	type PluginPublishResult,
 } from './garden-plugin-driver.ts';
 import {
@@ -77,12 +78,11 @@ describe('E2E Garden: access headless protect → publish → unlock (staging)',
 		console.log(`  account=guest guestId=${g.guestId} (same path as 01; sharedKeys via I3)`);
 	});
 
-	it('2. publish protected Garden folder (quartz)', async () => {
+	it('2. publish protected Garden folder', async () => {
 		const catalog = await fetchThemeCatalog(env.apiBase);
-		const quartz =
-			catalog.find((e) => e.slug === 'quartz') ||
-			catalog.find((e) => (e.kinds || []).includes('folder') && e.packUrl);
-		assert.ok(quartz?.packUrl, 'default folder theme (quartz) entitled for guests');
+		const theme = pickE2eTheme(catalog);
+		assert.ok(theme.packUrl, `theme ${theme.slug} entitled for guests`);
+		console.log(`  theme=${theme.slug}@${theme.version}`);
 
 		driver.writeVault({
 			'Garden/index.md': `---
@@ -110,7 +110,7 @@ Public contrast page content (inherits site protection when root is protected).
 `,
 		});
 
-		const site = await driver.createFolderProject('garden-access', 'Garden', quartz!);
+		const site = await driver.createFolderProject('garden-access', 'Garden', theme);
 		published = await driver.buildAndPublish(site, { token: guestKey, guest: true }, { force: true });
 		projectId = published.projectId;
 
@@ -121,7 +121,7 @@ Public contrast page content (inherits site protection when root is protected).
 		assert.equal(sharedKey.length, 17, `shared key length: ${sharedKey}`);
 		assert.equal(published.sharedKeys![0]!.scope, 'site');
 
-		// Quartz pretty URLs on share are *.html
+		// Beer-family pretty URLs on share are *.html
 		protectedPageUrl = `${published.baseURL}secret.html`;
 		console.log(
 			`  project=${projectId} base=${published.baseURL} secret=${protectedPageUrl} sharedScope=${published.sharedKeys![0]!.scope} files=${published.filesUploaded}`,

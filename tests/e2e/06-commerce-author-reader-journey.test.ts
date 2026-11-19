@@ -28,6 +28,7 @@ import { loadGardenE2eEnv } from './env.ts';
 import {
 	GardenPluginDriver,
 	fetchThemeCatalog,
+	pickE2eTheme,
 	type PluginPublishResult,
 	type PluginSite,
 } from './garden-plugin-driver.ts';
@@ -199,10 +200,9 @@ describe(
 
 		it('1. Personal: publish public home + docs/members scopes (share)', async () => {
 			const catalog = await fetchThemeCatalog(env.apiBase, creator.mdfKey);
-			const quartz =
-				catalog.find((e) => e.slug === 'quartz') ||
-				catalog.find((e) => (e.kinds || []).includes('folder') && e.packUrl);
-			assert.ok(quartz?.packUrl, 'quartz entitled for personal creator');
+			const theme = pickE2eTheme(catalog);
+			assert.ok(theme.packUrl, `theme ${theme.slug} entitled for personal creator`);
+			console.log(`  theme=${theme.slug}@${theme.version}`);
 
 			driver.writeVault({
 				'Garden/index.md': `---
@@ -236,7 +236,7 @@ ${membersCanary}
 `,
 			});
 
-			site = await driver.createFolderProject('g6-commerce', 'Garden', quartz);
+			site = await driver.createFolderProject('g6-commerce', 'Garden', theme);
 			const projectPath = driver.projectPath(site.name);
 			assert.equal(existsSync(projectPath), true);
 
