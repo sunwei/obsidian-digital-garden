@@ -184,7 +184,7 @@ describe('sales status line', () => {
 		const labels = { selling: 'Selling', offers: '{n} offers', disabled: 'Not enabled (manage in Dashboard)' };
 		assert.equal(formatSalesStatus(null, labels), labels.disabled);
 		assert.equal(
-			formatSalesStatus({ selling: true, offerCount: 3, mode: 'live' }, labels),
+			formatSalesStatus({ canSell: true, offerCount: 3, ordersLast30d: 0, mode: 'live' }, labels),
 			'Selling · 3 offers · live',
 		);
 	});
@@ -197,7 +197,6 @@ describe('sales status line', () => {
 		});
 		assert.deepEqual(status, {
 			canSell: true,
-			selling: true,
 			offerCount: 2,
 			ordersLast30d: 5,
 			mode: 'test',
@@ -212,6 +211,5 @@ describe('sales status line', () => {
 		});
 		assert.equal(status?.canSell, true);
 		assert.equal(status?.offerCount, 0);
-		assert.equal(status?.selling, true);
 	});
 });

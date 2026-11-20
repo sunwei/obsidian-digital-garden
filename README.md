@@ -8,7 +8,7 @@ Right-click a folder. Publish a wiki or digital garden. No account, no Git.
 
 - Website: https://mdfriday.com
 - Help: https://help.mdfriday.com
-- Discord: https://discord.gg/t7FHJ6qNzT
+- X / Twitter: https://x.com/szm_tech — DM for questions, or follow for updates
 
 ## Plans (product)
 
@@ -28,7 +28,7 @@ Digital Garden is the site product (folder/wiki). Single-note public links live 
 | Icon | `dice-2` |
 | Protocol | `obsidian://mdfriday-garden?event=…` |
 | Client header | `obsidian-garden/<version>` |
-| Engine | `@mdfriday/core` (`26.11.0` from npm; local: `npm run build:with-core`) |
+| Engine | `@mdfriday/core` (`^26.11.1` from npm; local: `npm run build:with-core`) |
 
 ## Dev
 

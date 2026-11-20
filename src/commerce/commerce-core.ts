@@ -311,8 +311,6 @@ export function stubDirPath(projectPath: string): string {
 export type SalesStatusLine = {
 	/** Checkout connection is ready (plan + contact + active provider). */
 	canSell: boolean;
-	/** Compat alias of `canSell` for older call sites / tests. Prefer `canSell`. */
-	selling: boolean;
 	offerCount: number;
 	ordersLast30d: number;
 	mode: 'live' | 'test' | null;
@@ -341,7 +339,7 @@ export function salesStatusFromOverview(body: Record<string, unknown> | null): S
 	const connection = body.activeConnection as { mode?: string; status?: string } | null;
 	const canSell = body.canSell === true;
 	const mode = connection?.mode === 'live' || connection?.mode === 'test' ? connection.mode : null;
-	return { canSell, selling: canSell, offerCount, ordersLast30d, mode };
+	return { canSell, offerCount, ordersLast30d, mode };
 }
 
 /** Public for UI / tests — whether top-level commerce.enable is on. */
