@@ -10,9 +10,10 @@ export const FOLDER_WIKI_THEME_SLUGS = [
 	'creator',
 	'flint',
 	'jasper',
+	'atlas',
 ] as const;
 
-/** Folder publish: allowlisted wiki skins only (quartz / creator / flint / jasper). */
+/** Folder publish: allowlisted wiki skins only (quartz / creator / flint / jasper / atlas). */
 export function isFolderWikiTheme(theme: CatalogEntry): boolean {
 	const family = (theme.family || '').toLowerCase();
 	const slug = (theme.slug || '').toLowerCase();

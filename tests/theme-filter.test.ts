@@ -27,12 +27,13 @@ function entry(
 }
 
 describe('filterThemesForSelection (folder)', () => {
-	it('allowlists quartz / creator / flint / jasper only', () => {
+	it('allowlists quartz / creator / flint / jasper / atlas only', () => {
 		const themes = [
 			entry({ slug: 'quartz', family: 'quartz' }),
 			entry({ slug: 'creator', family: 'creator' }),
 			entry({ slug: 'flint', family: 'flint' }),
 			entry({ slug: 'jasper', family: 'jasper' }),
+			entry({ slug: 'atlas', family: 'atlas', kinds: ['wiki', 'notebook'] }),
 			entry({ slug: 'book', family: 'book', kinds: ['docs', 'wiki'] }),
 			entry({ slug: 'notebook', family: 'notebook', kinds: ['wiki', 'docs'] }),
 			entry({ slug: 'paper', family: 'notes', kinds: ['note'] }),
