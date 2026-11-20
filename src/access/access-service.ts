@@ -61,13 +61,12 @@ export async function getAccessKeyStatus(
 		} catch {
 			json = null;
 		}
-		const keys = Array.isArray(json?.keys)
-			? (json!.keys as unknown[])
-			: Array.isArray(json?.accessKeys)
-				? (json!.accessKeys as unknown[])
-				: Array.isArray(json)
-					? (json as unknown[])
-					: [];
+		const keysCandidate = json?.keys ?? json?.accessKeys;
+		const keys = Array.isArray(keysCandidate)
+			? keysCandidate
+			: Array.isArray(json)
+				? json
+				: [];
 		return { projectId, activeKeyCount: keys.length };
 	} catch {
 		return null;

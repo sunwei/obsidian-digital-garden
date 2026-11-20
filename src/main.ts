@@ -8,7 +8,6 @@ import type {
 	ObsidianAuthService,
 	ObsidianBuildService,
 	ObsidianCustomDomainService,
-	ObsidianDomainService,
 	ObsidianFolderStructureInfo,
 	ObsidianGlobalConfigService,
 	ObsidianLicenseService,
@@ -207,7 +206,6 @@ export default class FridayPlugin extends Plugin {
 	foundryPublishService?: ObsidianPublishService | null
 	foundryAuthService?: ObsidianAuthService | null
 	foundryLicenseService?: ObsidianLicenseService | null
-	foundryDomainService?: ObsidianDomainService | null
 	/** Account-level custom domains (I4). Shares `cloudflareSession` for the MDF Key. */
 	foundryCustomDomainService?: ObsidianCustomDomainService | null
 	/** Account-level remote projects (I4). */
@@ -486,7 +484,6 @@ export default class FridayPlugin extends Plugin {
 				createObsidianPublishService,
 				createObsidianAuthService,
 				createObsidianLicenseService,
-				createObsidianDomainService,
 				createObsidianCustomDomainService,
 				createObsidianRemoteProjectService,
 				CloudflareSession,
@@ -563,9 +560,10 @@ export default class FridayPlugin extends Plugin {
 			secretBackend: dnsBackends.secretBackend,
 			indexBackend: dnsBackends.indexBackend,
 			projectConfigStore: {
-				loadConfig: async (projectName) => {
+				loadConfig: async (projectName: string) => {
+					const workspace = this.absWorkspacePath;
 					const result = await this.foundryProjectConfigService?.list(
-						this.absWorkspacePath,
+						workspace,
 						projectName,
 					);
 					return (result?.success && result.data?.config ? result.data.config : {}) as Record<
@@ -573,10 +571,11 @@ export default class FridayPlugin extends Plugin {
 						unknown
 					>;
 				},
-				saveConfig: async (projectName, patch) => {
+				saveConfig: async (projectName: string, patch: Record<string, unknown>) => {
+					const workspace = this.absWorkspacePath;
 					for (const [key, value] of Object.entries(patch)) {
 						await this.foundryProjectConfigService?.set(
-							this.absWorkspacePath,
+							workspace,
 							projectName,
 							key,
 							value,
@@ -593,23 +592,24 @@ export default class FridayPlugin extends Plugin {
 		// Resolve env (auto → local|staging) and wire live ControlPlane URL
 		await this.applyCloudflareEnv({ persist: true });
 		
-		// Create Identity HTTP client for Auth, License, and Domain services
+		// Auth / License only — Hugoverse domain service is deprecated;
+		// custom domains use foundryCustomDomainService above.
 		const identityHttpClient = createObsidianIdentityHttpClient();
 		this.foundryAuthService = createObsidianAuthService(identityHttpClient);
 		this.foundryLicenseService = createObsidianLicenseService(identityHttpClient);
-		this.foundryDomainService = createObsidianDomainService(identityHttpClient);
 
 	// Create Project Service Manager
 	if (this.foundryProjectService && this.foundryProjectConfigService) {
 		this.projectServiceManager = new ProjectServiceManager(this);
 	}
 
-	// Create License State Manager (optional — Cloudflare guest publish does not require license)
-	if (this.foundryLicenseService && this.foundryAuthService && this.foundryDomainService) {
+	// Create License State Manager (optional — Cloudflare guest publish does not require license).
+	// Pass null for legacy Hugoverse domain API (deprecated).
+	if (this.foundryLicenseService && this.foundryAuthService) {
 		this.licenseState = new LicenseStateManager(
 			this.foundryLicenseService,
 			this.foundryAuthService,
-			this.foundryDomainService,
+			null,
 			this.absWorkspacePath
 		);
 

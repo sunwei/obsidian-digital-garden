@@ -122,7 +122,7 @@ class RemoteProjectContextImpl {
 		) {
 			return { ...existing.identity, source: 'cache' };
 		}
-		if (!opts.force && existing?.inflight) {
+		if (!opts.force && existing?.inflight != null) {
 			return existing.inflight;
 		}
 
@@ -169,10 +169,7 @@ class RemoteProjectContextImpl {
 		try {
 			const contents = plugin.site?.getCurrentContents?.() ?? [];
 			const first = contents[0];
-			const raw =
-				(first?.file?.path as string | undefined) ||
-				(first?.folder?.path as string | undefined) ||
-				null;
+			const raw = first?.file?.path || first?.folder?.path || null;
 			return normalizeVaultPath(raw);
 		} catch {
 			return null;

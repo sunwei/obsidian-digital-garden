@@ -398,7 +398,7 @@ export const en = {
 		domains_cred_hint_aliyun: "Use a RAM sub-account with DNS permissions only (for example AliyunDNSFullAccess), not your main account key.",
 		domains_cred_hint_dnspod: "Use a CAM sub-user with DNSPod permissions only, not your main account key.",
 		domains_cred_missing: "Fill in every credential field.",
-		domains_remember_desc: "Off: the key is used once and discarded. On: it is saved in this plugin's data.json (plain text, inside your vault's .obsidian folder) and syncs with your vault via Obsidian Sync, iCloud or git. It is never sent to MDFriday.",
+		domains_remember_desc: "Off: the key is used once and discarded. On: it is saved in this plugin's data.json (plain text, inside your vault's Obsidian config folder) and syncs with your vault via Obsidian Sync, iCloud or git. It is never sent to MDFriday.",
 		domains_auto_start: "Set up automatically",
 		domains_auto_progress_title: "Setting up {{host}}",
 		domains_auto_failed: "Setting up {{host}} failed: {{error}}",

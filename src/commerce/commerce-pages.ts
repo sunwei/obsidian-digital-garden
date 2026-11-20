@@ -164,7 +164,10 @@ export async function ensureCommerceStubPages(input: {
 	}
 
 	const overlay = readOverlayState(input.projectPath);
-	const sourceAbs = contentIsSymlink ? contentTarget! : overlay?.originalTarget || contentDir;
+	const sourceAbs =
+		contentIsSymlink && contentTarget
+			? contentTarget
+			: overlay?.originalTarget || contentDir;
 	const existing = listExistingNotes(sourceAbs);
 	const planned = planCommerceStubs(existing, '');
 	writeStubFiles(input.projectPath, planned.write, input.locale);

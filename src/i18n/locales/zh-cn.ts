@@ -397,7 +397,7 @@ export const zhCn = {
 		domains_cred_hint_aliyun: "请使用仅具备 DNS 权限的 RAM 子账号（如 AliyunDNSFullAccess），不要使用主账号密钥。",
 		domains_cred_hint_dnspod: "请使用仅具备 DNSPod 权限的 CAM 子用户，不要使用主账号密钥。",
 		domains_cred_missing: "请填写全部凭证字段。",
-		domains_remember_desc: "关闭：密钥只用一次，随后丢弃。开启：保存到本插件的 data.json（明文，位于 vault 的 .obsidian 目录），会随 Obsidian Sync、iCloud 或 git 同步。密钥不会发送给 MDFriday。",
+		domains_remember_desc: "关闭：密钥只用一次，随后丢弃。开启：保存到本插件的 data.json（明文，位于 vault 的 Obsidian 配置目录），会随 Obsidian Sync、iCloud 或 git 同步。密钥不会发送给 MDFriday。",
 		domains_auto_start: "自动开通",
 		domains_auto_progress_title: "正在开通 {{host}}",
 		domains_auto_failed: "开通 {{host}} 失败：{{error}}",

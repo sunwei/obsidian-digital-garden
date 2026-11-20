@@ -311,7 +311,7 @@ export function stubDirPath(projectPath: string): string {
 export type SalesStatusLine = {
 	/** Checkout connection is ready (plan + contact + active provider). */
 	canSell: boolean;
-	/** @deprecated use canSell — kept for older call sites / tests */
+	/** Compat alias of `canSell` for older call sites / tests. Prefer `canSell`. */
 	selling: boolean;
 	offerCount: number;
 	ordersLast30d: number;
@@ -325,7 +325,7 @@ export function formatSalesStatus(status: SalesStatusLine | null, labels: {
 	disabled: string;
 }): string {
 	if (!status) return labels.disabled;
-	const ready = status.canSell === true || status.selling === true;
+	const ready = status.canSell === true;
 	if (!ready && status.offerCount === 0) return labels.disabled;
 	const offers = labels.offers.replace('{{n}}', String(status.offerCount)).replace('{n}', String(status.offerCount));
 	const mode = status.mode ? ` · ${status.mode}` : '';

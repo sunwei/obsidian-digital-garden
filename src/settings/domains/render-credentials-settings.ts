@@ -51,7 +51,7 @@ function renderCredentialRows(plugin: FridayPlugin, setting: Setting): () => voi
 		listEl.empty();
 		const items = res.success && res.data ? res.data : [];
 		if (items.length === 0) {
-			listEl.createEl('div', {
+			listEl.createDiv({
 				text: t('domains_credentials_empty'),
 				cls: 'setting-item-description mdfriday-settings-list-empty',
 			});
