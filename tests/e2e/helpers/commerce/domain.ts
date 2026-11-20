@@ -1,26 +1,68 @@
 /**
  * Custom-domain bind for Garden G6 (Aliyun DNS + CF SaaS custom hostname).
- * Mirrors cloudflare E2E-12 bindCustomHostname; DNS helpers imported from sibling test-kit.
+ * Mirrors cloudflare E2E-12 bindCustomHostname.
+ *
+ * DNS helpers live in sibling `cloudflare/packages/test-kit`. They are loaded
+ * lazily so default CI (`test:e2e` packaging with E2E_SKIP=1) can import this
+ * module without a checked-out cloudflare workspace.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import {
-	deleteAliyunDnsRecord,
-	describeDomainRecords,
-	pingAliyunDns,
-	upsertAliyunDnsRecord,
-	type AliyunDnsConfig,
-} from '../../../../../cloudflare/packages/test-kit/src/aliyun-dns.ts';
-import {
-	deleteCustomHostname,
-	waitForCname,
-	waitForTxt,
-} from '../../../../../cloudflare/packages/test-kit/src/dns.ts';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { CommerceApi } from './api.ts';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CF_ROOT = path.resolve(HERE, '../../../../..', 'cloudflare');
+
+/** Minimal shape; matches cloudflare test-kit AliyunDnsConfig. */
+export type AliyunDnsConfig = {
+	accessKeyId: string;
+	accessKeySecret: string;
+	domainName: string;
+	endpoint?: string;
+};
+
+type DnsKit = {
+	pingAliyunDns: (cfg: AliyunDnsConfig) => Promise<void>;
+	upsertAliyunDnsRecord: (
+		cfg: AliyunDnsConfig,
+		opts: { fqdn: string; type: string; content: string; ttl?: number },
+	) => Promise<string>;
+	deleteAliyunDnsRecord: (cfg: AliyunDnsConfig, recordId: string) => Promise<void>;
+	describeDomainRecords: (
+		cfg: AliyunDnsConfig,
+		opts: { rrKeyWord?: string; pageSize?: number },
+	) => Promise<Array<{ RR: string; RecordId: string }>>;
+	waitForTxt: (name: string, value: string, timeoutMs: number) => Promise<void>;
+	waitForCname: (name: string, target: string, timeoutMs: number) => Promise<void>;
+	deleteCustomHostname: (
+		cfg: { apiToken: string; zoneId: string; saasZoneId: string },
+		hostnameId: string,
+	) => Promise<void>;
+};
+
+async function loadDnsKit(): Promise<DnsKit> {
+	const aliyunPath = path.join(CF_ROOT, 'packages/test-kit/src/aliyun-dns.ts');
+	const dnsPath = path.join(CF_ROOT, 'packages/test-kit/src/dns.ts');
+	if (!existsSync(aliyunPath) || !existsSync(dnsPath)) {
+		throw new Error(
+			`Domain E2E needs sibling cloudflare test-kit at ${path.join(CF_ROOT, 'packages/test-kit')} (checkout cloudflare next to this repo)`,
+		);
+	}
+	const [aliyun, dns] = await Promise.all([
+		import(pathToFileURL(aliyunPath).href),
+		import(pathToFileURL(dnsPath).href),
+	]);
+	return {
+		pingAliyunDns: aliyun.pingAliyunDns,
+		upsertAliyunDnsRecord: aliyun.upsertAliyunDnsRecord,
+		deleteAliyunDnsRecord: aliyun.deleteAliyunDnsRecord,
+		describeDomainRecords: aliyun.describeDomainRecords,
+		waitForTxt: dns.waitForTxt,
+		waitForCname: dns.waitForCname,
+		deleteCustomHostname: dns.deleteCustomHostname,
+	};
+}
 
 function parseEnvFile(raw: string): Record<string, string> {
 	const out: Record<string, string> = {};
@@ -173,6 +215,12 @@ export async function bindE2eHostname(
 	projectId: string,
 	cfg: DomainE2eConfig,
 ): Promise<BoundDomain> {
+	const {
+		pingAliyunDns,
+		upsertAliyunDnsRecord,
+		waitForTxt,
+		waitForCname,
+	} = await loadDnsKit();
 	await pingAliyunDns(cfg.aliyun);
 	const aliyunRecordIds: string[] = [];
 
@@ -365,6 +413,8 @@ export async function cleanupBoundDomain(
 	opts: { keepData?: boolean } = {},
 ): Promise<void> {
 	if (!bound || !cfg || opts.keepData) return;
+
+	const { deleteCustomHostname, deleteAliyunDnsRecord, describeDomainRecords } = await loadDnsKit();
 
 	let cfId = bound.cfCustomHostnameId;
 	if (!cfId) {
