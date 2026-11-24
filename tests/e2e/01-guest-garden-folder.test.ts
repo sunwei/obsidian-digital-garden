@@ -75,12 +75,12 @@ describe('E2E Garden: guest folder → share.fsky.top (staging)', { skip, timeou
 		console.log(`  guest=${guestId} contentExpiresAt=+${Math.round(delta / 86_400_000)}d`);
 	});
 
-	it('2. publish sample folder with quartz theme (obsidian-garden client)', async () => {
+	it('2. publish sample folder with canopy theme (obsidian-garden client)', async () => {
 		const catalog = await fetchThemeCatalog(env.apiBase);
-		const quartz =
+		const canopy =
 			catalog.find(
 				(e) =>
-					e.slug === 'quartz' &&
+					e.slug === 'canopy' &&
 					e.packUrl &&
 					(e.kinds || []).includes('digital-garden'),
 			) ||
@@ -88,15 +88,15 @@ describe('E2E Garden: guest folder → share.fsky.top (staging)', { skip, timeou
 				(e) => e.packUrl && (e.kinds || []).includes('digital-garden'),
 			);
 		assert.ok(
-			quartz?.packUrl,
-			'default digital-garden theme (quartz) entitled for guests',
+			canopy?.packUrl,
+			'default digital-garden theme (canopy) entitled for guests',
 		);
 
 		driver.writeVault({
 			'Garden/index.md': `---\ntitle: Garden home\n---\n# ${marker}\n\nFrom obsidian-digital-garden tests/e2e.\n`,
 			'Garden/about.md': `---\ntitle: About\n---\n# About\n\nSecond page for folder build.\n`,
 		});
-		const site = await driver.createFolderProject('garden-hello', 'Garden', quartz!);
+		const site = await driver.createFolderProject('garden-hello', 'Garden', canopy!);
 		published = await driver.buildAndPublish(site, { token: guestKey, guest: true }, { force: true });
 		projectId = published.projectId;
 

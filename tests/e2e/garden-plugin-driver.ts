@@ -192,10 +192,10 @@ export function isDigitalGardenTheme(entry: CatalogEntry): boolean {
 
 /**
  * Pick a digital-garden theme for Garden E2E.
- * Prefer `E2E_THEME=<slug>` (e.g. canopy); else preferredSlug (default quartz);
+ * Prefer `E2E_THEME=<slug>`; else preferredSlug (default canopy);
  * else any entitled `digital-garden` pack.
  */
-export function pickE2eTheme(catalog: CatalogEntry[], preferredSlug = 'quartz'): CatalogEntry {
+export function pickE2eTheme(catalog: CatalogEntry[], preferredSlug = 'canopy'): CatalogEntry {
 	const want = (process.env.E2E_THEME || preferredSlug).trim().toLowerCase();
 	const bySlug = catalog.find((e) => e.slug === want && isDigitalGardenTheme(e));
 	if (bySlug) return bySlug;

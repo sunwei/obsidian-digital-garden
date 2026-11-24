@@ -106,7 +106,7 @@
 	let sitePath = '/';
 	let selectedThemeDownloadUrl: string = '';
 	let selectedThemeName: string = 'Quartz';
-	let selectedThemeSlug: string = DEFAULT_THEME_SLUGS.QUARTZ;
+	let selectedThemeSlug: string = DEFAULT_THEME_SLUGS.CANOPY;
 	
 	// 标志用户是否手动选择过主题
 	let userHasSelectedTheme = false;
@@ -1350,7 +1350,7 @@
 		const slug =
 			cfg.themeSlug ||
 			filtered[0]?.slug ||
-			DEFAULT_THEME_SLUGS.QUARTZ;
+			DEFAULT_THEME_SLUGS.CANOPY;
 		selectedThemeSlug = slug;
 		const theme = themeList.find((item) => item.slug === slug);
 		selectedThemeName = theme?.name || slug;
@@ -2445,7 +2445,7 @@
 		if (firstTheme?.packUrl) {
 			await applyThemeBySlug(firstTheme.slug);
 		} else {
-			const slug = defaults.themeSlug || DEFAULT_THEME_SLUGS.QUARTZ;
+			const slug = defaults.themeSlug || DEFAULT_THEME_SLUGS.CANOPY;
 			selectedThemeSlug = slug;
 			selectedThemeName = slug;
 			userHasSelectedTheme = true;

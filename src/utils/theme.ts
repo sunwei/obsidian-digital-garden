@@ -12,7 +12,8 @@ export {
 /** Default variant slugs — resolved against catalog at runtime. */
 export const DEFAULT_THEME_SLUGS = {
 	NOTE: 'paper',
-	QUARTZ: 'quartz',
+	/** Folder / digital-garden default skin */
+	CANOPY: 'canopy',
 } as const;
 
 /**
@@ -27,7 +28,7 @@ export async function resolveDefaultTheme(
 	plugin: FridayPlugin,
 	isFolder: boolean,
 ): Promise<CatalogEntry | null> {
-	const slug = isFolder ? DEFAULT_THEME_SLUGS.QUARTZ : DEFAULT_THEME_SLUGS.NOTE;
+	const slug = isFolder ? DEFAULT_THEME_SLUGS.CANOPY : DEFAULT_THEME_SLUGS.NOTE;
 	try {
 		return await themeApiService.getThemeBySlug(slug, plugin);
 	} catch (error) {
@@ -38,6 +39,6 @@ export async function resolveDefaultTheme(
 
 /** @deprecated use resolveDefaultTheme */
 export function getDefaultTheme(isFolder: boolean) {
-	const slug = isFolder ? DEFAULT_THEME_SLUGS.QUARTZ : DEFAULT_THEME_SLUGS.NOTE;
+	const slug = isFolder ? DEFAULT_THEME_SLUGS.CANOPY : DEFAULT_THEME_SLUGS.NOTE;
 	return { slug, isFolder };
 }

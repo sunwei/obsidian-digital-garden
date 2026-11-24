@@ -81,7 +81,7 @@ describe(
 			resetSmokePluginDataForGuestPublish({
 				apiBase: env.apiBase,
 				shareBase: env.shareBase,
-				themeSlug: 'quartz',
+				themeSlug: 'canopy',
 			});
 
 			console.log(`  launching headed Obsidian (smoke-vault)…`);

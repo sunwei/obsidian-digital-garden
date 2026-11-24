@@ -3,6 +3,9 @@ import type { ObsidianRemoteProjectInfo } from '@mdfriday/core';
 import type FridayPlugin from '../../main';
 import { confirmModal } from '../domains/confirm-modal';
 import { canUseCustomDomains, notifyDomainsChanged, uiT } from '../domains/domain-view';
+import { isGardenSettingsProject } from './project-list-filter';
+
+export { isGardenSettingsProject } from './project-list-filter';
 
 /** Settings ▸ Projects group (arch 05 §2.3). No Delete: the control plane has no delete-project endpoint yet. */
 export function getProjectsSettingDefinitions(plugin: FridayPlugin): SettingDefinitionItem[] {
@@ -24,7 +27,6 @@ export function getProjectsSettingDefinitions(plugin: FridayPlugin): SettingDefi
 	];
 }
 
-const HIDDEN_STATUSES = new Set(['deleted']);
 const OFFLINE_STATUSES = new Set(['unpublished', 'draft', 'deleted']);
 
 function renderProjectRows(plugin: FridayPlugin, setting: Setting): () => void {
@@ -59,7 +61,8 @@ function renderProjectRows(plugin: FridayPlugin, setting: Setting): () => void {
 			);
 			return;
 		}
-		const rows = res.data.filter((p) => !p.status || !HIDDEN_STATUSES.has(p.status));
+		const vaultWorkspaceId = plugin.getWorkspaceId();
+		const rows = res.data.filter((p) => isGardenSettingsProject(p, vaultWorkspaceId));
 
 		// Domain counts / "needs republish" need the account domain list (Personal+ only).
 		const domainCount = new Map<string, number>();
@@ -86,10 +89,6 @@ function renderProjectRows(plugin: FridayPlugin, setting: Setting): () => void {
 	function renderProjectRow(project: ObsidianRemoteProjectInfo, domains: number | null): void {
 		const title = project.title || project.siteId || project.id;
 		const row = new Setting(listEl).setName(title);
-		const workspaceId = (project.workspaceId ?? '').trim();
-		if (workspaceId && workspaceId !== plugin.getWorkspaceId()) {
-			row.nameEl.createSpan({ text: t('projects_other_vault'), cls: 'flair mdfriday-flair' });
-		}
 
 		const parts: string[] = [];
 		const custom = project.hostingMode === 'custom';

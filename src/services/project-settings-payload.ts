@@ -129,7 +129,7 @@ export function extractProjectSettings(
 	const variant = asString(mdfriday.variant);
 	if (slug || family) {
 		out.theme = {
-			slug: slug || [family, variant].filter(Boolean).join('-') || 'quartz',
+			slug: slug || [family, variant].filter(Boolean).join('-') || 'canopy',
 			versionPolicy: 'follow-catalog',
 			...(family ? { family } : {}),
 			...(variant ? { variant } : {}),

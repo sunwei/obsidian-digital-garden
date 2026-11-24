@@ -8,7 +8,7 @@
  * - Site.startPublish → sidebar form state (mode / theme / password)
  *
  * Defaults (right-click direct publish):
- * - folder → mode=themed, default theme (quartz), no password
+ * - folder → mode=themed, default theme (canopy), no password
  *
  * Garden is folder/wiki only. Single-note as-is belongs to Share.
  */
@@ -59,7 +59,7 @@ export function selectionKindFromContents(contents: {
 export function getDefaultPublishConfig(_kind: SelectionKind = 'folder'): PathPublishConfig {
 	return {
 		mode: 'themed',
-		themeSlug: DEFAULT_THEME_SLUGS.QUARTZ,
+		themeSlug: DEFAULT_THEME_SLUGS.CANOPY,
 		hasPasswordFlag: false,
 	};
 }

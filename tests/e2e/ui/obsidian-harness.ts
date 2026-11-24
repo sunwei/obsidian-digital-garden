@@ -499,7 +499,7 @@ export function seedPersonalPluginData(opts: {
 		pathConfigs: {
 			Garden: {
 				mode: 'themed',
-				themeSlug: 'quartz',
+				themeSlug: 'canopy',
 				hasPasswordFlag: false,
 				updatedAt: Date.now(),
 			},
@@ -591,7 +591,7 @@ export function resetSmokePluginDataForGuestPublish(opts?: {
 	const prev = existsSync(dataPath)
 		? (JSON.parse(readFileSync(dataPath, 'utf8')) as Record<string, unknown>)
 		: {};
-	const themeSlug = opts?.themeSlug ?? 'quartz';
+	const themeSlug = opts?.themeSlug ?? 'canopy';
 	const next: Record<string, unknown> = {
 		...prev,
 		mdfKey: null,
