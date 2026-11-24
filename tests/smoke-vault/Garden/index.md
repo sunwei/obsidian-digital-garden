@@ -1,8 +1,10 @@
 ---
-title: Commerce domain UI garden
+title: Access garden
 ---
-# Commerce domain UI garden
+# Access garden
 
-Public home. See [[docs]].
+Public homepage (G3 multi-scope).
 
-MDF_UI05_HOME_garden-e2e-mwg1hqpj-c6paw7
+See [[docs]] and [[members]].
+
+MDF_GARDEN_UI_HOME_garden-e2e-mwuhscio-vjt1uj

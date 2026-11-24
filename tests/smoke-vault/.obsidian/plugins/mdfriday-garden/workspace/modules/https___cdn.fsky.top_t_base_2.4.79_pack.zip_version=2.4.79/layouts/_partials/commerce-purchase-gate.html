@@ -1,0 +1,55 @@
+{{- /* Purchase delivery — Gate page framework (background + centered card).
+     Structure lives here; look comes from --mdf-gate-* tokens.
+     Families may replace this partial (caution) but must keep #mdf-purchase-root
+     and mdfCommerceAttrs / i18n data-msg-* contract. */ -}}
+{{- $attrs := mdfCommerceAttrs "purchase" -}}
+<link rel="stylesheet" href="{{ partial "caps-css" (dict "Page" . "path" "gate/style.css") }}">
+<div
+  id="mdf-purchase-gate"
+  class="mdf-modal mdf-gate mdf-gate--page"
+  role="main"
+  aria-labelledby="mdf-purchase-title"
+>
+  <div class="mdf-modal__decor mdf-gate__decor" aria-hidden="true">
+    <div class="mdf-modal__blob mdf-modal__blob--1 mdf-gate__blob mdf-gate__blob--1"></div>
+    <div class="mdf-modal__blob mdf-modal__blob--2 mdf-gate__blob mdf-gate__blob--2"></div>
+  </div>
+  <div class="mdf-modal-content mdf-gate__content">
+    <div class="mdf-unlock-eyebrow mdf-gate__eyebrow">
+      <span class="mdf-unlock-eyebrow__dot mdf-gate__eyebrow-dot" aria-hidden="true"></span>
+      <span>{{ i18n "commerce.purchase.eyebrow" | default "Purchase · Access key" }}</span>
+    </div>
+    <h1 class="mdf-unlock-title mdf-gate__title" id="mdf-purchase-title">
+      {{ i18n "commerce.purchase.headline" | default "Save your access key" }}
+    </h1>
+    <p class="mdf-unlock-body mdf-gate__body">
+      {{ i18n "commerce.purchase.lead" | default "Payment is complete. Your access key appears below — save it before leaving this page." }}
+    </p>
+    <div class="mdf-unlock-card mdf-gate__card">
+      {{- with $attrs -}}
+      <div
+        id="mdf-purchase-root"
+        class="mdf-purchase mdf-commerce mdf-purchase--gate"
+        data-endpoint="{{ .endpoint }}"
+        data-project="{{ .project }}"
+        data-privacy="{{ partial "commerce-page-href.html" .privacy }}"
+        data-msg-ready-save="{{ i18n "commerce.purchase.save_now" }}"
+        data-msg-ready-history="{{ i18n "commerce.purchase.history" }}"
+        data-msg-ready-contact="{{ i18n "commerce.purchase.contact" }}"
+        data-msg-ready-subscription="{{ i18n "commerce.purchase.subscription" }}"
+        data-msg-copy="{{ i18n "commerce.purchase.copy" }}"
+        data-msg-copied="{{ i18n "commerce.purchase.copied" }}"
+        data-msg-download="{{ i18n "commerce.purchase.download" }}"
+        data-msg-enter="{{ i18n "commerce.purchase.enter" }}"
+        data-msg-processing="{{ i18n "commerce.purchase.processing" }}"
+        data-msg-processing-timeout="{{ i18n "commerce.purchase.processing_timeout" }}"
+        data-msg-expired="{{ i18n "commerce.purchase.expired" }}"
+        data-msg-invalid="{{ i18n "commerce.purchase.invalid" }}"
+        data-msg-missing="{{ i18n "commerce.purchase.missing" }}"
+      ></div>
+      {{- else -}}
+      <p class="mdf-unlock-helper">{{ i18n "commerce.purchase.missing" }}</p>
+      {{- end -}}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,9 @@
+{{- /*
+  Resolve Cap CSS path under static/caps/ (single track after W4).
+  Usage: {{ partial "caps-css" (dict "Page" . "path" "clipboard/clipboard.css") }}
+
+  Do not read $page.Site — shortcode .Page is the content-layer page (no Site field),
+  and core errors on missing fields. Use global Site (capital; Hugo alias: site).
+*/ -}}
+{{- $path := .path -}}
+{{- partial "base-asset" (printf "caps/%s" $path) -}}

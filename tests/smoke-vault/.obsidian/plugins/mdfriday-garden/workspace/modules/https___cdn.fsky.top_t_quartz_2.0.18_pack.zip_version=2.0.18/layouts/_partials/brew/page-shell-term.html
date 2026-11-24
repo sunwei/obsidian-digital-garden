@@ -1,0 +1,34 @@
+{{- /* Quartz term shell */ -}}
+<div class="brew-shell">
+    <div id="brew-body">
+        <aside class="sidebar left">
+            {{- partial "brew/sidebar-left.html" . -}}
+        </aside>
+        <div class="center">
+            <div class="page-header">
+                <div class="popover-hint">
+                    {{- partial "brew/breadcrumbs.html" . -}}
+                </div>
+            </div>
+            <article class="popover-hint">
+                {{- $count := len .Pages -}}
+                <header class="article-header">
+                    <h1>{{ .Title }}</h1>
+                    <p class="taxonomy-description">
+                        {{- if eq $count 1 -}}
+                        1 item tagged with #{{ .Title }}
+                        {{- else -}}
+                        {{ $count }} items tagged with #{{ .Title }}
+                        {{- end -}}
+                    </p>
+                </header>
+                {{- partial "components/page-list.html" . -}}
+                {{- partial "subscribe.html" (dict "Page" . "variant" "compact" "placement" "term") -}}
+            </article>
+            {{- partial "brew/footer-content.html" . -}}
+        </div>
+        <aside class="sidebar right">
+            {{- partial "brew/sidebar-right.html" . -}}
+        </aside>
+    </div>
+</div>

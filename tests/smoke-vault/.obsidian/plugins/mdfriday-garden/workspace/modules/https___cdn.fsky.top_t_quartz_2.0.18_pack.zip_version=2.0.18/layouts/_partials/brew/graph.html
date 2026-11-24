@@ -1,0 +1,80 @@
+{{/* 
+  Graph Component - Knowledge Graph Visualization
+  Based on Quartz Graph.tsx
+  Source: quartz-src/brew/components/Graph.tsx
+  
+  Features:
+  - Local Graph: Shows neighboring pages (configurable depth)
+  - Global Graph: Shows entire site graph (full-screen overlay)
+  - Interactive: Drag nodes, zoom, hover highlight
+  - Responsive: Mobile and desktop support
+  
+  Configuration (in Site.Params.graph):
+  - localGraph.depth: 1 (how many levels of neighbors to show)
+  - localGraph.scale: 1.1 (initial zoom level)
+  - localGraph.repelForce: 0.5 (node repulsion strength)
+  - localGraph.centerForce: 0.3 (center attraction strength)
+  - localGraph.linkDistance: 30 (distance between connected nodes)
+  - localGraph.fontSize: 0.6 (label font size multiplier)
+  - localGraph.opacityScale: 1 (opacity scale for zoom)
+  - localGraph.showTags: true (show tag nodes)
+  - localGraph.removeTags: [] (tags to hide)
+  - localGraph.focusOnHover: false (dim non-neighbors on hover)
+  - globalGraph.*: Same options for global graph
+*/}}
+
+{{- $localGraph := dict 
+  "drag" true 
+  "zoom" true 
+  "depth" 1 
+  "scale" 1.1 
+  "repelForce" 0.5 
+  "centerForce" 0.3 
+  "linkDistance" 30 
+  "fontSize" 0.6 
+  "opacityScale" 1 
+  "showTags" true 
+  "removeTags" (slice) 
+  "focusOnHover" false 
+  "enableRadial" false -}}
+
+{{- $globalGraph := dict 
+  "drag" true 
+  "zoom" true 
+  "depth" -1 
+  "scale" 0.9 
+  "repelForce" 0.5 
+  "centerForce" 0.2 
+  "linkDistance" 30 
+  "fontSize" 0.6 
+  "opacityScale" 1 
+  "showTags" true 
+  "removeTags" (slice) 
+  "focusOnHover" true 
+  "enableRadial" true -}}
+
+{{- $graphCfg := .Site.Params.graph -}}
+{{- if $graphCfg -}}
+  {{- if reflect.IsMap $graphCfg -}}
+    {{- with index $graphCfg "localGraph" -}}
+      {{- $localGraph = merge $localGraph . -}}
+    {{- end -}}
+    {{- with index $graphCfg "globalGraph" -}}
+      {{- $globalGraph = merge $globalGraph . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+<div class="graph">
+  <h3>{{ i18n "graph.title" | default "Graph View" }}</h3>
+  <div class="graph-outer">
+    <div class="graph-container" data-cfg='{{ $localGraph | jsonify }}'></div>
+    <button type="button" class="global-graph-icon button circle small transparent" aria-label="{{ i18n "graph.globalLabel" | default "Global Graph" }}" title="{{ i18n "graph.globalLabel" | default "Global Graph" }}">
+      <i>hub</i>
+    </button>
+  </div>
+  <div class="global-graph-outer">
+    <div class="global-graph-container" data-cfg='{{ $globalGraph | jsonify }}'></div>
+  </div>
+</div>
+

@@ -1,0 +1,46 @@
+{{- if not .IsHome -}}
+{{/*
+  Do NOT use <nav> here — Beer styles `nav > ul { position:absolute; inset:0 }`,
+  which collapses breadcrumb height to 0 and stacks letters in popovers.
+  Hook stays `.breadcrumb-container` / `.breadcrumbs`; chrome = Beer `i` chevrons.
+*/}}
+<div class="breadcrumb-container" role="navigation" aria-label="breadcrumbs">
+    <ul class="breadcrumbs">
+        {{- $baseURL := .Site.BaseURL | default "/" -}}
+        {{- $baseURLPath := "" -}}
+        {{- if ne $baseURL "/" -}}
+          {{- $baseURLPath = $baseURL | strings.TrimPrefix "/" | strings.TrimSuffix "/" -}}
+        {{- end -}}
+
+        <li class="breadcrumb-element">
+            <a href="{{ .Site.Home.RelPermalink }}">Home</a>
+            <i aria-hidden="true">chevron_right</i>
+        </li>
+
+        {{- $relPath := .RelPermalink | strings.TrimPrefix "/" | strings.TrimSuffix ".html" -}}
+        {{- if $baseURLPath -}}
+          {{- $relPath = $relPath | strings.TrimPrefix ($baseURLPath | printf "%s/") -}}
+        {{- end -}}
+
+        {{- $sections := split $relPath "/" -}}
+        {{- $len := len $sections -}}
+        {{- $currentPath := "" -}}
+
+        {{- range $index, $section := $sections -}}
+            {{- if ne $section "" -}}
+                {{- $currentPath = printf "%s/%s" $currentPath $section -}}
+                {{- if ne $index (sub $len 1) -}}
+                <li class="breadcrumb-element">
+                    <a href="{{ $.Site.BaseURL | strings.TrimSuffix "/" }}{{ $currentPath }}/">{{ humanize $section }}</a>
+                    <i aria-hidden="true">chevron_right</i>
+                </li>
+                {{- else -}}
+                <li class="breadcrumb-element">
+                    <a href="{{ $.RelPermalink }}" aria-current="page">{{ $.Title }}</a>
+                </li>
+                {{- end -}}
+            {{- end -}}
+        {{- end -}}
+    </ul>
+</div>
+{{- end -}}

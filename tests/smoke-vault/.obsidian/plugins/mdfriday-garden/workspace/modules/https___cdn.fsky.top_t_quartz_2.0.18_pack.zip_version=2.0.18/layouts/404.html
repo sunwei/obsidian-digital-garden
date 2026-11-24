@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode | default "en" }}" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>404 — {{ .Site.Title }}</title>
+    {{- $beer := partial "beer-cdn.html" . | strings.TrimSpace -}}
+    {{- $mdf := index .Site.Params "mdfriday" | default dict -}}
+    {{- $seed := index $mdf "beerSeed" | default "#3366cc" -}}
+    <link rel="stylesheet" href="{{ $beer }}beer.min.css">
+    <script>document.documentElement.setAttribute("data-beer-seed", "{{ $seed }}")</script>
+    <link rel="stylesheet" href="{{ partial "asset" "css/layout.css" }}">
+    <script>
+    (function() {
+        var saved = localStorage.getItem('mdf-theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
+    })();
+    </script>
+</head>
+<body>
+    <div class="brew-shell">
+        <div id="brew-body">
+            <article class="center">
+                <h1>404 — Page Not Found</h1>
+                <p>The page you're looking for doesn't exist.</p>
+                <p><a class="button" href="{{ .Site.Home.RelPermalink }}">{{ i18n "nav.home" | default "Home" }}</a></p>
+            </article>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{{ define "header" }}{{ end }}
+{{ define "footer" }}{{ end }}
+{{ define "main" }}
+{{- $shell := partial "brew/page-shell-home.html" . -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

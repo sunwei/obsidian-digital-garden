@@ -1,5 +1,5 @@
 {
-  "baseURL": "/",
+  "baseURL": "/s/PGROvr/",
   "title": "Garden",
   "contentDir": "content",
   "publishDir": "public",
@@ -11,7 +11,7 @@
   "module": {
     "imports": [
       {
-        "path": "https://cdn.fsky.top/t/quartz/1.2.19/pack.zip?version=1.2.19"
+        "path": "https://cdn.fsky.top/t/quartz/2.0.18/pack.zip?version=2.0.18"
       }
     ]
   },
@@ -19,50 +19,10 @@
     "useInternalRenderer": true
   },
   "params": {
-    "search": {
-      "enable": true,
-      "variant": "inline",
-      "trigger": "sidebar",
-      "content": true,
-      "cjk": true
-    },
-    "explorer": true,
-    "graph": true,
-    "clipboard": true,
-    "toc": {
-      "variant": "interactive"
-    },
-    "breadcrumbs": true,
-    "readerMode": true,
+    "password": "",
     "logo": "",
     "favicon": "",
-    "branding": true,
-    "password": "",
-    "navLinks": [
-      {
-        "title": "Pricing",
-        "url": "/pricing.html"
-      }
-    ],
-    "lastPublishUrl": "https://test111.jiashu.ink/",
-    "subscribe": {
-      "enabled": true,
-      "title": "",
-      "description": "",
-      "project": "p_74430dff7131743d16b0be9634bcf88c",
-      "endpoint": "https://api.fsky.top/v1/public/subscribe",
-      "v": 1,
-      "synced": true,
-      "syncedproject": "p_74430dff7131743d16b0be9634bcf88c"
-    },
-    "mdfriday": {
-      "family": "quartz",
-      "variant": "quartz",
-      "version": "1.2.19"
-    },
-    "mdf": {
-      "hosting": "custom"
-    }
+    "navLinks": []
   },
   "publish": {
     "method": "cloudflare"
@@ -73,21 +33,9 @@
       "weight": 1
     }
   },
-  "domainSelection": {
-    "domainIds": [
-      "dom_c5768ddd0ff0d749f19cc0a102ed66cc"
-    ],
-    "primaryDomainId": "dom_c5768ddd0ff0d749f19cc0a102ed66cc",
-    "allowMoveFrom": []
-  },
-  "canonicalHost": "https://test111.jiashu.ink",
+  "canonicalHost": "https://share.fsky.top",
   "commerce": {
-    "enable": true
+    "enable": false
   },
-  "services": {
-    "mdfriday": {
-      "project": "p_74430dff7131743d16b0be9634bcf88c",
-      "endpoint": "https://api.fsky.top"
-    }
-  }
+  "services": {}
 }

@@ -1,28 +1,21 @@
 import type { CatalogEntry } from '../theme/types';
 
-/**
- * Folder (wiki) skins shown in the publish picker.
- * Catalog `kinds: ["wiki"]` alone is too broad (book / notebook also tag wiki);
- * ship only the supported Obsidian-folder families.
- */
-export const FOLDER_WIKI_THEME_SLUGS = [
-	'quartz',
-	'creator',
-	'flint',
-	'jasper',
-	'atlas',
-] as const;
+/** Catalog kind for Obsidian folder / digital-garden skins (see theme-focus digital-garden). */
+export const DIGITAL_GARDEN_KIND = 'digital-garden';
 
-/** Folder publish: allowlisted wiki skins only (quartz / creator / flint / jasper / atlas). */
-export function isFolderWikiTheme(theme: CatalogEntry): boolean {
-	const family = (theme.family || '').toLowerCase();
-	const slug = (theme.slug || '').toLowerCase();
-	return (FOLDER_WIKI_THEME_SLUGS as readonly string[]).some(
-		(id) => family === id || slug === id,
-	);
+/** Catalog kind for single-note skins. */
+export const NOTE_KIND = 'note';
+
+function hasKind(theme: CatalogEntry, kind: string): boolean {
+	return (theme.kinds ?? []).some((k) => String(k).toLowerCase() === kind);
 }
 
-/** Sidebar theme list: notes family for a single note; allowlisted wiki themes for a folder. */
+/** Folder publish: themes tagged `digital-garden` (not plain `wiki` — book/notebook stay out). */
+export function isFolderWikiTheme(theme: CatalogEntry): boolean {
+	return hasKind(theme, DIGITAL_GARDEN_KIND);
+}
+
+/** Sidebar theme list: `note` kind for a single note; `digital-garden` for a folder. */
 export function filterThemesForSelection(
 	themes: CatalogEntry[],
 	kind: 'note' | 'folder',
@@ -31,5 +24,5 @@ export function filterThemesForSelection(
 	if (kind === 'folder') {
 		return withPack.filter(isFolderWikiTheme);
 	}
-	return withPack.filter((t) => (t.family || '').toLowerCase() === 'notes');
+	return withPack.filter((t) => hasKind(t, NOTE_KIND));
 }

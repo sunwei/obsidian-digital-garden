@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://test111.jiashu.ink/sitemap.xml
+Sitemap: https://share.fsky.top/s/PGROvr/sitemap.xml
 

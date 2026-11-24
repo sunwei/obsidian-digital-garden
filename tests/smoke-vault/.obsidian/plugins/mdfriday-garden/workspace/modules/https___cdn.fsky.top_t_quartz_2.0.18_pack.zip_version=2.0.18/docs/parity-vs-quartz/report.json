@@ -1,0 +1,813 @@
+{
+  "at": "2026-11-18T03:40:45.022Z",
+  "brewBase": "https://fsky.top/demo/brew",
+  "quartzBase": "https://fsky.top/demo/quartz",
+  "sitemap": {
+    "ok": true,
+    "brewCount": 76,
+    "quartzCount": 76,
+    "onlyBrew": [],
+    "onlyQuartz": []
+  },
+  "pages": {
+    "home": {
+      "path": "/",
+      "brew": {
+        "url": "https://fsky.top/demo/brew/?v=parity",
+        "httpOk": true,
+        "noTemplateError": true,
+        "shell": true,
+        "explorer": true,
+        "search": true,
+        "searchOpens": true,
+        "searchFullscreen": true,
+        "navStartAligned": true,
+        "popoverContained": true,
+        "layoutStableAfterPopover": true,
+        "subscribeNotDuplicated": true,
+        "toc": true,
+        "callout": true,
+        "tabs": true,
+        "tabsSwitch": true,
+        "details": true,
+        "detailsOpen": true,
+        "codeBlock": true,
+        "darkToggle": true,
+        "internalNav": true,
+        "beer": true,
+        "capsV2": 5,
+        "brewShell": true
+      },
+      "quartz": {
+        "url": "https://fsky.top/demo/quartz/?v=parity",
+        "httpOk": true,
+        "noTemplateError": true,
+        "shell": true,
+        "explorer": true,
+        "search": true,
+        "searchOpens": true,
+        "searchFullscreen": true,
+        "navStartAligned": true,
+        "popoverContained": true,
+        "layoutStableAfterPopover": true,
+        "subscribeNotDuplicated": true,
+        "toc": true,
+        "callout": true,
+        "tabs": true,
+        "tabsSwitch": true,
+        "details": true,
+        "detailsOpen": true,
+        "codeBlock": true,
+        "darkToggle": true,
+        "internalNav": true,
+        "capsV1": 4,
+        "quartzBody": true
+      },
+      "parity": {
+        "pass": true,
+        "rows": [
+          {
+            "key": "httpOk",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "noTemplateError",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellLeft",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellCenter",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorer",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "search",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "toc",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "articleContent",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "callout",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tabs",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "details",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "codeBlock",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "darkToggle",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchOpens",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchFullscreen",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tabsSwitch",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "detailsOpen",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "internalNav",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "navStartAligned",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "popoverContained",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "layoutStableAfterPopover",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "subscribeNotDuplicated",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchMaskCoversRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchNoGhostBar",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "mobileExplorerDesktopHidden",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "graphIconTopRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tagsUseBeerChip",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "breadcrumbsStyled",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "breadcrumbsHaveHeight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "externalLinksNoEarlyWrap",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorerCollapses",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorerNoHScroll",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "subscribeCompact",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          }
+        ]
+      }
+    },
+    "article": {
+      "path": "/get-started.html",
+      "brew": {
+        "url": "https://fsky.top/demo/brew/get-started.html?v=parity",
+        "httpOk": true,
+        "noTemplateError": true,
+        "shell": true,
+        "explorer": true,
+        "search": true,
+        "searchOpens": true,
+        "searchFullscreen": true,
+        "navStartAligned": true,
+        "popoverContained": true,
+        "layoutStableAfterPopover": true,
+        "subscribeNotDuplicated": true,
+        "toc": true,
+        "callout": true,
+        "tabs": true,
+        "tabsSwitch": true,
+        "details": true,
+        "detailsOpen": true,
+        "codeBlock": true,
+        "darkToggle": true,
+        "internalNav": true,
+        "beer": true,
+        "capsV2": 5,
+        "brewShell": true
+      },
+      "quartz": {
+        "url": "https://fsky.top/demo/quartz/get-started.html?v=parity",
+        "httpOk": true,
+        "noTemplateError": true,
+        "shell": true,
+        "explorer": true,
+        "search": true,
+        "searchOpens": true,
+        "searchFullscreen": true,
+        "navStartAligned": true,
+        "popoverContained": true,
+        "layoutStableAfterPopover": true,
+        "subscribeNotDuplicated": true,
+        "toc": true,
+        "callout": true,
+        "tabs": true,
+        "tabsSwitch": true,
+        "details": true,
+        "detailsOpen": true,
+        "codeBlock": true,
+        "darkToggle": true,
+        "internalNav": true,
+        "capsV1": 4,
+        "quartzBody": true
+      },
+      "parity": {
+        "pass": true,
+        "rows": [
+          {
+            "key": "httpOk",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "noTemplateError",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellLeft",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellCenter",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorer",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "search",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "toc",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "articleContent",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "callout",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tabs",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "details",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "codeBlock",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "darkToggle",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchOpens",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchFullscreen",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tabsSwitch",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "detailsOpen",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "internalNav",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "navStartAligned",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "popoverContained",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "layoutStableAfterPopover",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "subscribeNotDuplicated",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchMaskCoversRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchNoGhostBar",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "mobileExplorerDesktopHidden",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "graphIconTopRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tagsUseBeerChip",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "breadcrumbsStyled",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "breadcrumbsHaveHeight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "externalLinksNoEarlyWrap",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorerCollapses",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorerNoHScroll",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "subscribeCompact",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          }
+        ]
+      }
+    },
+    "capability": {
+      "path": "/reference/capability-skin.html",
+      "brew": {
+        "url": "https://fsky.top/demo/brew/reference/capability-skin.html?v=parity",
+        "httpOk": true,
+        "noTemplateError": true,
+        "shell": true,
+        "explorer": true,
+        "search": true,
+        "searchOpens": true,
+        "searchFullscreen": true,
+        "navStartAligned": true,
+        "popoverContained": true,
+        "layoutStableAfterPopover": true,
+        "subscribeNotDuplicated": true,
+        "toc": true,
+        "callout": true,
+        "tabs": true,
+        "tabsSwitch": true,
+        "details": true,
+        "detailsOpen": true,
+        "codeBlock": true,
+        "darkToggle": true,
+        "internalNav": true,
+        "beer": true,
+        "capsV2": 6,
+        "brewShell": true
+      },
+      "quartz": {
+        "url": "https://fsky.top/demo/quartz/reference/capability-skin.html?v=parity",
+        "httpOk": true,
+        "noTemplateError": true,
+        "shell": true,
+        "explorer": true,
+        "search": true,
+        "searchOpens": true,
+        "searchFullscreen": true,
+        "navStartAligned": true,
+        "popoverContained": true,
+        "layoutStableAfterPopover": true,
+        "subscribeNotDuplicated": true,
+        "toc": true,
+        "callout": true,
+        "tabs": true,
+        "tabsSwitch": true,
+        "details": true,
+        "detailsOpen": true,
+        "codeBlock": true,
+        "darkToggle": true,
+        "internalNav": true,
+        "capsV1": 5,
+        "quartzBody": true
+      },
+      "parity": {
+        "pass": true,
+        "rows": [
+          {
+            "key": "httpOk",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "noTemplateError",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellLeft",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellCenter",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "shellRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorer",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "search",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "toc",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "articleContent",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "callout",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tabs",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "details",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "codeBlock",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "darkToggle",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchOpens",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchFullscreen",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tabsSwitch",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "detailsOpen",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "internalNav",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "navStartAligned",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "popoverContained",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "layoutStableAfterPopover",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "subscribeNotDuplicated",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchMaskCoversRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "searchNoGhostBar",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "mobileExplorerDesktopHidden",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "graphIconTopRight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "tagsUseBeerChip",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "breadcrumbsStyled",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "breadcrumbsHaveHeight",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "externalLinksNoEarlyWrap",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorerCollapses",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "explorerNoHScroll",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          },
+          {
+            "key": "subscribeCompact",
+            "brew": true,
+            "quartz": true,
+            "ok": true
+          }
+        ]
+      }
+    }
+  },
+  "intentional": {
+    "note": "Beer / caps-v2 / .brew-shell vs quartz caps-v1 / #quartz-body — not fail criteria"
+  },
+  "checks": {
+    "PAGE_HOME": true,
+    "PAGE_ARTICLE": true,
+    "PAGE_CAPABILITY": true,
+    "SITEMAP": true
+  },
+  "PASS": true
+}

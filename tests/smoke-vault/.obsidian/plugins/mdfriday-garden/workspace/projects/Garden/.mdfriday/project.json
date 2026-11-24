@@ -1,40 +1,16 @@
 {
-  "id": "garden-mwiwppbx",
+  "id": "garden-mwuht36e",
   "name": "Garden",
   "type": "site",
-  "createdAt": 1794811982979,
-  "updatedAt": 1794820709263,
+  "createdAt": 1795512540763,
+  "updatedAt": 1795512552716,
   "workspaceId": "workspace-1794010692366-bfb665aeb",
   "buildHistory": [
     {
-      "timestamp": 1794820699828,
+      "timestamp": 1795512546311,
       "type": "build",
       "success": true,
-      "duration": 2083
-    },
-    {
-      "timestamp": 1794819443306,
-      "type": "build",
-      "success": true,
-      "duration": 2457
-    },
-    {
-      "timestamp": 1794818531498,
-      "type": "build",
-      "success": true,
-      "duration": 5156
-    },
-    {
-      "timestamp": 1794818516685,
-      "type": "build",
-      "success": true,
-      "duration": 379
-    },
-    {
-      "timestamp": 1794812057807,
-      "type": "build",
-      "success": true,
-      "duration": 2443
+      "duration": 603
     }
   ],
   "contentLinks": [
@@ -44,11 +20,19 @@
       "weight": 0
     }
   ],
+  "baseURLStructure": {
+    "baseURL": "/s/PGROvr/",
+    "createdAt": 1795512546918,
+    "pathParts": [
+      "s",
+      "PGROvr"
+    ]
+  },
   "cloudflare": {
-    "cloudflareProjectId": "p_74430dff7131743d16b0be9634bcf88c",
-    "hostingMode": "custom",
-    "boundAt": 1794812056769,
-    "siteId": "PwksIQ",
-    "publicBaseUrl": "https://test111.jiashu.ink/"
+    "cloudflareProjectId": "p_9a10aea0f9d39bccabdcdea71c2bfe7a",
+    "hostingMode": "share",
+    "boundAt": 1795512545624,
+    "siteId": "PGROvr",
+    "publicBaseUrl": "https://share.fsky.top"
   }
 }

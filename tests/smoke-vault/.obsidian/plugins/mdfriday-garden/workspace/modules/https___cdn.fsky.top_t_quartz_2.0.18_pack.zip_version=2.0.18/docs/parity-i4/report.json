@@ -1,0 +1,567 @@
+{
+  "at": "2026-11-17T12:00:14.416Z",
+  "brewVersion": "0.3.4",
+  "checks": [
+    {
+      "id": "home",
+      "brew": {
+        "title": "MDFriday",
+        "bodyFont": "system-ui",
+        "bodySize": "16px",
+        "bodyBg": "rgb(255, 255, 255)",
+        "canvas": "#ffffff",
+        "surface": "#ffffff",
+        "accent": "#3366cc",
+        "proseMax": "48rem",
+        "center": {
+          "exists": true,
+          "w": 774,
+          "h": 2311,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "article": {
+          "exists": true,
+          "w": 742,
+          "h": 1673,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "left": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "right": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "explorer": true,
+        "toc": true,
+        "search": true,
+        "table": true,
+        "callout": true,
+        "list": true,
+        "h1": {
+          "exists": true,
+          "w": 742,
+          "h": 37,
+          "display": "block",
+          "font": "Source Serif 4",
+          "fontSize": "28.8px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "beer": true,
+        "listPad": "40px",
+        "packHint": "https://cdn.fsky.top/t/brew/0.3.4/css/layout.css"
+      },
+      "quartz": {
+        "title": "MDFriday",
+        "bodyFont": "system-ui",
+        "bodySize": "16px",
+        "bodyBg": "rgb(255, 255, 255)",
+        "canvas": "#ffffff",
+        "surface": "#ffffff",
+        "accent": "#3366cc",
+        "proseMax": "48rem",
+        "center": {
+          "exists": true,
+          "w": 790,
+          "h": 2158,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "article": {
+          "exists": true,
+          "w": 768,
+          "h": 1646,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "left": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "right": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "explorer": true,
+        "toc": true,
+        "search": true,
+        "table": true,
+        "callout": true,
+        "list": true,
+        "h1": {
+          "exists": true,
+          "w": 790,
+          "h": 37,
+          "display": "block",
+          "font": "Source Serif 4",
+          "fontSize": "28.8px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "beer": false,
+        "listPad": "40px",
+        "packHint": null
+      },
+      "diffs": []
+    },
+    {
+      "id": "article",
+      "brew": {
+        "title": "Install and first publish | MDFriday",
+        "bodyFont": "system-ui",
+        "bodySize": "16px",
+        "bodyBg": "rgb(255, 255, 255)",
+        "canvas": "#ffffff",
+        "surface": "#ffffff",
+        "accent": "#3366cc",
+        "proseMax": "48rem",
+        "center": {
+          "exists": true,
+          "w": 774,
+          "h": 3002,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "article": {
+          "exists": true,
+          "w": 742,
+          "h": 2340,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "left": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "right": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "explorer": true,
+        "toc": true,
+        "search": true,
+        "table": true,
+        "callout": false,
+        "list": true,
+        "h1": {
+          "exists": true,
+          "w": 742,
+          "h": 37,
+          "display": "block",
+          "font": "Source Serif 4",
+          "fontSize": "28.8px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "beer": true,
+        "listPad": "40px",
+        "packHint": "https://cdn.fsky.top/t/brew/0.3.4/css/layout.css"
+      },
+      "quartz": {
+        "title": "Install and first publish | MDFriday",
+        "bodyFont": "system-ui",
+        "bodySize": "16px",
+        "bodyBg": "rgb(255, 255, 255)",
+        "canvas": "#ffffff",
+        "surface": "#ffffff",
+        "accent": "#3366cc",
+        "proseMax": "48rem",
+        "center": {
+          "exists": true,
+          "w": 790,
+          "h": 4305,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "article": {
+          "exists": true,
+          "w": 768,
+          "h": 3751,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "left": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "right": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "explorer": true,
+        "toc": true,
+        "search": true,
+        "table": true,
+        "callout": false,
+        "list": true,
+        "h1": {
+          "exists": true,
+          "w": 790,
+          "h": 37,
+          "display": "block",
+          "font": "Source Serif 4",
+          "fontSize": "28.8px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "beer": false,
+        "listPad": "40px",
+        "packHint": null
+      },
+      "diffs": []
+    },
+    {
+      "id": "code",
+      "brew": {
+        "title": "Access password | MDFriday",
+        "bodyFont": "system-ui",
+        "bodySize": "16px",
+        "bodyBg": "rgb(255, 255, 255)",
+        "canvas": "#ffffff",
+        "surface": "#ffffff",
+        "accent": "#3366cc",
+        "proseMax": "48rem",
+        "center": {
+          "exists": true,
+          "w": 774,
+          "h": 2556,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "article": {
+          "exists": true,
+          "w": 742,
+          "h": 1894,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "left": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "right": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "explorer": true,
+        "toc": true,
+        "search": true,
+        "table": true,
+        "callout": false,
+        "list": true,
+        "h1": {
+          "exists": true,
+          "w": 742,
+          "h": 37,
+          "display": "block",
+          "font": "Source Serif 4",
+          "fontSize": "28.8px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "beer": true,
+        "listPad": "40px",
+        "packHint": "https://cdn.fsky.top/t/brew/0.3.4/css/layout.css"
+      },
+      "quartz": {
+        "title": "Access password | MDFriday",
+        "bodyFont": "system-ui",
+        "bodySize": "16px",
+        "bodyBg": "rgb(255, 255, 255)",
+        "canvas": "#ffffff",
+        "surface": "#ffffff",
+        "accent": "#3366cc",
+        "proseMax": "48rem",
+        "center": {
+          "exists": true,
+          "w": 790,
+          "h": 2863,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "article": {
+          "exists": true,
+          "w": 768,
+          "h": 2309,
+          "display": "block",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "left": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "right": {
+          "exists": true,
+          "w": 320,
+          "h": 900,
+          "display": "flex",
+          "font": "system-ui",
+          "fontSize": "16px",
+          "color": "rgb(84, 89, 93)",
+          "bg": "rgb(255, 255, 255)",
+          "padL": "32px",
+          "padR": "32px"
+        },
+        "explorer": true,
+        "toc": true,
+        "search": true,
+        "table": true,
+        "callout": false,
+        "list": true,
+        "h1": {
+          "exists": true,
+          "w": 790,
+          "h": 37,
+          "display": "block",
+          "font": "Source Serif 4",
+          "fontSize": "28.8px",
+          "color": "rgb(32, 33, 34)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "padL": "0px",
+          "padR": "0px"
+        },
+        "beer": false,
+        "listPad": "40px",
+        "packHint": null
+      },
+      "diffs": []
+    }
+  ],
+  "deep": {
+    "brew": {
+      "h2": {
+        "mT": "30.4px",
+        "mB": "16px",
+        "fs": "24px",
+        "color": "rgb(32, 33, 34)"
+      },
+      "p": {
+        "mT": "16px",
+        "mB": "16px",
+        "fs": "16px",
+        "color": "rgb(84, 89, 93)"
+      },
+      "table": {
+        "mT": "24px",
+        "mB": "24px",
+        "fs": "16px",
+        "color": "rgb(84, 89, 93)"
+      },
+      "td": {
+        "mT": "0px",
+        "mB": "0px",
+        "fs": "16px",
+        "color": "rgb(84, 89, 93)"
+      },
+      "callout": {
+        "mT": "16px",
+        "mB": "16px",
+        "fs": "16px",
+        "color": "rgb(84, 89, 93)"
+      },
+      "centerW": 774
+    },
+    "quartz": {
+      "h2": {
+        "mT": "30.4px",
+        "mB": "16px",
+        "fs": "24px",
+        "color": "rgb(32, 33, 34)"
+      },
+      "p": {
+        "mT": "16px",
+        "mB": "16px",
+        "fs": "16px",
+        "color": "rgb(84, 89, 93)"
+      },
+      "table": {
+        "mT": "24px",
+        "mB": "24px",
+        "fs": "16px",
+        "color": "rgb(84, 89, 93)"
+      },
+      "td": {
+        "mT": "0px",
+        "mB": "0px",
+        "fs": "16px",
+        "color": "rgb(84, 89, 93)"
+      },
+      "callout": {
+        "mT": "16px",
+        "mB": "16px",
+        "fs": "16px",
+        "color": "rgb(84, 89, 93)"
+      },
+      "centerW": 790
+    },
+    "diffs": [
+      {
+        "k": "centerW",
+        "brew": 774,
+        "quartz": 790
+      }
+    ]
+  }
+}

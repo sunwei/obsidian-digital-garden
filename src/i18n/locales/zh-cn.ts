@@ -157,7 +157,7 @@ export const zhCn = {
 		subscribe_export: "导出",
 		subscribe_export_csv: "导出为 CSV",
 		subscribe_export_md: "导出为 Markdown",
-		subscribe_theme_hint: "当前主题还不显示订阅表单。请更新主题，或选择 notes、quartz、creator、flint、jasper、atlas。",
+		subscribe_theme_hint: "当前主题还不显示订阅表单。请更新主题，或选择支持订阅的 notes / digital-garden 主题。",
 		subscribe_guest_hint: "登录免费 MDFriday 账号即可收集订阅者",
 		subscribe_sign_in: "登录",
 		subscribe_pending_publish: "下次发布后生效",

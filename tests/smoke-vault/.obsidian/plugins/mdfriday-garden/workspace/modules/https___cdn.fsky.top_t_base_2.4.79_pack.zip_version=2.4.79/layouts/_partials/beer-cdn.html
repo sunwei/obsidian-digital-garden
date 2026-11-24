@@ -1,0 +1,16 @@
+{{/* MDFriday-hosted BeerCSS base URL (no jsDelivr).
+     params.mdfriday.beerCdn overrides; else host follows theme asset CDN + beerVersion. */}}
+{{- $mdf := index .Site.Params "mdfriday" | default dict -}}
+{{- $ver := index $mdf "beerVersion" | default "5.0.5" -}}
+{{- with index $mdf "beerCdn" -}}
+{{- . -}}
+{{- else -}}
+{{- $asset := partial "asset" "css/layout.css" | strings.TrimSpace -}}
+{{- $host := "https://cdn.fsky.top" -}}
+{{- if hasPrefix $asset "https://cdn.mdfriday.com" -}}
+{{- $host = "https://cdn.mdfriday.com" -}}
+{{- else if hasPrefix $asset "https://cdn.fsky.top" -}}
+{{- $host = "https://cdn.fsky.top" -}}
+{{- end -}}
+{{- printf "%s/v/beercss/%s/" $host $ver -}}
+{{- end -}}

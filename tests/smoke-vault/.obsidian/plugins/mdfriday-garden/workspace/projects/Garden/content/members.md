@@ -1,1 +1,0 @@
-/Users/sunwei/github/sunwei/workspace/obsidian-digital-garden/tests/smoke-vault/Garden/members.md

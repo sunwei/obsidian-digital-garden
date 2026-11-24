@@ -3,7 +3,8 @@ import {themeApiService} from '../theme/themeApiService';
 import type {CatalogEntry} from '../theme/types';
 
 export {
-	FOLDER_WIKI_THEME_SLUGS,
+	DIGITAL_GARDEN_KIND,
+	NOTE_KIND,
 	filterThemesForSelection,
 	isFolderWikiTheme,
 } from './theme-selection';

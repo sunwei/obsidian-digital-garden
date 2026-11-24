@@ -1,0 +1,33 @@
+{{/* Search — Beer chrome; label shows ⌘ + K / Ctrl + K. */}}
+<div class="search">
+    <button class="search-button button small border" aria-label="{{ i18n "search.title" | default "Search" }}" type="button">
+        <i>search</i>
+        <span data-quartz-search-kbd>⌘ + K</span>
+    </button>
+    <div class="search-container">
+        <div class="search-space">
+            {{/* Do NOT use Beer `.label` here — without a real <label>, `.field.label.border`
+                 applies clip-path notches that look like a broken half-border on focus. */}}
+            <div class="field border small search-field">
+                <input
+                    autocomplete="off"
+                    class="search-bar"
+                    name="search"
+                    type="text"
+                    aria-label="{{ i18n "search.placeholder" | default "Search for something..." }}"
+                    placeholder="{{ i18n "search.placeholder" | default "Search for something..." }}"
+                />
+            </div>
+            <div class="search-layout" data-preview="true"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+  var el = document.querySelector("[data-quartz-search-kbd]");
+  if (!el) return;
+  var mac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || "") ||
+    (navigator.userAgentData && navigator.userAgentData.platform === "macOS");
+  el.textContent = mac ? "⌘ + K" : "Ctrl + K";
+})();
+</script>

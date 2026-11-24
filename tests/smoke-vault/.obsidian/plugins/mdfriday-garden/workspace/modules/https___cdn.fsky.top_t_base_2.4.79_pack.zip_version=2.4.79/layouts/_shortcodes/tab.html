@@ -1,0 +1,19 @@
+{{- /*
+  layouts/_shortcodes/tab.html
+  CAP-04: Individual tab panel — used inside {{< tabs >}}.
+
+  Foundry expands nested shortcodes before parent .Inner can seed Scratch,
+  so each tab renders immediately (CSS-only radio). Beer-source skins via caps/tabs.
+
+  Usage:
+    {{< tab "Tab Label" >}}Tab content here{{< /tab >}}
+*/ -}}
+{{- $label := .Get 0 | default "Tab" -}}
+{{- $id    := $label | urlize -}}
+{{- $name  := printf "tabs-%d" (.Parent.Ordinal | default 0) -}}
+<div class="mdf-tab">
+  <input type="radio" class="mdf-tab-toggle" id="tab-{{ $id }}" name="{{ $name }}"
+         {{- if eq .Ordinal 0 }} checked{{ end }}>
+  <label class="mdf-tab-label" for="tab-{{ $id }}">{{ $label }}</label>
+  <div class="mdf-tab-content">{{ .Inner | safeHTML }}</div>
+</div>

@@ -63,8 +63,13 @@ describe('E2E Garden: commerce publish stubs + pages (staging)', { skip, timeout
 
 	it('2. stubs stay out of the vault, then publish (quartz)', async () => {
 		const catalog = await fetchThemeCatalog(env.apiBase);
-		const quartz = catalog.find((t) => (t.family || t.slug) === 'quartz' && t.packUrl);
-		assert.ok(quartz, 'quartz theme missing from catalog');
+		const quartz = catalog.find(
+			(t) =>
+				(t.family || t.slug) === 'quartz' &&
+				t.packUrl &&
+				(t.kinds || []).includes('digital-garden'),
+		);
+		assert.ok(quartz, 'quartz digital-garden theme missing from catalog');
 		const site = await driver.createFolderProject('commerce-e2e', 'Garden', quartz);
 		const projectPath = path.join(driver.workspaceDir, 'projects', site.name);
 		assert.equal(existsSync(projectPath), true, projectPath);

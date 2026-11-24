@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "projectId": "p_74430dff7131743d16b0be9634bcf88c",
+  "projectId": "p_9a10aea0f9d39bccabdcdea71c2bfe7a",
   "scopes": [
     {
       "slug": "docs",
@@ -17,32 +17,32 @@
   ],
   "resources": [
     {
-      "resourceId": "res_CCZKB2ZGKH2BVRFE0M92",
+      "resourceId": "res_9F8PNN99MZY9AP0PT80A",
       "scope": "members",
       "sourcePath": "members.md",
-      "url": "https://test111.jiashu.ink/members.html",
+      "url": "https://share.fsky.top/s/PGROvr/members.html",
       "title": "Members",
-      "keyId": "k_8s1JVkwwShAycA",
+      "keyId": "k_IOUwD42m9HDq0A",
       "epoch": 1
     },
     {
-      "resourceId": "res_RJDX51841YBYNG14RACJ",
+      "resourceId": "res_RFZYFRPPHM6A5462QTBA",
       "scope": "docs",
       "sourcePath": "docs.md",
-      "url": "https://test111.jiashu.ink/docs.html",
+      "url": "https://share.fsky.top/s/PGROvr/docs.html",
       "title": "Docs",
-      "keyId": "k_YKx0U6whxrxw",
+      "keyId": "k_1JALttHidZh2wA",
       "epoch": 1
     }
   ],
   "keys": [
     {
-      "keyId": "k_8s1JVkwwShAycA",
-      "cek": "GnxuhJ/Bc/ujh/FRNmHSWZYc8x+jB78HKJzIYFlJnqo="
+      "keyId": "k_IOUwD42m9HDq0A",
+      "cek": "0zZlPY5JbYsYDCb+J7gzW6a2ozIgQ3A18ve7Mst8978="
     },
     {
-      "keyId": "k_YKx0U6whxrxw",
-      "cek": "ZhKf/dr5pw/eRcDUhbQ2zuNfJMl4OjZW9T+Adih/V/Q="
+      "keyId": "k_1JALttHidZh2wA",
+      "cek": "O2wXV+aJxBLJ9YnVbsvw2Tv5hwMqcA9lAfPQzJJWAsY="
     }
   ]
 }

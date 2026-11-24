@@ -1,0 +1,21 @@
+{{- /*
+  True when Cap/UI should use Beer-source markup (dialog, field, button, …).
+
+  Usage:
+    {{- $beer := partial "beer-source" . -}}
+
+  Cap CSS is single-track under static/caps/ (W4). This flag only selects markup.
+  Detection (global Site.Params — safe from shortcode .Page):
+  capsCssRoot=caps-v2 (legacy opt-in) / beerSeed / beerVersion / wiki family id.
+*/ -}}
+{{- $beer := false -}}
+{{- $mdf := index Site.Params "mdfriday" | default dict -}}
+{{- $root := index $mdf "capsCssRoot" | default "" -}}
+{{- $family := index $mdf "family" | default "" -}}
+{{- $wiki := or (eq $family "quartz") (eq $family "creator") (eq $family "flint") (eq $family "jasper") (eq $family "atlas") (eq $family "canopy") (eq $family "folio") -}}
+{{- if eq $root "caps-v2" -}}
+  {{- $beer = true -}}
+{{- else if or (index $mdf "beerSeed") (index $mdf "beerVersion") $wiki -}}
+  {{- $beer = true -}}
+{{- end -}}
+{{- return $beer -}}

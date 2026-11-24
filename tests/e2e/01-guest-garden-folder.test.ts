@@ -78,9 +78,19 @@ describe('E2E Garden: guest folder → share.fsky.top (staging)', { skip, timeou
 	it('2. publish sample folder with quartz theme (obsidian-garden client)', async () => {
 		const catalog = await fetchThemeCatalog(env.apiBase);
 		const quartz =
-			catalog.find((e) => e.slug === 'quartz') ||
-			catalog.find((e) => (e.kinds || []).includes('folder') && e.packUrl);
-		assert.ok(quartz?.packUrl, 'default folder theme (quartz) entitled for guests');
+			catalog.find(
+				(e) =>
+					e.slug === 'quartz' &&
+					e.packUrl &&
+					(e.kinds || []).includes('digital-garden'),
+			) ||
+			catalog.find(
+				(e) => e.packUrl && (e.kinds || []).includes('digital-garden'),
+			);
+		assert.ok(
+			quartz?.packUrl,
+			'default digital-garden theme (quartz) entitled for guests',
+		);
 
 		driver.writeVault({
 			'Garden/index.md': `---\ntitle: Garden home\n---\n# ${marker}\n\nFrom obsidian-digital-garden tests/e2e.\n`,

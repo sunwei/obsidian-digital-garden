@@ -1,0 +1,35 @@
+{{- /* Quartz home shell */ -}}
+<div class="brew-shell">
+    <div id="brew-body">
+        <aside class="sidebar left">
+            {{- partial "brew/sidebar-left.html" . -}}
+        </aside>
+        <div class="center">
+            <div class="page-header">
+                <div class="popover-hint">
+                    {{- if not .IsHome -}}
+                    {{- partial "brew/breadcrumbs.html" . -}}
+                    {{- end -}}
+                </div>
+            </div>
+            <article class="popover-hint">
+                {{- if .Title -}}
+                <header class="article-header">
+                    {{- partial "brew/article-title.html" . -}}
+                    {{- partial "brew/content-meta.html" . -}}
+                    {{- partial "brew/tag-list.html" . -}}
+                </header>
+                {{- end -}}
+                {{- with .WikilinkContent -}}
+                <div class="article-content">{{ . }}</div>
+                {{- end -}}
+                {{- partial "brew/recent-notes.html" . -}}
+                {{- partial "subscribe.html" (dict "Page" . "variant" "full" "placement" "home") -}}
+            </article>
+            {{- partial "brew/footer-content.html" . -}}
+        </div>
+        <aside class="sidebar right">
+            {{- partial "brew/sidebar-right.html" . -}}
+        </aside>
+    </div>
+</div>

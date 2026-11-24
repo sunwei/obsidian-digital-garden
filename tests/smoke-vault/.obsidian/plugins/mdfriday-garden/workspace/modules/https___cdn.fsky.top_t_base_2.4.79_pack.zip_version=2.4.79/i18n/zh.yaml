@@ -1,0 +1,193 @@
+# 搜索（modal + inline）
+- id: search.label
+  translation: "搜索"
+- id: search.title
+  translation: "搜索"
+- id: search.placeholder
+  translation: "搜索内容…"
+
+# Base 2.4 — 订阅能力文案（params.subscribe.<key> 优先）
+- id: subscribe.title
+  translation: "订阅更新"
+- id: subscribe.description
+  translation: "通过邮件获取新文章。"
+- id: subscribe.button
+  translation: "订阅"
+- id: subscribe.placeholder
+  translation: "you@example.com"
+- id: subscribe.success
+  translation: "感谢订阅！"
+- id: subscribe.error
+  translation: "出了点问题，请稍后重试。"
+- id: subscribe.invalid
+  translation: "请输入有效的邮箱地址。"
+- id: subscribe.rate_limited
+  translation: "尝试次数过多，请稍后再试。"
+- id: subscribe.preview
+  translation: "仅预览：表单可用，但不会保存任何数据。"
+- id: subscribe.powered
+  translation: "Powered by MDFriday"
+- id: subscribe.notice
+  translation: "订阅即表示你同意接收本站发送的邮件，可随时要求退订。"
+
+# Bases 视图。{name}、{type}、{count}、{total} 由引擎填入。
+- id: bases.noData
+  translation: "没有找到数据。"
+- id: bases.noViews
+  translation: "没有视图"
+- id: bases.viewNotFound
+  translation: "未找到视图「{name}」"
+- id: bases.unknownView
+  translation: "未知的视图类型：{type}"
+- id: bases.parseFile
+  translation: "无法解析这个 base 文件。"
+- id: bases.parseBlock
+  translation: "无法解析这个 base 代码块。"
+- id: bases.uncategorized
+  translation: "未分类"
+- id: bases.allEntries
+  translation: "全部条目"
+- id: bases.showingCount
+  translation: "显示 {count} / {total} 条"
+- id: bases.mapPlaceholder
+  translation: "静态构建不提供地图视图。"
+- id: bases.noImage
+  translation: "没有图片"
+
+# 访问解锁卡片
+- id: access.eyebrow
+  translation: "受保护内容 · 需要访问密钥"
+- id: access.title
+  translation: "输入访问密钥后继续"
+- id: access.body
+  translation: "本页由作者加密，输入访问密钥后即可解密查看。"
+- id: access.label
+  translation: "访问密钥"
+- id: access.unlock
+  translation: "解锁"
+- id: access.another
+  translation: "换一把密钥"
+- id: access.signout
+  translation: "退出"
+- id: access.helper
+  translation: "如果没有访问密钥，请联系本站作者。"
+
+# 售卖
+- id: commerce.buy
+  translation: "购买"
+- id: commerce.view_content
+  translation: "查看内容"
+- id: commerce.test_mode
+  translation: "测试模式"
+- id: commerce.billing.one_time
+  translation: "一次性"
+- id: commerce.billing.month
+  translation: "每月"
+- id: commerce.billing.year
+  translation: "每年"
+- id: commerce.already
+  translation: "已购买？请在上方输入 Key。"
+- id: commerce.contact_missing
+  translation: "找不到 Key？联系 {email}"
+- id: commerce.footer.privacy
+  translation: "数据与隐私"
+- id: commerce.confirm.title
+  translation: "确认购买"
+- id: commerce.confirm.email
+  translation: "邮箱"
+- id: commerce.confirm.email_invalid
+  translation: "请输入有效的邮箱地址。"
+- id: commerce.confirm.notice
+  translation: "付款后 Key 会显示在完成页，请务必保存。邮箱用于作者核实你的购买。Key 由本站作者签发和管理，MDFriday 代为处理，付款由 Creem 完成。"
+- id: commerce.confirm.pay
+  translation: "继续付款"
+- id: commerce.confirm.back
+  translation: "返回"
+- id: commerce.confirm.unavailable
+  translation: "该商品暂不可购买"
+- id: commerce.confirm.network
+  translation: "网络出错，请重试。"
+- id: commerce.pricing.title
+  translation: "价格"
+- id: commerce.pricing.lead
+  translation: "选择套餐。一次性付款或订阅后，即可获得访问 Key。"
+- id: commerce.pricing.empty
+  translation: "暂无可用套餐。"
+- id: commerce.purchase.title
+  translation: "购买"
+- id: commerce.purchase.eyebrow
+  translation: "购买完成 · 访问 Key"
+- id: commerce.purchase.headline
+  translation: "请保存你的访问 Key"
+- id: commerce.purchase.lead
+  translation: "付款已完成。访问 Key 显示在下方，离开本页前请先保存。"
+- id: commerce.purchase.save_now
+  translation: "Key 只显示在这里，请立即保存。"
+- id: commerce.purchase.history
+  translation: "本页 7 天内可从浏览器历史重新打开。"
+- id: commerce.purchase.contact
+  translation: "Key 由本站作者签发和管理，丢失请凭 Creem 收据联系 {email}。"
+- id: commerce.purchase.subscription
+  translation: "这是订阅：续费后 Key 不变，期限会自动延长。续费与取消请使用 Creem 发给你的收据邮件中的管理链接。"
+- id: commerce.purchase.copy
+  translation: "复制"
+- id: commerce.purchase.copied
+  translation: "已复制"
+- id: commerce.purchase.download
+  translation: "下载 .txt"
+- id: commerce.purchase.enter
+  translation: "进入内容"
+- id: commerce.purchase.processing
+  translation: "付款已收到，正在确认订单…"
+- id: commerce.purchase.processing_timeout
+  translation: "付款已收到，正在确认，请稍后刷新本页。"
+- id: commerce.purchase.expired
+  translation: "领取链接已过期；如果没有保存 Key，请凭 Creem 收据联系 {email}。"
+- id: commerce.purchase.invalid
+  translation: "链接无效。如有收据，请联系本站作者。"
+- id: commerce.purchase.missing
+  translation: "本页缺少领取参数。请从支付完成页的跳转打开。"
+- id: commerce.privacy.title
+  translation: "数据与隐私"
+- id: commerce.privacy.section_title
+  translation: "购买与访问 Key"
+- id: commerce.privacy.lead
+  translation: "本站由 {siteName} 的作者运营。关于购买、访问 Key 和你的个人数据，请联系：{contactEmail}。"
+- id: commerce.privacy.incomplete
+  translation: "作者开售后，本页中与购买相关的说明才会完整显示。"
+- id: commerce.privacy.who_title
+  translation: "谁负责你的数据"
+- id: commerce.privacy.who_author
+  translation: "本站作者管理你的数据：签发和管理你的访问 Key，处理你关于购买、Key 和个人数据的请求。"
+- id: commerce.privacy.who_mdfriday
+  translation: "MDFriday（mdfriday.com）为作者提供站点托管与售卖工具，代作者存储和处理这些数据，不会查看或把它们用于作者授权之外的目的。"
+- id: commerce.privacy.who_creem
+  translation: "Creem 作为商户（Merchant of Record）处理付款、税务、发票与退款。银行卡信息只由 Creem 处理。"
+- id: commerce.privacy.collect_title
+  translation: "购买时收集的信息"
+- id: commerce.privacy.collect_body
+  translation: "你在付款时填写的邮箱和姓名，以及订单信息（商品、金额、币种、时间、订阅状态）。"
+- id: commerce.privacy.collect_use
+  translation: "用途：签发访问 Key、作者核实你的购买、处理续费、退款与售后。不会因此把你加入任何邮件列表。"
+- id: commerce.privacy.key_title
+  translation: "访问 Key"
+- id: commerce.privacy.key_show
+  translation: "Key 是你访问付费内容的凭证，由本站作者签发和管理。Key 显示在付款完成页，请自行保存。"
+- id: commerce.privacy.key_store
+  translation: "在本站输入 Key 后，它会保存在当前浏览器里，用于自动解锁；在解锁卡片里退出或清除浏览器数据即可删除。"
+- id: commerce.privacy.key_lost
+  translation: "丢失 Key 时，请用购买时的邮箱联系 {contactEmail}，作者核实后会重新发给你。MDFriday 不提供找回。"
+- id: commerce.privacy.subscribe_title
+  translation: "订阅"
+- id: commerce.privacy.subscribe_body
+  translation: "如果你在本站订阅，你的邮箱、提交的页面、来源域名、国家 / 地区和时间会提供给作者，用于作者向你发送更新。不设置 Cookie，不保存 IP 地址。"
+- id: commerce.privacy.retain_title
+  translation: "保存多久"
+- id: commerce.privacy.retain_body
+  translation: "订单在本站存续期间保留；站点删除 30 天后删除。付款记录由 Creem 按其政策保存。"
+- id: commerce.privacy.rights_title
+  translation: "你的权利"
+- id: commerce.privacy.rights_body
+  translation: "你可以向作者要求查看、更正你的数据，或撤销你的 Key。请联系 {contactEmail}。"
+- id: commerce.privacy.updated
+  translation: "更新于 {updatedAt}"

@@ -1,0 +1,6 @@
+{{- /* Shared css/js when commerce.enable + services.mdfriday are ready (mdfCommerce). */ -}}
+{{- $c := mdfCommerce -}}
+{{- if $c.ready -}}
+<link rel="stylesheet" href="{{ partial "caps-css" (dict "Page" . "path" "commerce/style.css") }}">
+<script defer src="{{ partial "base-asset" "caps/commerce/commerce.js" }}"></script>
+{{- end -}}

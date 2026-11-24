@@ -434,7 +434,21 @@ export async function publishGardenFolderViaUi(page: Page): Promise<string> {
 		await sleep(1500);
 	}
 	if (!publicUrl) {
-		throw new Error('Timed out waiting for Published URL in Obsidian UI');
+		const debug = await page.evaluate(() => {
+			const body = (document.body?.innerText || '').slice(0, 1200);
+			const err = document.querySelector('.quota-error, .helper.warn')?.textContent?.trim() || '';
+			const badge = document.querySelector('.result-badge')?.textContent?.trim() || '';
+			const title = document.querySelector('.state-title')?.textContent?.trim() || '';
+			const building = !!document.querySelector('.spinner');
+			const urlText =
+				document.querySelector('.success-url-box .url, .state-result .url')?.textContent?.trim() ||
+				'';
+			return { err, badge, title, building, body, urlText };
+		});
+		throw new Error(
+			`Timed out waiting for Published URL in Obsidian UI` +
+				` (badge=${debug.badge} title=${debug.title} building=${debug.building} url=${debug.urlText} err=${debug.err}) body=${debug.body.replace(/\s+/g, ' ').slice(0, 400)}`,
+		);
 	}
 	return publicUrl;
 }
@@ -492,16 +506,120 @@ export function seedPersonalPluginData(opts: {
 		},
 	};
 	writeFileSync(dataPath, JSON.stringify(next, null, 2));
+	clearLocalGardenFoundryCache();
+}
 
-	const localProject = path.join(
-		SMOKE_VAULT,
-		'.obsidian/plugins',
-		PLUGIN_ID,
-		'workspace/projects/Garden',
-	);
+/**
+ * Drop on-disk Garden Foundry project + registry row so the next Open/Publish
+ * recreates a clean project (rm of the folder alone leaves a stale projects.json).
+ */
+export function clearLocalGardenFoundryCache(): void {
+	const wsRoot = path.join(SMOKE_VAULT, '.obsidian/plugins', PLUGIN_ID, 'workspace');
+	const localProject = path.join(wsRoot, 'projects', 'Garden');
 	if (existsSync(localProject)) {
 		rmSync(localProject, { recursive: true, force: true });
+		console.log('  cleared local Foundry project cache for Garden');
 	}
+	const registryPath = path.join(wsRoot, '.mdfriday', 'projects.json');
+	if (!existsSync(registryPath)) return;
+	try {
+		const registry = JSON.parse(readFileSync(registryPath, 'utf8')) as {
+			version?: string;
+			projects?: Array<{ name?: string; status?: string }>;
+		};
+		const before = registry.projects?.length ?? 0;
+		registry.projects = (registry.projects || []).filter((p) => p.name !== 'Garden');
+		if ((registry.projects?.length ?? 0) !== before) {
+			writeFileSync(registryPath, JSON.stringify(registry, null, 2));
+			console.log('  cleared Garden entry from Foundry projects.json');
+		}
+	} catch (err) {
+		console.warn('  failed to patch Foundry projects.json', err);
+	}
+}
+
+/**
+ * Abort non-terminal releases for every project on this key (clears DO publish locks).
+ */
+export async function abortInFlightReleases(opts: {
+	apiBase: string;
+	token: string;
+	clientHeader: string;
+}): Promise<number> {
+	const base = opts.apiBase.replace(/\/$/, '');
+	const headers = {
+		authorization: `Bearer ${opts.token}`,
+		'X-MDFriday-Client': opts.clientHeader,
+	};
+	const listRes = await fetch(`${base}/v1/projects`, { headers });
+	if (!listRes.ok) return 0;
+	const list = (await listRes.json()) as {
+		projects?: Array<{ id?: string; projectId?: string }>;
+	};
+	let n = 0;
+	for (const p of list.projects || []) {
+		const projectId = p.id || p.projectId;
+		if (!projectId) continue;
+		const relRes = await fetch(`${base}/v1/projects/${projectId}/releases`, { headers });
+		if (!relRes.ok) continue;
+		const body = (await relRes.json()) as {
+			releases?: Array<{ id?: string; state?: string }>;
+		};
+		for (const rel of body.releases || []) {
+			if (!rel.id) continue;
+			if (!['opened', 'uploading', 'committing'].includes(String(rel.state || ''))) continue;
+			const abortRes = await fetch(`${base}/v1/projects/${projectId}/releases/${rel.id}/abort`, {
+				method: 'POST',
+				headers,
+			});
+			if (abortRes.ok || abortRes.status === 409) n += 1;
+		}
+	}
+	return n;
+}
+
+/**
+ * Clear Personal/commerce keys left by prior E2E so guest UI tests mint a fresh
+ * guest key and publish to share.fsky.top (not a leftover custom domain).
+ */
+export function resetSmokePluginDataForGuestPublish(opts?: {
+	apiBase?: string;
+	shareBase?: string;
+	themeSlug?: string;
+}): void {
+	const dataPath = path.join(SMOKE_VAULT, '.obsidian/plugins', PLUGIN_ID, 'data.json');
+	const prev = existsSync(dataPath)
+		? (JSON.parse(readFileSync(dataPath, 'utf8')) as Record<string, unknown>)
+		: {};
+	const themeSlug = opts?.themeSlug ?? 'quartz';
+	const next: Record<string, unknown> = {
+		...prev,
+		mdfKey: null,
+		mdfKeyKind: null,
+		mdfKeyPlan: null,
+		mdfKeyEnv: 'staging',
+		mdfAccountEmail: null,
+		mdfContentExpiresAt: null,
+		mdfProjectCount: 0,
+		mdfStorageBytes: 0,
+		mdfQuotaFeatures: [],
+		mdfQuotaMaxCustomDomains: 0,
+		hasPublishedOnce: false,
+		cloudflareEnv: 'staging',
+		cloudflareResolvedEnv: 'staging',
+		cloudflareApiBaseUrl: opts?.apiBase ?? 'https://api.fsky.top',
+		cloudflarePublicBaseUrl: opts?.shareBase ?? 'https://share.fsky.top',
+		pathConfigs: {
+			Garden: {
+				mode: 'themed',
+				themeSlug,
+				hasPasswordFlag: false,
+				updatedAt: Date.now(),
+			},
+		},
+	};
+	writeFileSync(dataPath, JSON.stringify(next, null, 2));
+	clearLocalGardenFoundryCache();
 }
 
 export interface SalesPanelLinkResult {
@@ -630,6 +748,15 @@ export async function resolveProjectIdForUrl(opts: {
 	return list[0]?.id || list[0]?.projectId || null;
 }
 
+function pidAlive(pid: number): boolean {
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 export async function closeObsidianSession(session: ObsidianSession | undefined): Promise<void> {
 	if (!session) return;
 	try {
@@ -637,8 +764,9 @@ export async function closeObsidianSession(session: ObsidianSession | undefined)
 	} catch {
 		/* disconnect only */
 	}
+	const pid = session.child.pid;
 	try {
-		if (session.child.pid) process.kill(-session.child.pid, 'SIGTERM');
+		if (pid) process.kill(-pid, 'SIGTERM');
 	} catch {
 		try {
 			session.child.kill('SIGTERM');
@@ -646,12 +774,28 @@ export async function closeObsidianSession(session: ObsidianSession | undefined)
 			/* ignore */
 		}
 	}
-	await sleep(800);
-	try {
-		if (session.child.pid) process.kill(-session.child.pid, 'SIGKILL');
-	} catch {
-		/* ignore */
+	// Wait for exit so a late data.json flush cannot overwrite the next test's seed.
+	const deadline = Date.now() + 8_000;
+	while (pid && pidAlive(pid) && Date.now() < deadline) {
+		await sleep(200);
 	}
+	if (pid && pidAlive(pid)) {
+		try {
+			process.kill(-pid, 'SIGKILL');
+		} catch {
+			try {
+				session.child.kill('SIGKILL');
+			} catch {
+				/* ignore */
+			}
+		}
+		const killDeadline = Date.now() + 3_000;
+		while (pidAlive(pid) && Date.now() < killDeadline) {
+			await sleep(150);
+		}
+	}
+	// Filesystem settle after Electron teardown
+	await sleep(400);
 }
 
 /** Open Garden folder in the publish panel (same path as Open in MDFriday Digital Garden). */
@@ -721,22 +865,27 @@ export interface AccessKeysLinkResult {
  */
 export async function assertAccessKeysLinkInPanel(page: Page): Promise<AccessKeysLinkResult> {
 	await expandAdvancedOptions(page);
+	await page.waitForSelector('.mdf-access-settings', { timeout: 15_000 });
 	const result = await page.evaluate(() => {
 		const radios = document.querySelectorAll('input[name="mdf-access-prot"]').length;
 		const teaser = document.getElementById('mdf-access-teaser');
-		const btn = document.querySelector(
-			'[data-mdf-access-dashboard], button',
-		) as HTMLButtonElement | null;
-		// Prefer the dedicated dashboard button
+		const block = document.querySelector('.mdf-access-settings');
+		const guestHint = Array.from(block?.querySelectorAll('p.helper') || []).some((p) =>
+			/guest|访客|Sign in|登录|Not available|不可用|free MDFriday account/i.test(
+				p.textContent || '',
+			),
+		);
 		const dash =
 			(document.querySelector('[data-mdf-access-dashboard]') as HTMLButtonElement | null) ||
-			Array.from(document.querySelectorAll('button')).find((b) =>
-				/Manage keys|管理密钥|Dashboard/i.test(b.textContent || ''),
+			Array.from(block?.querySelectorAll('button') || []).find((b) =>
+				/Manage keys|管理密钥|View in dashboard|Dashboard|查看/i.test(b.textContent || ''),
 			) ||
 			null;
 		return {
 			radios,
 			hasTeaser: !!teaser,
+			hasBlock: !!block,
+			guestHint,
 			hasDash: !!dash,
 			dashDisabled: dash ? !!dash.disabled : true,
 			dashText: (dash?.textContent || '').trim().slice(0, 80),
@@ -746,6 +895,12 @@ export async function assertAccessKeysLinkInPanel(page: Page): Promise<AccessKey
 		throw new Error(
 			`Sidebar Access settings editor still present (radios=${result.radios} teaser=${result.hasTeaser})`,
 		);
+	}
+	if (!result.hasBlock) {
+		throw new Error('Access (.mdf-access-settings) missing from Advanced panel');
+	}
+	if (result.guestHint && !result.hasDash) {
+		throw new Error('Access still shows guest-disabled state — Personal key seed failed?');
 	}
 	if (!result.hasDash) {
 		throw new Error('Dashboard manage-keys control missing from Advanced panel');

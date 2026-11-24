@@ -1,107 +1,89 @@
 {
-  "projectId": "garden-mwiwppbx",
+  "projectId": "garden-mwuht36e",
   "publishMethod": "cloudflare",
-  "lastPublishTime": 1794820702731,
+  "lastPublishTime": 1795512547436,
   "remoteConfig": {
-    "projectId": "p_74430dff7131743d16b0be9634bcf88c",
-    "hostingMode": "custom",
-    "siteId": "PwksIQ"
+    "projectId": "p_9a10aea0f9d39bccabdcdea71c2bfe7a",
+    "hostingMode": "share",
+    "siteId": "PGROvr"
   },
   "files": {
     "404.html": {
-      "hash": "58abe4dfc2a25fdedafe2e3e24d080beb9d67d38bccebde3e6f4053bf0f6d271",
-      "size": 1393,
-      "mtime": 1794820701884.7139,
+      "hash": "f5d1ac09e3ea37c79e958aa2fc6e79f842215ff9a67344b2681d80e67faf8bdc",
+      "size": 1104,
+      "mtime": 1795512546897.0557,
       "relativePath": "404.html"
     },
     "categories/index.html": {
-      "hash": "e1df068f7ef63be84840f4b39f9db7a6eb131544ef499f90f476a3ed173eb220",
-      "size": 17112,
-      "mtime": 1794820701886.501,
+      "hash": "0e63407b23f7cf67fbecce24bc7a05a330710ea7a03e633eb7ab8585d45d2a3b",
+      "size": 18027,
+      "mtime": 1795512546898.1301,
       "relativePath": "categories/index.html"
     },
     "docs.html": {
-      "hash": "a4005e2e938b494e7b6357cc43c1aafe88da5ac28350221041798547e1b4e776",
-      "size": 30093,
-      "mtime": 1794820701884.9111,
+      "hash": "cdccb1f51f95b461d59ba010bbc980eb1ef8eaf9af22cde0558d065999586094",
+      "size": 25874,
+      "mtime": 1795512546897.1538,
       "relativePath": "docs.html"
     },
-    "en.search-index.min.c69536aeebbe.json": {
-      "hash": "c69536aeebbe5b1d7aa722780925ad85dd8a17aa681002e2227d50b238ca5055",
-      "size": 3037,
-      "mtime": 1794820701832.6543,
-      "relativePath": "en.search-index.min.c69536aeebbe.json"
+    "en.search-index.min.e3c80e5c4e0a.json": {
+      "hash": "e3c80e5c4e0afdaed689d01ce7a8cf32d25e5b6799146224ea38a4339e7ddd52",
+      "size": 2894,
+      "mtime": 1795512546817.5098,
+      "relativePath": "en.search-index.min.e3c80e5c4e0a.json"
     },
     "index.html": {
-      "hash": "c9d254f1813d7fd23d0c7459ad50ede99d66320352c397ac12fc3e0eae4bcefa",
-      "size": 20937,
-      "mtime": 1794820701832.755,
+      "hash": "69c2721c6536cfff2ae45b95d1152c77e53203331efd23ed2f5d283f4994f2d3",
+      "size": 19082,
+      "mtime": 1795512546817.5664,
       "relativePath": "index.html"
     },
     "members.html": {
-      "hash": "a8df6f033de03258d000570cb4ee9933049993aecc4be91f5529c98545f85dde",
-      "size": 30174,
-      "mtime": 1794820701885.7676,
+      "hash": "a41e6dec726d5c2170005e5cd6d371e9f92c5a6fa0ef1abf9b7ac356969f99e5",
+      "size": 25933,
+      "mtime": 1795512546897.2202,
       "relativePath": "members.html"
     },
     "notes/about.html": {
-      "hash": "fb311a116ba7e59bccfe4279ff455322b88bf652b7f826eb1f8a44c97f45fd3b",
-      "size": 21337,
-      "mtime": 1794820701886.696,
+      "hash": "aa792f78866ec7b774ca5d77fb6e1b2a579f9cbb1113396bdb79c0bcf8e1ba23",
+      "size": 19352,
+      "mtime": 1795512546898.4983,
       "relativePath": "notes/about.html"
     },
     "notes/hello.html": {
-      "hash": "1a17091b91cc0d99b9f40fc8d3adfd1832f278074e14fcee148fe481cff09cae",
-      "size": 22143,
-      "mtime": 1794820701886.779,
+      "hash": "e0400ad71f78798ea7875a0c9e33f03546dc335dae7b81ceeec437b6e940d33d",
+      "size": 20151,
+      "mtime": 1795512546898.6326,
       "relativePath": "notes/hello.html"
     },
     "notes/index.html": {
-      "hash": "09bb6012560ed5941c2748a8f078a41646837d504772d8ff84e93878ac34b4da",
-      "size": 20517,
-      "mtime": 1794820701886.4033,
+      "hash": "47c07066389ea8ac82006cada54c0ad57c0e0b7958aa380e3f042f276afded48",
+      "size": 18758,
+      "mtime": 1795512546898.5984,
       "relativePath": "notes/index.html"
     },
-    "pricing.html": {
-      "hash": "d6f8ab51622d0825b97c7e45b4a11033d30ade5f8617308120898a99b45bcf10",
-      "size": 16110,
-      "mtime": 1794820701886.66,
-      "relativePath": "pricing.html"
-    },
-    "privacy.html": {
-      "hash": "dae4a54d0d338bac42180e5feeb49fec8f2931bc878899319cbce49da62e13f1",
-      "size": 22973,
-      "mtime": 1794820701907.3018,
-      "relativePath": "privacy.html"
-    },
-    "purchase.html": {
-      "hash": "9202f707043c300d1d3f9e197e6e5312a85e8c32e0f364479d614d4a3856390b",
-      "size": 8207,
-      "mtime": 1794820701907.1873,
-      "relativePath": "purchase.html"
-    },
     "robots.txt": {
-      "hash": "526862b84cd81429b979663b9abea7b96325caa219776a218af95f2a06482045",
-      "size": 73,
-      "mtime": 1794820701884.6304,
+      "hash": "2aae4abc4e6ffe7e71171eb9030845935a9c3a9a7850bd0bbc3a55715fc3c81d",
+      "size": 78,
+      "mtime": 1795512546896.8794,
       "relativePath": "robots.txt"
     },
     "secret.html": {
-      "hash": "01358e7c07b5805317ce698c61ba99fe5c16b0ce1ba5f9135e228a20df6c25d2",
-      "size": 21186,
-      "mtime": 1794820701907.2278,
+      "hash": "40279fb4ebc31f42ac22e180e4eb887bf100ec59e325abaa8cb803cfafd5ea64",
+      "size": 19215,
+      "mtime": 1795512546896.9246,
       "relativePath": "secret.html"
     },
     "sitemap.xml": {
-      "hash": "549fb0991fca1309a054f4b3f99b42ad89a2f4b21b9907866179dcce85c59797",
-      "size": 1808,
-      "mtime": 1794820701884.8113,
+      "hash": "0624293a66c8980ceec8dcb4ca32b4149ef100f02ab42ab89dba7d2035dfffdb",
+      "size": 1450,
+      "mtime": 1795512546896.9922,
       "relativePath": "sitemap.xml"
     },
     "tags/index.html": {
-      "hash": "8116778c375a78fa6299a611e9c8c873a8b77aa8420d9517fdfba20b861d98d6",
-      "size": 17036,
-      "mtime": 1794820701908.6492,
+      "hash": "3001862e409b5697cf524da9531c8bd5c9604cdac0d48cad5712cf2cd90c1297",
+      "size": 17976,
+      "mtime": 1795512546912.169,
       "relativePath": "tags/index.html"
     }
   }

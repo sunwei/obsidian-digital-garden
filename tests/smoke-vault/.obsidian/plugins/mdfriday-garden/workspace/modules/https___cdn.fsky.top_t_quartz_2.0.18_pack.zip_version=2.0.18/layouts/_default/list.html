@@ -1,0 +1,14 @@
+{{ define "header" }}{{ end }}
+{{ define "footer" }}{{ end }}
+{{ define "main" }}
+{{- /* Foundry serves term/taxonomy through _default/list.html — route to the right shell. */ -}}
+{{- $shell := "" -}}
+{{- if eq .Kind "term" -}}
+  {{- $shell = partial "brew/page-shell-term.html" . -}}
+{{- else if eq .Kind "taxonomy" -}}
+  {{- $shell = partial "brew/page-shell-taxonomy.html" . -}}
+{{- else -}}
+  {{- $shell = partial "brew/page-shell-list.html" . -}}
+{{- end -}}
+{{- partial "encrypt-content.html" (dict "Page" . "HTML" $shell) -}}
+{{ end }}

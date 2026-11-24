@@ -94,6 +94,7 @@
 					<button
 						type="button"
 						class="adv-secondary-btn"
+						data-mdf-access-dashboard
 						on:click={openDashboard}
 						disabled={!boundId}
 						title={!boundId ? t('ui.access_count_unpublished') : undefined}

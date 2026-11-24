@@ -1,0 +1,56 @@
+{{- /*
+  layouts/_partials/search.html
+  CAP-search: Unified FlexSearch modal (v2.2+).
+
+  Renders the full modal overlay (#mdf-search-modal) once before </body>.
+  Beer-source: field + button chrome; hooks/IDs unchanged for search.js.
+
+  Locked IDs: #mdf-search-modal, #mdf-search-input, #mdf-search-results
+  CSS: caps/search/search.css (Beer recipe; W4 single track)
+*/ -}}
+{{- with .Site.Params.search -}}
+{{- if .enable -}}
+{{- $hotkey := .hotkey | default "/" -}}
+{{- $beer := partial "beer-source" $ -}}
+{{- $ph := i18n "search.placeholder" | default "Search..." -}}
+<div id="mdf-search-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-label="{{ i18n "search.label" | default (i18n "search.title" | default "Search") }}"
+  data-hotkey="{{ $hotkey }}"
+  hidden>
+  <div class="mdf-search-modal-box">
+    <div class="mdf-search-input-row">
+      {{- if $beer -}}
+      <i class="mdf-search-icon" aria-hidden="true">search</i>
+      <div class="field border small mdf-search-field">
+        <input type="search"
+          id="mdf-search-input"
+          class="search-bar"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="{{ $ph }}"
+          aria-label="{{ $ph }}"
+          aria-controls="mdf-search-results">
+      </div>
+      <button class="mdf-search-close button small" type="button" aria-label="Close search">Esc</button>
+      {{- else -}}
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="search"
+        id="mdf-search-input"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="{{ $ph }}"
+        aria-label="{{ $ph }}"
+        aria-controls="mdf-search-results">
+      <button class="mdf-search-close" type="button" aria-label="Close search">Esc</button>
+      {{- end -}}
+    </div>
+    <div id="mdf-search-results" role="listbox" aria-live="polite"></div>
+  </div>
+</div>
+{{- end -}}
+{{- end -}}

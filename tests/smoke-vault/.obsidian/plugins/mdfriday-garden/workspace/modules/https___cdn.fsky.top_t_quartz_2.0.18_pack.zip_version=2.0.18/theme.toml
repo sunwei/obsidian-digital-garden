@@ -1,0 +1,15 @@
+name        = "Quartz"
+description = "Wiki layout on BeerCSS — one family; colors via ThemePreset seeds"
+license     = "MIT"
+homepage    = "https://github.com/mdfriday"
+tags        = ["wiki", "beercss", "knowledge-base", "dark-mode"]
+features    = ["wikilink", "dark-mode", "responsive", "toc", "breadcrumbs", "search", "explorer"]
+min_version = "0.1.0"
+
+[author]
+    name     = "MDFriday Team"
+    homepage = "https://github.com/mdfriday"
+
+[module]
+  [[module.imports]]
+    path = "https://cdn.fsky.top/t/base/2.4.79/pack.zip?version=2.4.79"

@@ -1,0 +1,80 @@
+{{- $behavior := "link" -}}
+{{- $defaultState := "collapsed" -}}
+{{- $useSavedState := true -}}
+{{- $title := i18n "explorer.title" | default "Explorer" -}}
+
+{{- $explorerCfg := .Site.Params.explorer -}}
+{{- if reflect.IsMap $explorerCfg -}}
+{{- $behavior = $explorerCfg.folderClickBehavior | default "link" -}}
+{{- $defaultState = $explorerCfg.folderDefaultState | default "collapsed" -}}
+{{- $useSavedState = $explorerCfg.useSavedState | default true -}}
+{{- $title = $explorerCfg.title | default (i18n "explorer.title" | default "Explorer") -}}
+{{- end -}}
+
+<div class="explorer" 
+     data-behavior="{{ $behavior }}" 
+     data-collapsed="{{ $defaultState }}" 
+     data-savestate="{{ $useSavedState }}">
+    
+    {{/* Mobile toggle — Beer circle icon button */}}
+    <button type="button" 
+            class="explorer-toggle mobile-explorer hide-until-loaded button circle small transparent" 
+            data-mobile="true"
+            aria-controls="explorer-content"
+            aria-label="{{ i18n "explorer.toggle" | default "Toggle Explorer" }}">
+        <i>menu</i>
+    </button>
+    
+    {{/* Desktop toggle — Beer transparent text button + fold icon */}}
+    <button type="button" 
+            class="title-button explorer-toggle desktop-explorer button small transparent" 
+            data-mobile="false"
+            aria-expanded="true"
+            aria-label="{{ i18n "explorer.toggle" | default "Toggle Explorer" }}">
+        <span class="explorer-title">{{ $title }}</span>
+        <i class="fold">expand_more</i>
+    </button>
+    
+    {{/* Explorer content - will be populated by JavaScript */}}
+    <div id="explorer-content" 
+         class="explorer-content" 
+         aria-expanded="false" 
+         role="group">
+        <ul class="explorer-ul list"></ul>
+    </div>
+    
+    {{/* File + folder share one row box. No Beer button chrome on folders. */}}
+    <template id="template-file">
+        <li>
+            <a href="#"></a>
+        </li>
+    </template>
+
+    <template id="template-folder">
+        <li>
+            <div class="folder-container">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="12"
+                     height="12"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     class="folder-icon"
+                     aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+                <div>
+                    <button type="button" class="folder-button">
+                        <span class="folder-title"></span>
+                    </button>
+                </div>
+            </div>
+            <div class="folder-outer">
+                <ul class="content"></ul>
+            </div>
+        </li>
+    </template>
+</div>

@@ -1,0 +1,31 @@
+{{- /* Quartz single page shell (full #brew-body) */ -}}
+<div class="brew-shell">
+    <div id="brew-body">
+        <aside class="sidebar left">
+            {{- partial "brew/sidebar-left.html" . -}}
+        </aside>
+        <div class="center">
+            <div class="page-header">
+                <div class="popover-hint">
+                    {{- partial "brew/breadcrumbs.html" . -}}
+                </div>
+            </div>
+            <article class="popover-hint">
+                <header class="article-header">
+                    {{- partial "brew/article-title.html" . -}}
+                    {{- partial "brew/content-meta.html" . -}}
+                    {{- partial "brew/tag-list.html" . -}}
+                </header>
+                <div class="article-content">
+                    {{- .WikilinkContent -}}
+					{{- partial "commerce-page-body.html" . -}}
+                </div>
+                {{- partial "subscribe.html" (dict "Page" . "variant" "full" "placement" "article") -}}
+            </article>
+            {{- partial "brew/footer-content.html" . -}}
+        </div>
+        <aside class="sidebar right">
+            {{- partial "brew/sidebar-right.html" . -}}
+        </aside>
+    </div>
+</div>

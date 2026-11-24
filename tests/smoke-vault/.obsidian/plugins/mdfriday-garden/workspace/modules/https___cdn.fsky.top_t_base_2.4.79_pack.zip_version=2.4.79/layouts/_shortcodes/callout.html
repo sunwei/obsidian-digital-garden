@@ -1,0 +1,62 @@
+{{- /*
+  layouts/_shortcodes/callout.html
+  CAP-03: Callout / alert block.
+
+  Beer-source: .callout + caps/callout (Beer slots).
+  Legacy: .mdf-callout + caps/callout (mdf tokens).
+
+  Usage:
+    {{< callout type="note" >}}Basic note{{< /callout >}}
+    {{< callout type="warning" title="Watch out" >}}With title{{< /callout >}}
+    {{< callout type="tip" title="Tip" fold="open" >}}Collapsible{{< /callout >}}
+*/ -}}
+{{- $type  := .Get "type"  | default "note" -}}
+{{- $title := .Get "title" -}}
+{{- $fold  := .Get "fold"  -}}
+{{- $beer  := partial "beer-source" . -}}
+
+{{- if not (.Page.Scratch.Get "mdf-callout-css") -}}
+<link rel="stylesheet" href="{{ partial "caps-css" (dict "Page" .Page "path" "callout/callout.css") }}">
+{{- .Page.Scratch.Set "mdf-callout-css" true -}}
+{{- end -}}
+
+{{- if $beer -}}
+{{- $icon := "info" -}}
+{{- if eq $type "warning" -}}{{- $icon = "warning" -}}
+{{- else if or (eq $type "error") (eq $type "danger") (eq $type "failure") -}}{{- $icon = "error" -}}
+{{- else if eq $type "tip" -}}{{- $icon = "lightbulb" -}}
+{{- else if eq $type "success" -}}{{- $icon = "check_circle" -}}
+{{- else if eq $type "note" -}}{{- $icon = "sticky_note_2" -}}
+{{- end -}}
+<div class="callout callout-{{ $type }}{{ if $fold }} is-collapsible{{ end }}">
+  {{- if $fold -}}
+  <details {{ if eq $fold "open" }}open{{ end }} class="callout-fold">
+    <summary class="callout-title">
+      <span class="callout-icon" aria-hidden="true"><i>{{ $icon }}</i></span>
+      {{ $title | default ($type | title) }}
+    </summary>
+    <div class="callout-content">{{ .Inner | safeHTML }}</div>
+  </details>
+  {{- else -}}
+  <div class="callout-title">
+    <span class="callout-icon" aria-hidden="true"><i>{{ $icon }}</i></span>
+    {{ with $title }}{{ . }}{{ else }}{{ $type | title }}{{ end }}
+  </div>
+  <div class="callout-content">{{ .Inner | safeHTML }}</div>
+  {{- end -}}
+</div>
+{{- else -}}
+{{- if $fold -}}
+<details class="mdf-callout mdf-callout-{{ $type }}"{{ if eq $fold "open" }} open{{ end }}>
+  <summary class="mdf-callout__title">{{ $title | default ($type | title) }}</summary>
+  <div class="mdf-callout__body">{{ .Inner | safeHTML }}</div>
+</details>
+{{- else -}}
+<div class="mdf-callout mdf-callout-{{ $type }}" role="note">
+  {{- if $title -}}
+  <div class="mdf-callout__title">{{ $title }}</div>
+  {{- end -}}
+  <div class="mdf-callout__body">{{ .Inner | safeHTML }}</div>
+</div>
+{{- end -}}
+{{- end -}}

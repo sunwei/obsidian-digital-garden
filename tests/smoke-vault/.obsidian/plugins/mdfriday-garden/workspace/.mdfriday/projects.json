@@ -2,12 +2,12 @@
   "version": "1.0",
   "projects": [
     {
-      "id": "garden-mwiwppbx",
+      "id": "garden-mwuht36e",
       "name": "Garden",
       "path": "Garden",
       "absolutePath": "/Users/sunwei/github/sunwei/workspace/obsidian-digital-garden/tests/smoke-vault/.obsidian/plugins/mdfriday-garden/workspace/projects/Garden",
-      "createdAt": 1794811982979,
-      "updatedAt": 1794812066927,
+      "createdAt": 1795512540763,
+      "updatedAt": 1795512540763,
       "status": "active"
     }
   ]

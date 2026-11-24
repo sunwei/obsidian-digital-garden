@@ -2,8 +2,8 @@
 title: Docs
 access: protected
 access_scope: docs
-teaser: Docs teaser UI05 garden-e2e-mwg1hqpj-c6paw7
+teaser: Docs teaser UI garden-e2e-mwuhscio-vjt1uj
 ---
 # Docs
 
-MDF_UI05_DOCS_garden-e2e-mwg1hqpj-c6paw7
+MDF_GARDEN_UI_DOCS_garden-e2e-mwuhscio-vjt1uj

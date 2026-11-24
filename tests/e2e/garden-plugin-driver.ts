@@ -182,24 +182,31 @@ export async function fetchThemeCatalog(apiBase: string, authToken?: string): Pr
 	return body.entries;
 }
 
+/** True when catalog entry is a digital-garden (folder) skin with a pack. */
+export function isDigitalGardenTheme(entry: CatalogEntry): boolean {
+	return (
+		!!entry.packUrl &&
+		(entry.kinds || []).some((k) => String(k).toLowerCase() === 'digital-garden')
+	);
+}
+
 /**
- * Pick a folder/wiki theme for Garden E2E.
- * Prefer `E2E_THEME=<slug>` (e.g. atlas); otherwise fall back to quartz, then any entitled folder/wiki pack.
+ * Pick a digital-garden theme for Garden E2E.
+ * Prefer `E2E_THEME=<slug>` (e.g. canopy); else preferredSlug (default quartz);
+ * else any entitled `digital-garden` pack.
  */
 export function pickE2eTheme(catalog: CatalogEntry[], preferredSlug = 'quartz'): CatalogEntry {
 	const want = (process.env.E2E_THEME || preferredSlug).trim().toLowerCase();
-	const bySlug = catalog.find((e) => e.slug === want && e.packUrl);
+	const bySlug = catalog.find((e) => e.slug === want && isDigitalGardenTheme(e));
 	if (bySlug) return bySlug;
-	const quartz = catalog.find((e) => e.slug === 'quartz' && e.packUrl);
-	if (quartz) return quartz;
-	const folderish = catalog.find(
-		(e) =>
-			e.packUrl &&
-			(e.kinds || []).some((k) => k === 'folder' || k === 'wiki' || k === 'notebook'),
-	);
-	if (folderish) return folderish;
+	const preferred = catalog.find((e) => e.slug === preferredSlug && isDigitalGardenTheme(e));
+	if (preferred) return preferred;
+	const garden = catalog.find(isDigitalGardenTheme);
+	if (garden) return garden;
 	throw new Error(
-		`No entitled theme for E2E (wanted ${want}; catalog slugs: ${catalog.map((e) => e.slug).join(',')})`,
+		`No entitled digital-garden theme for E2E (wanted ${want}; catalog: ${catalog
+			.map((e) => `${e.slug}[${(e.kinds || []).join(',')}]`)
+			.join(', ')})`,
 	);
 }
 

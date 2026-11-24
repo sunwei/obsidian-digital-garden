@@ -1,0 +1,24 @@
+{{/* Quartz Beer-source: Beer → Atmosphere fonts → layout → Cap CSS → variant (last wins density).
+     Default seed/preset from beerSeed / beerPreset; bundled character via characterRef.
+     Use index for mdfriday — core errors on missing nested fields. */}}
+{{- $beer := partial "beer-cdn.html" . | strings.TrimSpace -}}
+{{- $mdf := index .Site.Params "mdfriday" | default dict -}}
+{{- $seed := index $mdf "beerSeed" | default "#3366cc" -}}
+{{- $preset := index $mdf "beerPreset" | default "vector" -}}
+{{- if not $seed -}}{{- $seed = "#3366cc" -}}{{- end -}}
+{{- if not $preset -}}{{- $preset = "vector" -}}{{- end -}}
+{{- $trim := "\n\r\t " -}}
+<link rel="stylesheet" href="{{ $beer }}beer.min.css">
+<script>
+  document.documentElement.setAttribute("data-beer-seed", "{{ $seed }}");
+  document.documentElement.setAttribute("data-beer-preset", "{{ $preset }}");
+  document.documentElement.setAttribute("data-atmosphere-character", "true");
+</script>
+<link rel="stylesheet" href="{{ trim (partial "base-asset" "css/atmosphere-fonts.css") $trim }}">
+<link rel="stylesheet" href="{{ trim (partial "base-asset" "css/theme-preset.css") $trim }}">
+<link rel="stylesheet" href="{{ trim (partial "asset" "css/layout.css") $trim }}">
+<link rel="stylesheet" href="{{ trim (partial "caps-css" (dict "Page" . "path" "callout/callout.css")) $trim }}">
+<link rel="stylesheet" href="{{ trim (partial "caps-css" (dict "Page" . "path" "toc/toc.css")) $trim }}">
+<link rel="stylesheet" href="{{ trim (partial "caps-css" (dict "Page" . "path" "search/search.css")) $trim }}">
+{{/* Variant last so TOC/nav density overrides Cap defaults */}}
+<link rel="stylesheet" href="{{ partial "variant-css" . }}">

@@ -1,0 +1,19 @@
+{{- /*
+  layouts/_shortcodes/tabs.html
+  CAP-04: CSS-only tab panels (radio). Beer-source uses caps/tabs skin
+  (Beer .tabs visual on .mdf-tab-label). True Beer data-ui strip deferred —
+  Foundry nests shortcodes before parent Scratch can collect.
+
+  Usage:
+    {{< tabs >}}
+    {{< tab "macOS" >}}…{{< /tab >}}
+    {{< /tabs >}}
+*/ -}}
+{{- if not (.Page.Scratch.Get "mdf-tabs-css") -}}
+<link rel="stylesheet" href="{{ partial "caps-css" (dict "Page" .Page "path" "tabs/tabs.css") }}">
+{{- .Page.Scratch.Set "mdf-tabs-css" true -}}
+{{- end -}}
+{{- $beer := partial "beer-source" . -}}
+<div class="mdf-tabs{{ if $beer }} tabs{{ end }}" data-mdf-tabs="{{ if $beer }}beer{{ else }}radio{{ end }}">
+  {{ .Inner | safeHTML }}
+</div>

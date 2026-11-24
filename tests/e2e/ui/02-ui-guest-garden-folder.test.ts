@@ -20,7 +20,9 @@ import {
 	launchObsidianForUiE2e,
 	obsidianAppPresent,
 	publishGardenFolderViaUi,
+	abortInFlightReleases,
 	readSmokePluginData,
+	resetSmokePluginDataForGuestPublish,
 	resolveProjectIdForUrl,
 	type ObsidianSession,
 } from './obsidian-harness.ts';
@@ -61,6 +63,26 @@ describe(
 			const rootMain = path.join(REPO_ROOT, 'main.js');
 			const st = existsSync(rootMain) ? readFileSync(rootMain) : null;
 			assert.ok(st && st.byteLength > 500_000, 'main.js implausibly small — run npm run build:smoke');
+
+			// Abort leftover in-flight releases, then drop Personal keys / custom domains.
+			const prior = readSmokePluginData();
+			const manifest = JSON.parse(
+				readFileSync(path.join(REPO_ROOT, 'manifest.json'), 'utf8'),
+			) as { version?: string };
+			const header = `obsidian-garden/${manifest.version ?? '0.0.0'}`;
+			if (prior.mdfKey) {
+				const aborted = await abortInFlightReleases({
+					apiBase: env.apiBase,
+					token: prior.mdfKey,
+					clientHeader: header,
+				});
+				if (aborted) console.log(`  aborted ${aborted} in-flight release(s)`);
+			}
+			resetSmokePluginDataForGuestPublish({
+				apiBase: env.apiBase,
+				shareBase: env.shareBase,
+				themeSlug: 'quartz',
+			});
 
 			console.log(`  launching headed Obsidian (smoke-vault)…`);
 			session = await launchObsidianForUiE2e();

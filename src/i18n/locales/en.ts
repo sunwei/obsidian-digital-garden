@@ -158,7 +158,7 @@ export const en = {
 		subscribe_export: "Export",
 		subscribe_export_csv: "Export as CSV",
 		subscribe_export_md: "Export as Markdown",
-		subscribe_theme_hint: "This theme doesn't show the form yet. Update it or choose notes, quartz, creator, flint, jasper or atlas.",
+		subscribe_theme_hint: "This theme doesn't show the form yet. Update it or choose a notes or digital-garden theme that supports subscribe.",
 		subscribe_guest_hint: "Sign in with a free MDFriday account to collect subscribers",
 		subscribe_sign_in: "Sign in",
 		subscribe_pending_publish: "Applies on the next publish",

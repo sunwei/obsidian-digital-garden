@@ -2,51 +2,39 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://test111.jiashu.ink/notes/index.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/notes/index.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://test111.jiashu.ink/notes/about.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/notes/about.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://test111.jiashu.ink/index.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/index.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://test111.jiashu.ink/privacy.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/docs.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://test111.jiashu.ink/docs.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/notes/hello.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://test111.jiashu.ink/notes/hello.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/members.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://test111.jiashu.ink/members.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/secret.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://test111.jiashu.ink/pricing.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/categories/index.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://test111.jiashu.ink/purchase.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url><url>
-    <loc>https://test111.jiashu.ink/secret.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url><url>
-    <loc>https://test111.jiashu.ink/categories/index.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url><url>
-    <loc>https://test111.jiashu.ink/tags/index.html</loc>
+    <loc>https://share.fsky.top/s/PGROvr/tags/index.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

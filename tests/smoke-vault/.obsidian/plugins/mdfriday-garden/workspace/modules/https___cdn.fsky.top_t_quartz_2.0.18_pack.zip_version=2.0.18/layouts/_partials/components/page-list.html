@@ -1,0 +1,40 @@
+{{- /* Quartz page list — used by term / taxonomy / section shells. */ -}}
+{{- $pages := .Pages -}}
+{{- if $pages -}}
+<div class="page-listing">
+    <ul class="section-ul">
+        {{- range $pages -}}
+        <li class="section-li">
+            <div class="section">
+                <div class="desc">
+                    <h3>
+                        <a href="{{ .RelPermalink }}" class="internal">
+                            {{- $pageTitle := partial "brew/title.html" . -}}
+                            {{- if $pageTitle -}}
+                                {{ $pageTitle }}
+                            {{- else -}}
+                                Untitled
+                            {{- end -}}
+                        </a>
+                    </h3>
+                </div>
+
+                {{- with .Params.tags -}}
+                <ul class="tags">
+                    {{- range . -}}
+                    {{- if . -}}
+                    <li>
+                        <a class="internal tag-link" href="{{ printf "/tags/%s/" (. | urlize) | relURL }}">
+                            {{ . }}
+                        </a>
+                    </li>
+                    {{- end -}}
+                    {{- end -}}
+                </ul>
+                {{- end -}}
+            </div>
+        </li>
+        {{- end -}}
+    </ul>
+</div>
+{{- end -}}

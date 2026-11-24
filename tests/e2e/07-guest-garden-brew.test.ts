@@ -68,8 +68,20 @@ describe('E2E Garden: guest folder → quartz theme (staging)', { skip, timeout:
 
 	it('2. publish folder with quartz theme', async () => {
 		const catalog = await fetchThemeCatalog(env.apiBase);
-		const quartz = catalog.find((e) => e.slug === 'quartz');
-		assert.ok(quartz?.packUrl, 'quartz theme must be entitled on staging catalog');
+		const quartz = catalog.find(
+			(e) =>
+				e.slug === 'quartz' &&
+				e.packUrl &&
+				(e.kinds || []).includes('digital-garden'),
+		);
+		assert.ok(
+			quartz?.packUrl,
+			'quartz@digital-garden must be entitled on staging catalog',
+		);
+		assert.ok(
+			String(quartz!.version || '').startsWith('2.'),
+			`expected quartz 2.x on staging, got ${quartz!.version}`,
+		);
 
 		driver.writeVault({
 			'Garden/index.md': `---\ntitle: Quartz garden home\n---\n# ${marker}\n\nWiki home for quartz E2E.\n`,

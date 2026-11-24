@@ -12,10 +12,15 @@
  *   E2E_KEEP_DATA=1 MDF_E2E_ENV=staging node --test --test-timeout=420000 tests/e2e/ui/03-ui-access-journey.test.ts
  */
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { loadGardenE2eEnv } from '../env.ts';
+import {
+	cleanupStagingCreator,
+	createStagingCreator,
+	type StagingCreator,
+} from '../staging-creator.ts';
 import {
 	PLUGIN_ID,
 	REPO_ROOT,
@@ -27,7 +32,7 @@ import {
 	obsidianAppPresent,
 	openGardenPublishPanel,
 	publishGardenFolderViaUiWithAccess,
-	readSmokePluginData,
+	seedPersonalPluginData,
 	resolveProjectIdForUrl,
 	type ObsidianSession,
 } from './obsidian-harness.ts';
@@ -109,54 +114,6 @@ ${opts.membersCanary}
 	);
 }
 
-function prepPluginDataForAccessPublish(): void {
-	const dataPath = path.join(SMOKE_VAULT, '.obsidian/plugins', PLUGIN_ID, 'data.json');
-	if (!existsSync(dataPath)) return;
-	const data = JSON.parse(readFileSync(dataPath, 'utf8')) as Record<string, unknown>;
-	data.pathConfigs = {
-		Garden: {
-			mode: 'themed',
-			themeSlug: 'quartz',
-			hasPasswordFlag: false,
-			updatedAt: Date.now(),
-		},
-	};
-	data.cloudflareEnv = 'staging';
-	data.cloudflareResolvedEnv = 'staging';
-	data.cloudflareApiBaseUrl = 'https://api.fsky.top';
-	data.cloudflarePublicBaseUrl = 'https://share.fsky.top';
-	writeFileSync(dataPath, JSON.stringify(data, null, 2));
-
-	const localProject = path.join(
-		SMOKE_VAULT,
-		'.obsidian/plugins',
-		PLUGIN_ID,
-		'workspace/projects/Garden',
-	);
-	if (existsSync(localProject)) {
-		rmSync(localProject, { recursive: true, force: true });
-		console.log('  cleared local Foundry project cache for Garden');
-	}
-}
-
-async function deleteAllGuestProjects(apiBase: string, token: string, header: string): Promise<number> {
-	const res = await fetch(`${apiBase.replace(/\/$/, '')}/v1/projects`, {
-		headers: { authorization: `Bearer ${token}`, 'X-MDFriday-Client': header },
-	});
-	if (!res.ok) return 0;
-	const body = (await res.json()) as {
-		projects?: Array<{ id?: string; projectId?: string }>;
-	};
-	let n = 0;
-	for (const p of body.projects || []) {
-		const id = p.id || p.projectId;
-		if (!id) continue;
-		await deleteStagingProject({ apiBase, projectId: id, token, clientHeader: header });
-		n += 1;
-	}
-	return n;
-}
-
 describe(
 	'UI E2E Garden: multi-scope page frontmatter → publish (G3)',
 	{ skip, timeout: 420_000 },
@@ -177,6 +134,7 @@ describe(
 		let session: ObsidianSession | undefined;
 		let publicUrl = '';
 		let projectId: string | null = null;
+		let creator: StagingCreator | undefined;
 
 		before(async () => {
 			const mainJs = path.join(SMOKE_VAULT, '.obsidian/plugins', PLUGIN_ID, 'main.js');
@@ -192,14 +150,25 @@ describe(
 				docsTeaser,
 				membersTeaser,
 			});
-			prepPluginDataForAccessPublish();
 
-			const data = readSmokePluginData();
-			const header = clientHeader();
-			if (data.mdfKey) {
-				const deleted = await deleteAllGuestProjects(env.apiBase, data.mdfKey, header);
-				console.log(`  cleared ${deleted} prior staging project(s)`);
-			}
+			// Fresh Personal account (no leftover custom domains from commerce E2E).
+			creator = await createStagingCreator('g3-ui', env.runId, { plan: 'personal' });
+			console.log(`  g3 creator user=${creator.userId} api=${env.apiBase}`);
+
+			// Seed immediately before launch so a late guest-test Obsidian flush cannot
+			// overwrite Personal keys in data.json.
+			seedPersonalPluginData({
+				mdfKey: creator.mdfKey,
+				email: creator.email,
+				apiBase: env.apiBase,
+				shareBase: env.shareBase,
+			});
+			const seeded = JSON.parse(
+				readFileSync(path.join(SMOKE_VAULT, '.obsidian/plugins', PLUGIN_ID, 'data.json'), 'utf8'),
+			) as { mdfKey?: string; mdfKeyKind?: string; mdfKeyPlan?: string };
+			assert.equal(seeded.mdfKey, creator.mdfKey, 'Personal MDF key must be on disk before launch');
+			assert.equal(seeded.mdfKeyKind, 'user');
+			assert.equal(seeded.mdfKeyPlan, 'personal');
 
 			console.log('  launching headed Obsidian (smoke-vault) for G3 multi-scope…');
 			session = await launchObsidianForUiE2e();
@@ -208,34 +177,42 @@ describe(
 
 		after(async () => {
 			const keep = process.env.E2E_KEEP_DATA === '1';
-			if (!keep && publicUrl) {
+			if (!keep && publicUrl && creator) {
 				try {
-					const data = readSmokePluginData();
 					const header = clientHeader();
-					if (data.mdfKey) {
-						projectId =
-							projectId ||
-							(await resolveProjectIdForUrl({
-								apiBase: env.apiBase,
-								token: data.mdfKey,
-								clientHeader: header,
-								publicUrl,
-							}));
-						if (projectId) {
-							await deleteStagingProject({
-								apiBase: env.apiBase,
-								projectId,
-								token: data.mdfKey,
-								clientHeader: header,
-							});
-							console.log(`  cleaned project ${projectId}`);
-						}
+					projectId =
+						projectId ||
+						(await resolveProjectIdForUrl({
+							apiBase: env.apiBase,
+							token: creator.mdfKey,
+							clientHeader: header,
+							publicUrl,
+						}));
+					if (projectId) {
+						await deleteStagingProject({
+							apiBase: env.apiBase,
+							projectId,
+							token: creator.mdfKey,
+							clientHeader: header,
+						});
+						console.log(`  cleaned project ${projectId}`);
 					}
 				} catch (err) {
 					console.warn('G3 UI E2E cleanup failed', err);
 				}
 			} else if (keep && publicUrl) {
 				console.log(`  E2E_KEEP_DATA=1 — leaving site up: ${publicUrl}`);
+			}
+			try {
+				if (creator) {
+					await cleanupStagingCreator(creator, {
+						projectId: projectId ?? undefined,
+						clientHeader: clientHeader(),
+						keepData: keep,
+					});
+				}
+			} catch (err) {
+				console.warn('G3 creator cleanup failed', err);
 			}
 			await closeObsidianSession(session);
 		});
