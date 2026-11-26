@@ -75,7 +75,7 @@
 		"typescript-eslint": "^8.63.0"
 	},
 	"dependencies": {
-		"@mdfriday/core": "^26.11.1",
+		"@mdfriday/core": "^26.11.2",
 		"jszip": "^3.10.1"
 	}
 }
